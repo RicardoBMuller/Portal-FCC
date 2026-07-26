@@ -18,7 +18,7 @@
       .fcc-avatar-img--site{width:54px!important;height:54px!important;max-width:54px!important;max-height:54px!important;}
     }
   </style>
-  <link rel="stylesheet" href="styles.css?v=12.1">
+  <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body class="intro-playing">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -50,6 +50,49 @@
   <div class="ambient ambient-one" aria-hidden="true"></div>
   <div class="ambient ambient-two" aria-hidden="true"></div>
   <div class="grid-noise" aria-hidden="true"></div>
+
+  <div class="main-menu" id="mainMenu" aria-hidden="true">
+    <div class="main-menu-backdrop" id="mainMenuBackdrop"></div>
+    <aside class="main-menu-panel" role="dialog" aria-modal="true" aria-label="Menu principal">
+      <div class="main-menu-head">
+        <div class="main-menu-brand">
+          <div class="fcc-avatar-shell fcc-avatar-shell--menu" aria-hidden="true">
+            <span class="fcc-orbit fcc-orbit--outer"></span>
+            <span class="fcc-orbit fcc-orbit--inner"></span>
+            <div class="fcc-avatar fcc-avatar--menu">
+              <img class="fcc-logo fcc-avatar-img fcc-avatar-img--menu" src="logo-fcc-avatar.png" width="52" height="52" alt="">
+            </div>
+          </div>
+          <div><strong>Portal FCC</strong><small>Navegação</small></div>
+        </div>
+        <button class="menu-close-btn" id="mainMenuClose" type="button" aria-label="Fechar menu">×</button>
+      </div>
+
+      <div class="main-menu-context">
+        <span>Contexto atual</span>
+        <strong id="menuProjectName">Nenhum projeto</strong>
+        <small id="menuPeriodName">Selecione Manhã ou Tarde</small>
+      </div>
+
+      <nav class="main-menu-nav" aria-label="Navegação principal">
+        <button class="main-menu-item main-menu-item--primary" id="menuProjectsBtn" type="button">
+          <span class="main-menu-icon">⌂</span>
+          <span><strong>Início / Projetos</strong><small>Escolher ou criar projeto e período</small></span>
+          <b>›</b>
+        </button>
+        <button class="main-menu-item" id="menuCalculatorBtn" type="button">
+          <span class="main-menu-icon">✦</span>
+          <span><strong>Calculadora</strong><small>Leitura OCR e cálculo manual</small></span>
+          <b>›</b>
+        </button>
+        <button class="main-menu-item" id="menuPortalBtn" type="button">
+          <span class="main-menu-icon">▤</span>
+          <span><strong>Diretório de salas</strong><small>Navegar pelas salas cadastradas</small></span>
+          <b>›</b>
+        </button>
+      </nav>
+    </aside>
+  </div>
 
   <div class="app-shell">
     <aside class="sidebar">
@@ -124,10 +167,15 @@
 
     <main class="main-area">
       <header class="topbar surface-fade">
-        <div>
-          <p class="eyebrow">CONTROLE DE TEMPO</p>
-          <h2>Calculadora de duração de provas</h2>
-          <p class="topbar-subtitle">Escolha o projeto, entre em Manhã ou Tarde, leia os cartões e organize os registros por sala.</p>
+        <div class="topbar-heading-wrap">
+          <button class="main-menu-btn" id="mainMenuBtn" type="button" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+          </button>
+          <div>
+            <p class="eyebrow">CONTROLE DE TEMPO</p>
+            <h2>Calculadora de duração de provas</h2>
+            <p class="topbar-subtitle">Escolha o projeto, entre em Manhã ou Tarde, leia os cartões e organize os registros por sala.</p>
+          </div>
         </div>
         <div class="topbar-actions">
           <button class="context-badge" id="topContextBtn" type="button">
@@ -140,7 +188,7 @@
 
       <nav class="view-tabs surface-fade" aria-label="Seções do portal">
         <button class="view-tab active" id="calculatorTabBtn" type="button" data-view="calculator">✦ Calculadora</button>
-        <button class="view-tab" id="portalTabBtn" type="button" data-view="portal">▦ Portal de salas</button>
+        <button class="view-tab" id="portalTabBtn" type="button" data-view="portal">▦ Diretório de salas</button>
       </nav>
 
       <section class="workspace" id="calculatorView">
@@ -300,8 +348,8 @@
       <section class="portal-view hidden" id="portalView" aria-labelledby="portalTitle">
         <div class="portal-hero surface-fade">
           <div>
-            <span class="step-label">PORTAL DE SALAS</span>
-            <h3 id="portalTitle">Registros do período</h3>
+            <span class="step-label">DIRETÓRIO DE SALAS</span>
+            <h3 id="portalTitle">Salas do período</h3>
             <p id="portalSubtitle">Selecione um projeto e um período para visualizar as salas.</p>
           </div>
           <div class="portal-actions">
@@ -320,7 +368,30 @@
           <span class="portal-status-dot"></span> Aguardando seleção do projeto.
         </div>
 
-        <div class="rooms-grid" id="roomsGrid"></div>
+        <div class="directory-toolbar" id="directoryToolbar">
+          <div class="directory-breadcrumb" id="directoryBreadcrumb" aria-label="Caminho atual">
+            <button type="button" id="breadcrumbRootBtn">Salas</button>
+          </div>
+          <button class="directory-back-btn hidden" id="directoryBackBtn" type="button">← Voltar para salas</button>
+        </div>
+
+        <div class="directory-root" id="directoryRoot">
+          <div class="rooms-grid" id="roomsGrid"></div>
+        </div>
+
+        <section class="room-directory-view hidden" id="roomDirectoryView" aria-live="polite">
+          <div class="room-directory-head">
+            <div class="room-directory-title">
+              <div class="room-directory-folder-icon">▰</div>
+              <div><span>SALA</span><h4 id="roomDirectoryCode">—</h4><p id="roomDirectoryMeta">0 cartões</p></div>
+            </div>
+            <div class="room-directory-nav">
+              <button class="room-nav-btn" id="previousRoomBtn" type="button">← Anterior</button>
+              <button class="room-nav-btn" id="nextRoomBtn" type="button">Próxima →</button>
+            </div>
+          </div>
+          <div class="room-directory-records" id="roomDirectoryRecords"></div>
+        </section>
 
         <div class="portal-empty hidden" id="portalEmpty">
           <div class="portal-empty-icon">▦</div>
@@ -541,7 +612,7 @@
     <span id="toastText">Resumo copiado!</span>
   </div>
 
-  <script src="config.js?v=12.1"></script>
-  <script src="app.js?v=12.1"></script>
+  <script src="config.js?v=13"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

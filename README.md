@@ -1,54 +1,37 @@
-# Portal FCC v12
+# Portal FCC v13 — Diretórios de Salas
 
-Portal mobile-first para leitura de cartões de horário, cálculo de encerramento e organização de salas de prova.
+Versão do Portal FCC com navegação por diretórios de salas.
 
 ## Fluxo
 
-**Projeto → Período → OCR → Sala → Cartão**
+1. Escolher ou criar o Projeto.
+2. Selecionar Manhã ou Tarde.
+3. Usar a calculadora/OCR para ler os cartões.
+4. Os cartões validados são armazenados no Supabase.
+5. Em **Diretório de salas**, cada sala aparece como uma pasta fechada.
+6. Toque na pasta para entrar na sala; use **Voltar para salas** para retornar à raiz.
+7. Dentro da sala também é possível navegar diretamente para a sala anterior ou seguinte.
 
-Ao abrir o site, o usuário primeiro escolhe ou cria um projeto. Depois seleciona um dos dois períodos fixos do sistema: **Manhã** ou **Tarde**. Somente então entra no portal com calculadora e leitura por câmera.
+## Menu principal
 
-## Leitura do cartão
+O botão ☰ no topo abre o menu com:
 
-O OCR procura:
+- **Início / Projetos** — volta para a seleção/criação do projeto e período.
+- **Calculadora** — abre cálculo manual e OCR.
+- **Diretório de salas** — abre a raiz das pastas de salas.
 
-- Sala
-- Módulo(s)
-- Horário de início
-- Duração da prova
-- Permanência mínima
+## Banco
 
-O campo **Término** do cartão não é usado. O encerramento é sempre calculado pelo navegador a partir de **início + duração**.
+Esta versão não altera a estrutura do banco da v12.1. Se o Supabase já está funcionando, não é necessário recriar as tabelas.
 
-## Organização no Supabase
+Para uma instalação nova, execute `SUPABASE_SETUP_V13.sql` no SQL Editor do Supabase.
 
-A V12 usa:
+## Configuração
 
-- `fcc_projects`
-- `fcc_rooms`
-- `fcc_exam_cards`
+Preencha `config.js` com:
 
-Os períodos são uma regra fixa (`manha` ou `tarde`) e ficam associados à sala. Não é necessário criar uma tabela de períodos.
+- `OCRSPACE_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
 
-Estrutura lógica:
-
-```text
-Projeto
-├── Manhã
-│   ├── Sala 0017
-│   └── Sala 0020
-└── Tarde
-    ├── Sala 0017
-    └── Sala 0031
-```
-
-## Arquivos principais
-
-- `index.html` — interface
-- `styles.css` — identidade visual e responsividade
-- `app.js` — OCR, cálculo, portal e Supabase
-- `config.js` — chaves/configuração
-- `SUPABASE_SETUP_V12_1.sql` — banco de dados
-- `logo-fcc-avatar.png` — versão circular preparada para os avatares do portal
-
-Consulte `PASSO_A_PASSO.txt` antes de publicar.
+Depois publique os arquivos na raiz do GitHub Pages.

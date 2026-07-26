@@ -65,6 +65,16 @@
     topPeriodName: document.getElementById("topPeriodName"),
     footerContext: document.getElementById("footerContext"),
 
+    mainMenu: document.getElementById("mainMenu"),
+    mainMenuBtn: document.getElementById("mainMenuBtn"),
+    mainMenuClose: document.getElementById("mainMenuClose"),
+    mainMenuBackdrop: document.getElementById("mainMenuBackdrop"),
+    menuProjects: document.getElementById("menuProjectsBtn"),
+    menuCalculator: document.getElementById("menuCalculatorBtn"),
+    menuPortal: document.getElementById("menuPortalBtn"),
+    menuProjectName: document.getElementById("menuProjectName"),
+    menuPeriodName: document.getElementById("menuPeriodName"),
+
     calculatorTab: document.getElementById("calculatorTabBtn"),
     portalTab: document.getElementById("portalTabBtn"),
     calculatorView: document.getElementById("calculatorView"),
@@ -79,6 +89,16 @@
     portalStatus: document.getElementById("portalStatus"),
     roomsGrid: document.getElementById("roomsGrid"),
     portalEmpty: document.getElementById("portalEmpty"),
+    directoryRoot: document.getElementById("directoryRoot"),
+    roomDirectoryView: document.getElementById("roomDirectoryView"),
+    directoryBack: document.getElementById("directoryBackBtn"),
+    breadcrumbRoot: document.getElementById("breadcrumbRootBtn"),
+    directoryBreadcrumb: document.getElementById("directoryBreadcrumb"),
+    roomDirectoryCode: document.getElementById("roomDirectoryCode"),
+    roomDirectoryMeta: document.getElementById("roomDirectoryMeta"),
+    roomDirectoryRecords: document.getElementById("roomDirectoryRecords"),
+    previousRoom: document.getElementById("previousRoomBtn"),
+    nextRoom: document.getElementById("nextRoomBtn"),
 
     introScreen: document.getElementById("introScreen"),
     logos: [...document.querySelectorAll(".fcc-logo")],
@@ -135,6 +155,8 @@
   let selectedPeriod = "";
   let lastPortalMeta = null;
   let portalRefreshTimer = null;
+  let portalRoomFolders = [];
+  let openRoomId = null;
 
   function enableLogoFallback(img) {
     if (!img) return;
@@ -713,6 +735,8 @@ ${lastResult.summary}`;
     el.topProjectName.textContent = project;
     el.topPeriodName.textContent = period;
     el.footerContext.textContent = currentContext ? `${project} • ${period}` : "Selecione um projeto para começar";
+    if (el.menuProjectName) el.menuProjectName.textContent = currentContext ? project : "Nenhum projeto";
+    if (el.menuPeriodName) el.menuPeriodName.textContent = currentContext ? period : "Selecione Manhã ou Tarde";
     el.portalSubtitle.textContent = currentContext
       ? `${project} • ${period} — registros agrupados automaticamente por sala.`
       : "Selecione um projeto e depois Manhã ou Tarde para visualizar as salas.";
@@ -778,6 +802,7 @@ ${lastResult.summary}`;
       storeContext(currentContext);
       updateContextUi();
       closeContextModal();
+      openRoomId = null;
       setActiveView("calculator");
       await loadPortalData();
       startPortalAutoRefresh();
@@ -831,7 +856,52 @@ ${lastResult.summary}`;
     el.portalView.classList.toggle("hidden", !portal);
     el.calculatorTab.classList.toggle("active", !portal);
     el.portalTab.classList.toggle("active", portal);
-    if (portal) loadPortalData();
+    if (portal) {
+      if (!openRoomId) showDirectoryRoot();
+      loadPortalData();
+    }
+  }
+
+  function openMainMenu() {
+    if (!el.mainMenu) return;
+    el.mainMenu.classList.add("open");
+    el.mainMenu.setAttribute("aria-hidden", "false");
+    document.body.classList.add("menu-open");
+  }
+
+  function closeMainMenu() {
+    if (!el.mainMenu) return;
+    el.mainMenu.classList.remove("open");
+    el.mainMenu.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("menu-open");
+  }
+
+  function setupMainMenu() {
+    el.mainMenuBtn?.addEventListener("click", openMainMenu);
+    el.mainMenuClose?.addEventListener("click", closeMainMenu);
+    el.mainMenuBackdrop?.addEventListener("click", closeMainMenu);
+
+    el.menuProjects?.addEventListener("click", () => {
+      closeMainMenu();
+      openRoomId = null;
+      openContextModal();
+    });
+
+    el.menuCalculator?.addEventListener("click", () => {
+      closeMainMenu();
+      setActiveView("calculator");
+    });
+
+    el.menuPortal?.addEventListener("click", () => {
+      closeMainMenu();
+      openRoomId = null;
+      showDirectoryRoot();
+      setActiveView("portal");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && el.mainMenu?.classList.contains("open")) closeMainMenu();
+    });
   }
 
   function setPortalStatus(message, type = "ok") {
@@ -851,10 +921,88 @@ ${lastResult.summary}`;
     }
   }
 
+  function buildExamRecord(card) {
+    const start = dbTimeToClock(card.start_time);
+    const end = dbTimeToClock(card.end_time);
+    const minimumExit = dbTimeToClock(card.minimum_exit_time);
+    const durationClock = formatDurationClock(Number(card.duration_minutes || 0));
+    const minimumClock = formatDurationClock(Number(card.minimum_stay_minutes || 0));
+    const record = document.createElement("article");
+    record.className = "exam-record exam-record--file";
+    record.innerHTML = `
+      <div class="exam-record-filebar">
+        <span class="exam-file-icon">▤</span>
+        <span>Registro de prova</span>
+      </div>
+      <div class="exam-record-top">
+        <div class="exam-record-module"><span>Módulo(s)</span><strong>${escapeHtml(card.modules)}</strong></div>
+        <div class="exam-record-time"><strong>${escapeHtml(end)}</strong><small>encerramento${card.end_next_day ? " • dia seguinte" : ""}</small></div>
+      </div>
+      <div class="exam-record-meta">
+        <div><span>Início</span><strong>${escapeHtml(start)}</strong></div>
+        <div><span>Duração</span><strong>${escapeHtml(durationClock)}</strong></div>
+        <div><span>Liberação mín.</span><strong>${escapeHtml(minimumExit)}</strong></div>
+      </div>
+      <div class="exam-record-minimum">⏱ Permanência mínima: <strong>${escapeHtml(minimumClock)}</strong></div>
+      <div class="exam-record-date">${escapeHtml(formatCapturedAt(card.captured_at))}</div>
+    `;
+    return record;
+  }
+
+  function showDirectoryRoot() {
+    openRoomId = null;
+    el.directoryRoot?.classList.remove("hidden");
+    el.roomDirectoryView?.classList.add("hidden");
+    el.directoryBack?.classList.add("hidden");
+    if (el.directoryBreadcrumb) {
+      el.directoryBreadcrumb.innerHTML = '<button type="button" id="breadcrumbRootBtnDynamic">Salas</button>';
+      el.directoryBreadcrumb.querySelector("button")?.addEventListener("click", showDirectoryRoot);
+    }
+  }
+
+  function openRoomDirectory(roomId) {
+    const room = portalRoomFolders.find((item) => String(item.id) === String(roomId));
+    if (!room) return;
+
+    openRoomId = room.id;
+    el.directoryRoot?.classList.add("hidden");
+    el.portalEmpty?.classList.add("hidden");
+    el.roomDirectoryView?.classList.remove("hidden");
+    el.directoryBack?.classList.remove("hidden");
+    el.roomDirectoryCode.textContent = room.room_code;
+    el.roomDirectoryMeta.textContent = `${room.cards.length} ${room.cards.length === 1 ? "cartão" : "cartões"} • ${currentContext?.projectName || "Projeto"} • ${periodLabel(currentContext?.period)}`;
+    el.roomDirectoryRecords.innerHTML = "";
+
+    room.cards
+      .slice()
+      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)))
+      .forEach((card) => el.roomDirectoryRecords.appendChild(buildExamRecord(card)));
+
+    if (!room.cards.length) {
+      el.roomDirectoryRecords.innerHTML = '<div class="directory-room-empty">Esta sala ainda não possui cartões registrados.</div>';
+    }
+
+    if (el.directoryBreadcrumb) {
+      el.directoryBreadcrumb.innerHTML = `
+        <button type="button" id="breadcrumbRootBtnDynamic">Salas</button>
+        <span>›</span>
+        <strong>Sala ${escapeHtml(room.room_code)}</strong>
+      `;
+      el.directoryBreadcrumb.querySelector("button")?.addEventListener("click", showDirectoryRoot);
+    }
+
+    const index = portalRoomFolders.findIndex((item) => String(item.id) === String(room.id));
+    el.previousRoom.disabled = index <= 0;
+    el.nextRoom.disabled = index < 0 || index >= portalRoomFolders.length - 1;
+    el.previousRoom.dataset.roomId = index > 0 ? portalRoomFolders[index - 1].id : "";
+    el.nextRoom.dataset.roomId = index >= 0 && index < portalRoomFolders.length - 1 ? portalRoomFolders[index + 1].id : "";
+  }
+
   function renderPortalRooms(rooms, cards) {
     const roomMap = new Map(rooms.map((room) => [room.id, { ...room, cards: [] }]));
     cards.forEach((card) => roomMap.get(card.room_id)?.cards.push(card));
     const folders = [...roomMap.values()].sort((a, b) => String(a.room_code).localeCompare(String(b.room_code), "pt-BR", { numeric: true }));
+    portalRoomFolders = folders;
 
     const moduleSet = new Set();
     cards.forEach((card) => splitModules(card.modules).forEach((module) => moduleSet.add(module)));
@@ -864,52 +1012,36 @@ ${lastResult.summary}`;
     el.roomsGrid.innerHTML = "";
 
     if (!folders.length) {
+      showDirectoryRoot();
       el.portalEmpty.classList.remove("hidden");
       return;
     }
     el.portalEmpty.classList.add("hidden");
 
     folders.forEach((room) => {
-      room.cards.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
-      const article = document.createElement("article");
-      article.className = "room-folder";
-      article.innerHTML = `
-        <header class="room-folder-header">
-          <div class="room-folder-title">
-            <span class="room-folder-icon">▰</span>
-            <span><small>SALA</small><strong>${escapeHtml(room.room_code)}</strong></span>
-          </div>
-          <span class="room-folder-count">${room.cards.length} ${room.cards.length === 1 ? "cartão" : "cartões"}</span>
-        </header>
-        <div class="room-records"></div>
+      const moduleCount = new Set(room.cards.flatMap((card) => splitModules(card.modules))).size;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "room-directory-folder";
+      button.dataset.roomId = room.id;
+      button.innerHTML = `
+        <span class="folder-visual" aria-hidden="true"><span class="folder-tab"></span><span class="folder-body">▰</span></span>
+        <span class="folder-copy">
+          <small>SALA</small>
+          <strong>${escapeHtml(room.room_code)}</strong>
+          <span>${room.cards.length} ${room.cards.length === 1 ? "cartão" : "cartões"} • ${moduleCount} ${moduleCount === 1 ? "módulo" : "módulos"}</span>
+        </span>
+        <span class="folder-open">Abrir ›</span>
       `;
-
-      const records = article.querySelector(".room-records");
-      room.cards.forEach((card) => {
-        const start = dbTimeToClock(card.start_time);
-        const end = dbTimeToClock(card.end_time);
-        const minimumExit = dbTimeToClock(card.minimum_exit_time);
-        const durationClock = formatDurationClock(Number(card.duration_minutes || 0));
-        const minimumClock = formatDurationClock(Number(card.minimum_stay_minutes || 0));
-        const record = document.createElement("div");
-        record.className = "exam-record";
-        record.innerHTML = `
-          <div class="exam-record-top">
-            <div class="exam-record-module"><span>Módulo(s)</span><strong>${escapeHtml(card.modules)}</strong></div>
-            <div class="exam-record-time"><strong>${escapeHtml(end)}</strong><small>encerramento${card.end_next_day ? " • dia seguinte" : ""}</small></div>
-          </div>
-          <div class="exam-record-meta">
-            <div><span>Início</span><strong>${escapeHtml(start)}</strong></div>
-            <div><span>Duração</span><strong>${escapeHtml(durationClock)}</strong></div>
-            <div><span>Liberação mín.</span><strong>${escapeHtml(minimumExit)}</strong></div>
-          </div>
-          <div class="exam-record-minimum">⏱ Permanência mínima: <strong>${escapeHtml(minimumClock)}</strong></div>
-          <div class="exam-record-date">${escapeHtml(formatCapturedAt(card.captured_at))}</div>
-        `;
-        records.appendChild(record);
-      });
-      el.roomsGrid.appendChild(article);
+      button.addEventListener("click", () => openRoomDirectory(room.id));
+      el.roomsGrid.appendChild(button);
     });
+
+    if (openRoomId && folders.some((room) => String(room.id) === String(openRoomId))) {
+      openRoomDirectory(openRoomId);
+    } else {
+      showDirectoryRoot();
+    }
   }
 
   async function loadPortalData() {
@@ -1006,9 +1138,21 @@ ${lastResult.summary}`;
 
   function setupPortalView() {
     el.calculatorTab.addEventListener("click", () => setActiveView("calculator"));
-    el.portalTab.addEventListener("click", () => setActiveView("portal"));
+    el.portalTab.addEventListener("click", () => {
+      openRoomId = null;
+      showDirectoryRoot();
+      setActiveView("portal");
+    });
     el.refreshPortal.addEventListener("click", loadPortalData);
     [el.portalCamera, el.emptyCamera].forEach((button) => button.addEventListener("click", requestPhoto));
+    el.directoryBack?.addEventListener("click", showDirectoryRoot);
+    el.breadcrumbRoot?.addEventListener("click", showDirectoryRoot);
+    el.previousRoom?.addEventListener("click", () => {
+      if (el.previousRoom.dataset.roomId) openRoomDirectory(el.previousRoom.dataset.roomId);
+    });
+    el.nextRoom?.addEventListener("click", () => {
+      if (el.nextRoom.dataset.roomId) openRoomDirectory(el.nextRoom.dataset.roomId);
+    });
   }
 
   // =========================================================
@@ -1845,6 +1989,7 @@ ${lastResult.summary}`;
   setupLogos();
   setupPortalContext();
   setupPortalView();
+  setupMainMenu();
   initIntro();
   setupAiPhotoReader();
   setupResultModal();

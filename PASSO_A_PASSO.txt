@@ -1,0 +1,34 @@
+PORTAL FCC v13 — PUBLICAÇÃO
+
+1) Se o Supabase da versão anterior já está funcionando:
+   - NÃO é necessário executar SQL novamente.
+   - Mantenha as tabelas fcc_projects, fcc_rooms e fcc_exam_cards.
+
+2) Abra config.js e mantenha/preencha:
+   OCRSPACE_API_KEY
+   SUPABASE_URL
+   SUPABASE_PUBLISHABLE_KEY
+
+3) Envie para a raiz do GitHub Pages:
+   index.html
+   styles.css
+   app.js
+   config.js
+   logo-fcc.jpg
+   logo-fcc-avatar.png
+   .nojekyll
+
+4) Abra o site.
+
+5) Fluxo:
+   Projeto -> Manhã/Tarde -> Calculadora/OCR -> Diretório de salas.
+
+6) No Diretório de salas:
+   - Toque em uma pasta para abrir a sala.
+   - Use "Voltar para salas" para fechar a sala/retornar à raiz.
+   - Use "Anterior" e "Próxima" para navegar entre as salas.
+
+7) O botão de menu ☰ fica no topo.
+   - Início / Projetos: escolha/criação de projeto e período.
+   - Calculadora: OCR e cálculo manual.
+   - Diretório de salas: raiz das pastas.

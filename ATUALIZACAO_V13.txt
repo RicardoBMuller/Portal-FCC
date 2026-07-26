@@ -1,0 +1,14 @@
+PORTAL FCC v13
+
+ALTERAÇÕES DESTA VERSÃO
+
+1. As salas agora aparecem como pastas/diretórios fechados.
+2. Ao tocar em uma sala, o portal entra dentro daquele diretório e mostra somente os cartões da sala.
+3. Foi criado o botão "Voltar para salas".
+4. Dentro de uma sala há navegação "Anterior" e "Próxima" para alternar entre diretórios.
+5. Foi criado um menu principal ☰ no topo.
+6. O menu possui "Início / Projetos", "Calculadora" e "Diretório de salas".
+7. "Início / Projetos" retorna à tela de escolha/criação do projeto e período.
+8. Não há alteração de banco em relação à versão v12.1.
+
+Se o Supabase já está funcionando, mantenha as tabelas atuais.
