@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17171f">
+  <meta name="description" content="Portal FCC para cálculo e armazenamento de horários de prova por concurso, período e sala.">
+  <title>FCC • Portal de Provas</title>
+  <link rel="icon" href="logo-fcc.jpg" type="image/jpeg">
+  <style>
+    /* Evita o logo gigante antes do CSS externo terminar de carregar. */
+    .fcc-avatar-img{display:block;object-fit:cover;border-radius:50%;}
+    .fcc-avatar-img--intro{width:112px!important;height:112px!important;max-width:112px!important;max-height:112px!important;}
+    .fcc-avatar-img--site{width:64px!important;height:64px!important;max-width:64px!important;max-height:64px!important;}
+    @media(max-width:780px){
+      .fcc-avatar-img--intro{width:96px!important;height:96px!important;max-width:96px!important;max-height:96px!important;}
+      .fcc-avatar-img--site{width:54px!important;height:54px!important;max-width:54px!important;max-height:54px!important;}
+    }
+  </style>
+  <link rel="stylesheet" href="styles.css?v=11">
+</head>
+<body class="intro-playing">
+  <div class="intro-screen" id="introScreen" aria-hidden="true">
+    <div class="intro-screen__glow intro-screen__glow--one"></div>
+    <div class="intro-screen__glow intro-screen__glow--two"></div>
+    <div class="intro-card">
+      <div class="intro-orbit intro-orbit--one"></div>
+      <div class="intro-orbit intro-orbit--two"></div>
+      <div class="fcc-avatar-shell fcc-avatar-shell--intro" aria-label="Fundação Carlos Chagas">
+        <span class="fcc-orbit fcc-orbit--outer" aria-hidden="true"></span>
+        <span class="fcc-orbit fcc-orbit--inner" aria-hidden="true"></span>
+        <div class="fcc-avatar fcc-avatar--intro">
+          <img class="fcc-logo fcc-avatar-img fcc-avatar-img--intro" src="logo-fcc.jpg" width="112" height="112" alt="Fundação Carlos Chagas">
+          <div class="logo-fallback" hidden>
+            <strong>FCC</strong>
+            <span>Fundação Carlos Chagas</span>
+          </div>
+        </div>
+      </div>
+      <div class="intro-copy">
+        <span class="intro-eyebrow">FUNDAÇÃO CARLOS CHAGAS</span>
+        <h1>Calculadora de duração de provas</h1>
+        <p>Preparando a experiência...</p>
+      </div>
+      <div class="intro-loader" aria-hidden="true"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="grid-noise" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-card surface-fade">
+        <div class="fcc-avatar-shell fcc-avatar-shell--site" aria-label="Fundação Carlos Chagas">
+          <span class="fcc-orbit fcc-orbit--outer" aria-hidden="true"></span>
+          <span class="fcc-orbit fcc-orbit--inner" aria-hidden="true"></span>
+          <div class="fcc-avatar fcc-avatar--site">
+            <img class="fcc-logo fcc-avatar-img fcc-avatar-img--site" src="logo-fcc.jpg" width="64" height="64" alt="Fundação Carlos Chagas">
+            <div class="logo-fallback brand-fallback" hidden>
+              <strong>FCC</strong>
+              <span>Fundação Carlos Chagas</span>
+            </div>
+          </div>
+        </div>
+        <div class="brand-copy">
+          <h1>Portal de Provas</h1>
+          <p>FCC • controle de salas</p>
+        </div>
+      </div>
+
+      <section class="panel context-side-panel surface-fade delay-1">
+        <div class="panel-header">
+          <span>Contexto atual</span>
+          <button class="icon-button" id="changeContextBtn" type="button" title="Trocar concurso/período" aria-label="Trocar concurso ou período">↻</button>
+        </div>
+        <div class="context-side-line">
+          <span>Concurso</span>
+          <strong id="sideContestName">—</strong>
+        </div>
+        <div class="context-side-line">
+          <span>Período</span>
+          <strong id="sidePeriodName">—</strong>
+        </div>
+      </section>
+
+      <section class="panel surface-fade delay-1">
+        <div class="panel-header">
+          <span>Como funciona</span>
+          <span class="mini-icon" aria-hidden="true">↗</span>
+        </div>
+        <p class="panel-text">
+          Escolha o concurso e o período. Ao fotografar o cartão, o sistema lê sala, módulo(s), início, duração e permanência mínima. Após sua validação, o registro é salvo no Supabase e organizado por sala.
+        </p>
+      </section>
+
+      <section class="panel example-panel surface-fade delay-2">
+        <div class="panel-header">
+          <span>Exemplo</span>
+          <span class="status-dot"></span>
+        </div>
+        <div class="example-row"><span>Horário de início</span><strong>10:08</strong></div>
+        <div class="example-row"><span>Duração</span><strong>00:50</strong></div>
+        <div class="example-result">
+          <span>Encerramento</span>
+          <strong>10:58</strong>
+        </div>
+      </section>
+
+      <section class="panel history-panel surface-fade delay-3">
+        <div class="panel-header">
+          <span>Histórico recente</span>
+          <button class="icon-button" id="clearHistoryBtn" type="button" title="Limpar histórico" aria-label="Limpar histórico">⌫</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p class="history-empty">Os últimos cálculos aparecerão aqui.</p>
+        </div>
+      </section>
+
+      <p class="sidebar-footer">FCC • Utilitário de apoio operacional</p>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar surface-fade">
+        <div>
+          <p class="eyebrow">CONTROLE DE TEMPO</p>
+          <h2>Calculadora de duração de provas</h2>
+          <p class="topbar-subtitle">Leia cartões de horário, calcule o encerramento e organize os registros por concurso, período e sala.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="context-badge" id="topContextBtn" type="button">
+            <span class="context-badge-dot"></span>
+            <span><b id="topContestName">Selecione um concurso</b><small id="topPeriodName">—</small></span>
+          </button>
+          <div class="live-badge"><span></span> portal sincronizado</div>
+        </div>
+      </header>
+
+      <nav class="view-tabs surface-fade" aria-label="Seções do portal">
+        <button class="view-tab active" id="calculatorTabBtn" type="button" data-view="calculator">✦ Calculadora</button>
+        <button class="view-tab" id="portalTabBtn" type="button" data-view="portal">▦ Portal de salas</button>
+      </nav>
+
+      <section class="workspace" id="calculatorView">
+        <article class="calculator-card surface-fade delay-1">
+          <div class="section-heading">
+            <div>
+              <span class="step-label">ETAPA 01</span>
+              <h3>Informe o horário e a duração</h3>
+            </div>
+            <div class="clock-orbit" aria-hidden="true">
+              <span class="clock-hand hand-hour"></span>
+              <span class="clock-hand hand-minute"></span>
+              <span class="clock-center"></span>
+            </div>
+          </div>
+
+          <section class="ai-scan-card" aria-labelledby="aiScanTitle">
+            <div class="ai-scan-copy">
+              <span class="ai-chip">OCR • LEITURA POR FOTO</span>
+              <h4 id="aiScanTitle">Fotografe o cartão da prova</h4>
+              <p>A câmera lê <strong>sala, módulo(s), início, duração da prova e permanência mínima</strong>. Após você conferir os dados, o registro é salvo automaticamente na sala do concurso/período selecionado.</p>
+            </div>
+            <div class="ai-scan-actions camera-only">
+              <input id="examPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
+              <button class="btn btn-camera" id="takePhotoBtn" type="button"><span>📷</span> Fotografar cartão</button>
+            </div>
+            <div class="ai-note"><span>✦</span> Início + duração definem o encerramento. O campo “Término” do cartão é ignorado. Sala, módulo(s) e horários validados são armazenados no Supabase.</div>
+          </section>
+
+          <form id="examForm" novalidate>
+            <div class="input-grid single-input-grid">
+              <label class="field-card" for="startTime">
+                <span class="field-icon accent-icon">▶</span>
+                <span class="field-copy">
+                  <span class="field-label">Horário de Início</span>
+                  <span class="field-help">Horário em que a prova começou</span>
+                </span>
+                <input id="startTime" class="time-input" type="time" value="10:08" required>
+              </label>
+            </div>
+
+            <div class="duration-block">
+              <div class="duration-header">
+                <div>
+                  <span class="field-label">Duração da prova</span>
+                  <span class="field-help">Tempo total disponível para realização</span>
+                </div>
+                <div class="duration-input-wrap" aria-label="Duração da prova em horas e minutos">
+                  <input id="durationHours" type="text" inputmode="numeric" maxlength="2" value="00" aria-label="Horas de duração" autocomplete="off" required>
+                  <span class="duration-separator" aria-hidden="true">:</span>
+                  <input id="durationMinutes" type="text" inputmode="numeric" maxlength="2" value="50" aria-label="Minutos de duração" autocomplete="off" required>
+                </div>
+              </div>
+
+              <div class="quick-times" aria-label="Durações rápidas">
+                <button type="button" data-minutes="30">30 min</button>
+                <button type="button" data-minutes="45">45 min</button>
+                <button type="button" data-minutes="50" class="active">50 min</button>
+                <button type="button" data-minutes="60">1 h</button>
+                <button type="button" data-minutes="90">1h30</button>
+                <button type="button" data-minutes="120">2 h</button>
+              </div>
+            </div>
+
+            <div class="minimum-block">
+              <div class="minimum-copy">
+                <span class="minimum-icon" aria-hidden="true">⏱</span>
+                <div>
+                  <span class="field-label">Permanência mínima</span>
+                  <span class="field-help">Tempo mínimo antes da liberação do candidato</span>
+                </div>
+              </div>
+              <div class="minimum-input-wrap" aria-label="Permanência mínima em horas e minutos">
+                <input id="minimumHours" type="text" inputmode="numeric" maxlength="2" value="00" aria-label="Horas de permanência mínima" autocomplete="off" required>
+                <span class="duration-separator" aria-hidden="true">:</span>
+                <input id="minimumMinutes" type="text" inputmode="numeric" maxlength="2" value="30" aria-label="Minutos de permanência mínima" autocomplete="off" required>
+              </div>
+            </div>
+
+            <p id="validationMessage" class="validation-message" role="alert" aria-live="polite"></p>
+
+            <div class="form-actions">
+              <button class="btn btn-soft" id="resetBtn" type="button"><span>↺</span> Limpar</button>
+              <button class="btn btn-primary" id="calculateBtn" type="submit"><span>✦</span> Calcular horário final</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="result-card surface-fade delay-2" id="resultCard" aria-live="polite">
+          <div class="section-heading result-heading">
+            <div>
+              <span class="step-label">ETAPA 02</span>
+              <h3>Resultado</h3>
+            </div>
+            <span id="statusPill" class="result-status delayed">00:50</span>
+          </div>
+
+          <div class="result-hero">
+            <p>Horário de encerramento</p>
+            <div class="new-end-time" id="endTime">10:58</div>
+            <span id="dayIndicator" class="day-indicator hidden">dia seguinte</span>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <span class="metric-icon">▶</span>
+              <div><span>Horário de início</span><strong id="resultStart">10:08</strong></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-icon">⌛</span>
+              <div><span>Duração</span><strong id="durationValue">00:50</strong></div>
+            </div>
+            <div class="metric-card">
+              <span class="metric-icon">✓</span>
+              <div><span>Encerramento</span><strong id="resultEnd">10:58</strong></div>
+            </div>
+          </div>
+
+          <div class="minimum-result-highlight">
+            <div class="minimum-result-icon" aria-hidden="true">⏱</div>
+            <div>
+              <span>Permanência mínima</span>
+              <strong id="resultMinimumStay">00:30</strong>
+              <small>Liberação a partir de <b id="resultMinimumExit">10:38</b></small>
+            </div>
+          </div>
+
+          <div class="timeline-wrap">
+            <div class="timeline-topline">
+              <span>Linha do tempo</span>
+              <span id="timelineCaption">00:50 de duração</span>
+            </div>
+            <div class="timeline timeline-simple" id="timeline">
+              <div class="timeline-track"><div class="timeline-progress" id="timelineProgress"></div></div>
+              <div class="timeline-point point-scheduled">
+                <span class="point-dot"></span>
+                <strong id="timelineStart">10:08</strong>
+                <small>Início</small>
+              </div>
+              <div class="timeline-point point-end">
+                <span class="point-dot"></span>
+                <strong id="timelineEnd">10:58</strong>
+                <small>Encerramento</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-box">
+            <div class="summary-icon" aria-hidden="true">✓</div>
+            <p id="summaryText">A prova começa às 10:08 e possui duração de 00:50. O horário de encerramento é 10:58.</p>
+          </div>
+
+          <button class="btn btn-copy" id="copyBtn" type="button"><span>▣</span> Copiar resumo</button>
+        </article>
+      </section>
+
+      <section class="portal-view hidden" id="portalView" aria-labelledby="portalTitle">
+        <div class="portal-hero surface-fade">
+          <div>
+            <span class="step-label">PORTAL DE SALAS</span>
+            <h3 id="portalTitle">Registros do período</h3>
+            <p id="portalSubtitle">Selecione um concurso e um período para visualizar as salas.</p>
+          </div>
+          <div class="portal-actions">
+            <button class="btn btn-soft" id="refreshPortalBtn" type="button">↻ Atualizar</button>
+            <button class="btn btn-primary portal-camera-btn" id="portalCameraBtn" type="button">📷 Ler novo cartão</button>
+          </div>
+        </div>
+
+        <div class="portal-stats">
+          <div class="portal-stat"><span>Salas</span><strong id="portalRoomCount">0</strong></div>
+          <div class="portal-stat"><span>Cartões</span><strong id="portalCardCount">0</strong></div>
+          <div class="portal-stat"><span>Módulos</span><strong id="portalModuleCount">0</strong></div>
+        </div>
+
+        <div class="portal-status" id="portalStatus" role="status">
+          <span class="portal-status-dot"></span> Aguardando seleção do concurso.
+        </div>
+
+        <div class="rooms-grid" id="roomsGrid"></div>
+
+        <div class="portal-empty hidden" id="portalEmpty">
+          <div class="portal-empty-icon">▦</div>
+          <h4>Nenhuma sala registrada</h4>
+          <p>Fotografe o primeiro cartão deste período. A sala será criada automaticamente após a confirmação.</p>
+          <button class="btn btn-primary" id="emptyCameraBtn" type="button">📷 Fotografar primeiro cartão</button>
+        </div>
+      </section>
+
+      <footer class="main-footer">
+        <span>GitHub Pages • OCR.Space • Supabase</span>
+        <span id="footerContext">Selecione um concurso para começar</span>
+      </footer>
+    </main>
+  </div>
+
+  <div class="context-modal" id="contextModal" aria-hidden="true">
+    <div class="context-modal-backdrop"></div>
+    <section class="context-modal-card" role="dialog" aria-modal="true" aria-labelledby="contextModalTitle">
+      <div class="context-modal-brand">
+        <div class="fcc-avatar-shell fcc-avatar-shell--context" aria-hidden="true">
+          <span class="fcc-orbit fcc-orbit--outer"></span>
+          <span class="fcc-orbit fcc-orbit--inner"></span>
+          <div class="fcc-avatar fcc-avatar--context"><img class="fcc-logo" src="logo-fcc.jpg" alt=""></div>
+        </div>
+        <div>
+          <span class="ai-chip">PORTAL FCC</span>
+          <h2 id="contextModalTitle">Escolha o concurso e o período</h2>
+          <p>Este contexto define onde os cartões serão organizados e armazenados.</p>
+        </div>
+      </div>
+
+      <div class="context-steps">
+        <div class="context-step">
+          <span class="context-step-number">1</span>
+          <div class="context-step-content">
+            <label for="contestSelect">Concurso</label>
+            <select id="contestSelect">
+              <option value="">Carregando concursos...</option>
+            </select>
+            <div class="new-contest-wrap hidden" id="newContestWrap">
+              <label for="newContestName">Nome do novo concurso</label>
+              <input id="newContestName" type="text" maxlength="120" placeholder="Ex.: Concurso CFP 2026">
+            </div>
+          </div>
+        </div>
+
+        <div class="context-step">
+          <span class="context-step-number">2</span>
+          <div class="context-step-content">
+            <span class="context-label">Período</span>
+            <div class="period-picker" role="radiogroup" aria-label="Período da prova">
+              <button class="period-option" type="button" data-period="manha"><span>☀</span><strong>Manhã</strong><small>Período matutino</small></button>
+              <button class="period-option" type="button" data-period="tarde"><span>◐</span><strong>Tarde</strong><small>Período vespertino</small></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="context-alert hidden" id="contextAlert" role="alert"></div>
+      <button class="btn btn-primary context-enter-btn" id="enterPortalBtn" type="button">Entrar no portal →</button>
+      <p class="context-footnote">Os dados do portal são sincronizados com o Supabase. A calculadora manual continua funcionando no navegador.</p>
+    </section>
+  </div>
+
+  <div class="ai-modal" id="aiModal" aria-hidden="true">
+    <div class="ai-modal-backdrop" id="aiModalBackdrop"></div>
+    <section class="ai-modal-card" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+      <button class="ai-modal-close" id="aiModalClose" type="button" aria-label="Fechar">×</button>
+
+      <div id="aiLoadingState" class="ai-state ai-state-loading">
+        <div class="ai-spinner" aria-hidden="true"></div>
+        <span class="ai-chip">LENDO FOTO</span>
+        <h3>Lendo o cartão da prova...</h3>
+        <p>O OCR está procurando sala, módulo(s), horário de início, duração da prova e permanência mínima. O término preenchido no cartão será ignorado.</p>
+      </div>
+
+      <div id="aiConfirmState" class="ai-state hidden">
+        <div class="ai-modal-header">
+          <span class="ai-chip">DADOS IDENTIFICADOS</span>
+          <h3 id="aiModalTitle">Confira antes de calcular</h3>
+          <p>Confira todos os dados. Ao confirmar, a sala será criada (se ainda não existir) e o cartão será armazenado no portal.</p>
+        </div>
+
+        <div class="ai-preview-wrap">
+          <img id="aiPhotoPreview" alt="Foto do cartão analisado">
+        </div>
+
+        <div class="ai-record-grid">
+          <label class="ai-field ai-field-important">
+            <span>Sala</span>
+            <input id="aiRoom" type="text" inputmode="text" placeholder="Ex.: 0020" maxlength="40" required>
+          </label>
+          <label class="ai-field ai-field-important">
+            <span>Módulo(s)</span>
+            <input id="aiModules" type="text" inputmode="text" placeholder="Ex.: 0000001" maxlength="120" required>
+          </label>
+        </div>
+
+        <div class="ai-fields-grid">
+          <label class="ai-field">
+            <span>Horário de início</span>
+            <input id="aiStartTime" type="time" required>
+          </label>
+          <label class="ai-field">
+            <span>Duração</span>
+            <input id="aiDuration" type="text" inputmode="numeric" placeholder="01:00" maxlength="5" required>
+          </label>
+        </div>
+
+        <div class="ai-minimum-highlight">
+          <div class="ai-minimum-title">
+            <span class="ai-minimum-icon" aria-hidden="true">⏱</span>
+            <div>
+              <span>Permanência mínima</span>
+              <small>Confira este tempo antes de confirmar</small>
+            </div>
+          </div>
+          <input id="aiMinimumStay" type="text" inputmode="numeric" placeholder="00:30" maxlength="5" aria-label="Permanência mínima">
+        </div>
+
+        <div class="ai-extra-grid ai-extra-grid-single">
+          <div><span>Qualidade da identificação</span><strong id="aiConfidence">—</strong></div>
+        </div>
+
+        <p class="ai-observation" id="aiObservation"></p>
+
+        <details class="ocr-raw-details" id="ocrRawDetails">
+          <summary>Ver texto reconhecido pelo OCR</summary>
+          <pre id="ocrRawText"></pre>
+        </details>
+
+        <p class="ai-validation" id="aiValidation" role="alert"></p>
+
+        <div class="ai-modal-actions">
+          <button class="btn btn-soft" id="aiRetryBtn" type="button">↺ Tirar outra foto</button>
+          <button class="btn btn-primary" id="aiConfirmBtn" type="button">✓ Confirmar, calcular e salvar</button>
+        </div>
+      </div>
+
+      <div id="aiErrorState" class="ai-state hidden">
+        <div class="ai-error-icon">!</div>
+        <span class="ai-chip">NÃO FOI POSSÍVEL LER</span>
+        <h3>Revise a foto e tente novamente</h3>
+        <p id="aiErrorMessage">Não foi possível identificar os dados com segurança.</p>
+        <div class="ai-modal-actions single">
+          <button class="btn btn-primary" id="aiErrorRetryBtn" type="button">📷 Tentar outra foto</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="result-modal" id="resultModal" aria-hidden="true">
+    <div class="result-modal-backdrop" id="resultModalBackdrop"></div>
+    <section class="result-modal-card" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+      <button class="result-modal-close" id="resultModalClose" type="button" aria-label="Fechar resultado">×</button>
+      <span class="result-modal-chip">CÁLCULO CONCLUÍDO</span>
+      <h3 id="resultModalTitle">Horário de encerramento</h3>
+      <div class="result-modal-time" id="modalEndTime">10:58</div>
+      <span id="modalDayIndicator" class="result-modal-day hidden">dia seguinte</span>
+
+      <div class="result-modal-grid">
+        <div><span>Início</span><strong id="modalStartTime">10:08</strong></div>
+        <div><span>Duração da prova</span><strong id="modalDuration">00:50</strong></div>
+      </div>
+
+      <div class="result-modal-minimum">
+        <div class="result-modal-minimum-icon" aria-hidden="true">⏱</div>
+        <div>
+          <span>Permanência mínima</span>
+          <strong id="modalMinimumStay">00:30</strong>
+          <small>Liberação mínima a partir de <b id="modalMinimumExit">10:38</b></small>
+        </div>
+      </div>
+
+      <div class="result-portal-meta hidden" id="resultPortalMeta">
+        <div class="result-portal-saved" id="resultPortalSaved">✓ Registro salvo no portal</div>
+        <div class="result-portal-grid">
+          <div><span>Sala</span><strong id="modalRoom">—</strong></div>
+          <div><span>Módulo(s)</span><strong id="modalModules">—</strong></div>
+        </div>
+        <small id="modalPortalContext">—</small>
+      </div>
+
+      <p class="result-modal-note">O encerramento é calculado exclusivamente por <strong>horário de início + duração da prova</strong>. O campo “Término” preenchido no cartão é ignorado.</p>
+
+      <div class="result-modal-actions">
+        <button class="btn btn-soft" id="resultModalCopy" type="button">▣ Copiar resumo</button>
+        <button class="btn btn-primary" id="resultModalOk" type="button">✓ Entendido</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastText">Resumo copiado!</span>
+  </div>
+
+  <script src="config.js?v=11"></script>
+  <script src="app.js?v=11"></script>
+</body>
+</html>
