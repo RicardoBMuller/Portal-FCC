@@ -1,24 +1,28 @@
 /*
-  CONFIGURAÇÃO DO PORTAL FCC
+  PORTAL FCC V12.1
 
-  1) OCR.Space
-     - Use sua chave gratuita atual.
+  Preencha SOMENTE os valores abaixo antes de publicar no GitHub Pages.
 
-  2) Supabase
-     - SUPABASE_URL: Project URL / Data API URL do projeto calculadora-fcc.
-     - SUPABASE_PUBLISHABLE_KEY: chave pública sb_publishable_...
+  OCR.Space:
+  - OCRSPACE_API_KEY: sua chave gratuita já criada.
 
-  A Publishable Key do Supabase pode ficar no frontend. A segurança dos dados
-  é definida pelas permissões/RLS do SQL fornecido com o projeto.
+  Supabase:
+  - SUPABASE_URL: Project URL / Data API URL do projeto calculadora-fcc.
+  - SUPABASE_PUBLISHABLE_KEY: chave pública sb_publishable_...
 
-  ATENÇÃO: a chave gratuita do OCR.Space também ficará visível no GitHub Pages.
-  Neste modo simples, alguém que inspecione o código pode consumir a sua franquia OCR.
+  Esta versão usa as tabelas:
+  - fcc_projects
+  - fcc_rooms
+  - fcc_exam_cards
+
+  Regra do portal:
+  Projeto -> Manhã ou Tarde -> Sala -> Cartões
 */
 window.FCC_CONFIG = {
-  OCRSPACE_API_KEY: "K82786113188957",
+  OCRSPACE_API_KEY: "COLE_AQUI_SUA_CHAVE_OCR_SPACE",
   OCRSPACE_ENDPOINT: "https://api.ocr.space/parse/image",
   OCRSPACE_ENGINE: "3",
 
-  SUPABASE_URL: "https://fxkjikfurlvfftpncunp.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_tla6br_lPVuEPBgsMFEDCw_58Pp-7jA"
+  SUPABASE_URL: "COLE_AQUI_SUA_PROJECT_URL_DO_SUPABASE",
+  SUPABASE_PUBLISHABLE_KEY: "COLE_AQUI_SUA_PUBLISHABLE_KEY_DO_SUPABASE"
 };

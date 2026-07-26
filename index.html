@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
-  <meta name="description" content="Portal FCC para cálculo e armazenamento de horários de prova por concurso, período e sala.">
+  <meta name="description" content="Portal FCC para cálculo e armazenamento de horários de prova por projeto, período e sala.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc.jpg" type="image/jpeg">
   <style>
@@ -12,12 +12,13 @@
     .fcc-avatar-img{display:block;object-fit:cover;border-radius:50%;}
     .fcc-avatar-img--intro{width:112px!important;height:112px!important;max-width:112px!important;max-height:112px!important;}
     .fcc-avatar-img--site{width:64px!important;height:64px!important;max-width:64px!important;max-height:64px!important;}
+    .fcc-avatar-shell--context img.fcc-avatar-img--context{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;}
     @media(max-width:780px){
       .fcc-avatar-img--intro{width:96px!important;height:96px!important;max-width:96px!important;max-height:96px!important;}
       .fcc-avatar-img--site{width:54px!important;height:54px!important;max-width:54px!important;max-height:54px!important;}
     }
   </style>
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12.1">
 </head>
 <body class="intro-playing">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -30,7 +31,7 @@
         <span class="fcc-orbit fcc-orbit--outer" aria-hidden="true"></span>
         <span class="fcc-orbit fcc-orbit--inner" aria-hidden="true"></span>
         <div class="fcc-avatar fcc-avatar--intro">
-          <img class="fcc-logo fcc-avatar-img fcc-avatar-img--intro" src="logo-fcc.jpg" width="112" height="112" alt="Fundação Carlos Chagas">
+          <img class="fcc-logo fcc-avatar-img fcc-avatar-img--intro" src="logo-fcc-avatar.png" width="112" height="112" alt="Fundação Carlos Chagas">
           <div class="logo-fallback" hidden>
             <strong>FCC</strong>
             <span>Fundação Carlos Chagas</span>
@@ -57,7 +58,7 @@
           <span class="fcc-orbit fcc-orbit--outer" aria-hidden="true"></span>
           <span class="fcc-orbit fcc-orbit--inner" aria-hidden="true"></span>
           <div class="fcc-avatar fcc-avatar--site">
-            <img class="fcc-logo fcc-avatar-img fcc-avatar-img--site" src="logo-fcc.jpg" width="64" height="64" alt="Fundação Carlos Chagas">
+            <img class="fcc-logo fcc-avatar-img fcc-avatar-img--site" src="logo-fcc-avatar.png" width="64" height="64" alt="Fundação Carlos Chagas">
             <div class="logo-fallback brand-fallback" hidden>
               <strong>FCC</strong>
               <span>Fundação Carlos Chagas</span>
@@ -73,11 +74,11 @@
       <section class="panel context-side-panel surface-fade delay-1">
         <div class="panel-header">
           <span>Contexto atual</span>
-          <button class="icon-button" id="changeContextBtn" type="button" title="Trocar concurso/período" aria-label="Trocar concurso ou período">↻</button>
+          <button class="icon-button" id="changeContextBtn" type="button" title="Trocar projeto/período" aria-label="Trocar projeto ou período">↻</button>
         </div>
         <div class="context-side-line">
-          <span>Concurso</span>
-          <strong id="sideContestName">—</strong>
+          <span>Projeto</span>
+          <strong id="sideProjectName">—</strong>
         </div>
         <div class="context-side-line">
           <span>Período</span>
@@ -91,7 +92,7 @@
           <span class="mini-icon" aria-hidden="true">↗</span>
         </div>
         <p class="panel-text">
-          Escolha o concurso e o período. Ao fotografar o cartão, o sistema lê sala, módulo(s), início, duração e permanência mínima. Após sua validação, o registro é salvo no Supabase e organizado por sala.
+          Escolha ou crie o projeto; em seguida selecione Manhã ou Tarde. Ao fotografar o cartão, o sistema lê sala, módulo(s), início, duração e permanência mínima. Após sua validação, o registro é salvo no Supabase e organizado por sala.
         </p>
       </section>
 
@@ -126,12 +127,12 @@
         <div>
           <p class="eyebrow">CONTROLE DE TEMPO</p>
           <h2>Calculadora de duração de provas</h2>
-          <p class="topbar-subtitle">Leia cartões de horário, calcule o encerramento e organize os registros por concurso, período e sala.</p>
+          <p class="topbar-subtitle">Escolha o projeto, entre em Manhã ou Tarde, leia os cartões e organize os registros por sala.</p>
         </div>
         <div class="topbar-actions">
           <button class="context-badge" id="topContextBtn" type="button">
             <span class="context-badge-dot"></span>
-            <span><b id="topContestName">Selecione um concurso</b><small id="topPeriodName">—</small></span>
+            <span><b id="topProjectName">Selecione um projeto</b><small id="topPeriodName">—</small></span>
           </button>
           <div class="live-badge"><span></span> portal sincronizado</div>
         </div>
@@ -160,7 +161,7 @@
             <div class="ai-scan-copy">
               <span class="ai-chip">OCR • LEITURA POR FOTO</span>
               <h4 id="aiScanTitle">Fotografe o cartão da prova</h4>
-              <p>A câmera lê <strong>sala, módulo(s), início, duração da prova e permanência mínima</strong>. Após você conferir os dados, o registro é salvo automaticamente na sala do concurso/período selecionado.</p>
+              <p>A câmera lê <strong>sala, módulo(s), início, duração da prova e permanência mínima</strong>. Após você conferir os dados, o registro é salvo automaticamente na sala do projeto/período selecionado.</p>
             </div>
             <div class="ai-scan-actions camera-only">
               <input id="examPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
@@ -301,7 +302,7 @@
           <div>
             <span class="step-label">PORTAL DE SALAS</span>
             <h3 id="portalTitle">Registros do período</h3>
-            <p id="portalSubtitle">Selecione um concurso e um período para visualizar as salas.</p>
+            <p id="portalSubtitle">Selecione um projeto e um período para visualizar as salas.</p>
           </div>
           <div class="portal-actions">
             <button class="btn btn-soft" id="refreshPortalBtn" type="button">↻ Atualizar</button>
@@ -316,7 +317,7 @@
         </div>
 
         <div class="portal-status" id="portalStatus" role="status">
-          <span class="portal-status-dot"></span> Aguardando seleção do concurso.
+          <span class="portal-status-dot"></span> Aguardando seleção do projeto.
         </div>
 
         <div class="rooms-grid" id="roomsGrid"></div>
@@ -331,7 +332,7 @@
 
       <footer class="main-footer">
         <span>GitHub Pages • OCR.Space • Supabase</span>
-        <span id="footerContext">Selecione um concurso para começar</span>
+        <span id="footerContext">Selecione um projeto para começar</span>
       </footer>
     </main>
   </div>
@@ -340,48 +341,71 @@
     <div class="context-modal-backdrop"></div>
     <section class="context-modal-card" role="dialog" aria-modal="true" aria-labelledby="contextModalTitle">
       <div class="context-modal-brand">
-        <div class="fcc-avatar-shell fcc-avatar-shell--context" aria-hidden="true">
-          <span class="fcc-orbit fcc-orbit--outer"></span>
-          <span class="fcc-orbit fcc-orbit--inner"></span>
-          <div class="fcc-avatar fcc-avatar--context"><img class="fcc-logo" src="logo-fcc.jpg" alt=""></div>
+        <div class="fcc-avatar-shell fcc-avatar-shell--context" aria-label="Fundação Carlos Chagas">
+          <span class="fcc-orbit fcc-orbit--outer" aria-hidden="true"></span>
+          <span class="fcc-orbit fcc-orbit--inner" aria-hidden="true"></span>
+          <div class="fcc-avatar fcc-avatar--context">
+            <img class="fcc-logo fcc-avatar-img fcc-avatar-img--context" src="logo-fcc-avatar.png" width="70" height="70" alt="Fundação Carlos Chagas">
+            <div class="logo-fallback context-fallback" hidden><strong>FCC</strong><span>Fundação Carlos Chagas</span></div>
+          </div>
         </div>
-        <div>
+        <div class="context-modal-brand-copy">
           <span class="ai-chip">PORTAL FCC</span>
-          <h2 id="contextModalTitle">Escolha o concurso e o período</h2>
-          <p>Este contexto define onde os cartões serão organizados e armazenados.</p>
+          <h2 id="contextModalTitle">Escolha ou crie um projeto</h2>
+          <p id="contextModalSubtitle">Primeiro definimos o projeto. Em seguida você escolhe Manhã ou Tarde e entra na leitura do cartão.</p>
         </div>
       </div>
 
-      <div class="context-steps">
-        <div class="context-step">
-          <span class="context-step-number">1</span>
-          <div class="context-step-content">
-            <label for="contestSelect">Concurso</label>
-            <select id="contestSelect">
-              <option value="">Carregando concursos...</option>
-            </select>
-            <div class="new-contest-wrap hidden" id="newContestWrap">
-              <label for="newContestName">Nome do novo concurso</label>
-              <input id="newContestName" type="text" maxlength="120" placeholder="Ex.: Concurso CFP 2026">
-            </div>
-          </div>
-        </div>
+      <div class="context-progress" aria-label="Etapas de entrada no portal">
+        <div class="context-progress-item active" id="projectProgress"><span>1</span><strong>Projeto</strong></div>
+        <div class="context-progress-line"></div>
+        <div class="context-progress-item" id="periodProgress"><span>2</span><strong>Período</strong></div>
+        <div class="context-progress-line"></div>
+        <div class="context-progress-item" id="ocrProgress"><span>3</span><strong>OCR</strong></div>
+      </div>
 
-        <div class="context-step">
-          <span class="context-step-number">2</span>
-          <div class="context-step-content">
-            <span class="context-label">Período</span>
-            <div class="period-picker" role="radiogroup" aria-label="Período da prova">
-              <button class="period-option" type="button" data-period="manha"><span>☀</span><strong>Manhã</strong><small>Período matutino</small></button>
-              <button class="period-option" type="button" data-period="tarde"><span>◐</span><strong>Tarde</strong><small>Período vespertino</small></button>
+      <div class="context-wizard">
+        <section class="context-wizard-panel active" id="projectStepPanel">
+          <div class="context-step context-step--full">
+            <span class="context-step-number">1</span>
+            <div class="context-step-content">
+              <label for="projectSelect">Projeto</label>
+              <select id="projectSelect">
+                <option value="">Carregando projetos...</option>
+              </select>
+              <div class="new-project-wrap hidden" id="newProjectWrap">
+                <label for="newProjectName">Nome do novo projeto</label>
+                <input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Certificação CFP - Julho 2026">
+              </div>
+              <p class="context-rule-note"><span>✓</span> Todo projeto possui automaticamente os períodos <strong>Manhã</strong> e <strong>Tarde</strong>.</p>
             </div>
           </div>
-        </div>
+          <button class="btn btn-primary context-enter-btn" id="continueProjectBtn" type="button">Continuar para o período →</button>
+        </section>
+
+        <section class="context-wizard-panel" id="periodStepPanel" aria-hidden="true">
+          <button class="context-back-btn" id="backProjectBtn" type="button">← Trocar projeto</button>
+          <div class="selected-project-card">
+            <span>Projeto selecionado</span>
+            <strong id="wizardProjectName">—</strong>
+          </div>
+          <div class="context-step context-step--full">
+            <span class="context-step-number">2</span>
+            <div class="context-step-content">
+              <span class="context-label">Escolha o período</span>
+              <div class="period-picker" role="radiogroup" aria-label="Período da prova">
+                <button class="period-option" type="button" data-period="manha"><span>☀</span><strong>Manhã</strong><small>Período matutino</small></button>
+                <button class="period-option" type="button" data-period="tarde"><span>◐</span><strong>Tarde</strong><small>Período vespertino</small></button>
+              </div>
+              <p class="context-rule-note"><span>📷</span> Após escolher o período, você entra no portal para <strong>fotografar e ler o cartão via OCR</strong>.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary context-enter-btn" id="enterPortalBtn" type="button">Abrir período e entrar no portal →</button>
+        </section>
       </div>
 
       <div class="context-alert hidden" id="contextAlert" role="alert"></div>
-      <button class="btn btn-primary context-enter-btn" id="enterPortalBtn" type="button">Entrar no portal →</button>
-      <p class="context-footnote">Os dados do portal são sincronizados com o Supabase. A calculadora manual continua funcionando no navegador.</p>
+      <p class="context-footnote">Projeto → Período → OCR. As salas e cartões validados são sincronizados com o Supabase.</p>
     </section>
   </div>
 
@@ -517,7 +541,7 @@
     <span id="toastText">Resumo copiado!</span>
   </div>
 
-  <script src="config.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="config.js?v=12.1"></script>
+  <script src="app.js?v=12.1"></script>
 </body>
 </html>

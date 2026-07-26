@@ -2,7 +2,7 @@
   "use strict";
 
   const HISTORY_KEY = "fcc_exam_time_history_single_v1";
-  const CONTEXT_KEY = "fcc_portal_context_v1";
+  const CONTEXT_KEY = "fcc_portal_context_v2";
   const MAX_HISTORY = 5;
   const INTRO_DURATION = 4000;
   const OCR_MAX_SOURCE_BYTES = 20 * 1024 * 1024;
@@ -41,17 +41,27 @@
     clearHistory: document.getElementById("clearHistoryBtn"),
 
     contextModal: document.getElementById("contextModal"),
-    contestSelect: document.getElementById("contestSelect"),
-    newContestWrap: document.getElementById("newContestWrap"),
-    newContestName: document.getElementById("newContestName"),
+    projectSelect: document.getElementById("projectSelect"),
+    newProjectWrap: document.getElementById("newProjectWrap"),
+    newProjectName: document.getElementById("newProjectName"),
     periodOptions: [...document.querySelectorAll(".period-option")],
     contextAlert: document.getElementById("contextAlert"),
     enterPortal: document.getElementById("enterPortalBtn"),
+    continueProject: document.getElementById("continueProjectBtn"),
+    backProject: document.getElementById("backProjectBtn"),
+    projectStepPanel: document.getElementById("projectStepPanel"),
+    periodStepPanel: document.getElementById("periodStepPanel"),
+    projectProgress: document.getElementById("projectProgress"),
+    periodProgress: document.getElementById("periodProgress"),
+    ocrProgress: document.getElementById("ocrProgress"),
+    wizardProjectName: document.getElementById("wizardProjectName"),
+    contextModalTitle: document.getElementById("contextModalTitle"),
+    contextModalSubtitle: document.getElementById("contextModalSubtitle"),
     changeContext: document.getElementById("changeContextBtn"),
     topContext: document.getElementById("topContextBtn"),
-    sideContestName: document.getElementById("sideContestName"),
+    sideProjectName: document.getElementById("sideProjectName"),
     sidePeriodName: document.getElementById("sidePeriodName"),
-    topContestName: document.getElementById("topContestName"),
+    topProjectName: document.getElementById("topProjectName"),
     topPeriodName: document.getElementById("topPeriodName"),
     footerContext: document.getElementById("footerContext"),
 
@@ -121,6 +131,7 @@
   let lastAiImageDataUrl = "";
   let lastOcrRawText = "";
   let currentContext = null;
+  let pendingProject = null;
   let selectedPeriod = "";
   let lastPortalMeta = null;
   let portalRefreshTimer = null;
@@ -442,7 +453,7 @@
     if (!lastResult) return;
 
     const portalHeader = lastPortalMeta
-      ? `Concurso: ${lastPortalMeta.contestName || "—"}
+      ? `Projeto: ${lastPortalMeta.projectName || "—"}
 Período: ${periodLabel(lastPortalMeta.period)}
 Sala: ${lastPortalMeta.room || "—"}
 Módulo(s): ${lastPortalMeta.modules || "—"}
@@ -588,7 +599,7 @@ ${lastResult.summary}`;
   function loadStoredContext() {
     try {
       const value = JSON.parse(localStorage.getItem(CONTEXT_KEY) || "null");
-      return value && value.contestId && value.period ? value : null;
+      return value && value.projectId && ["manha", "tarde"].includes(value.period) ? value : null;
     } catch {
       return null;
     }
@@ -604,45 +615,71 @@ ${lastResult.summary}`;
     el.contextAlert.classList.toggle("hidden", !message);
   }
 
-  async function loadContests() {
-    el.contestSelect.innerHTML = '<option value="">Carregando concursos...</option>';
+  function showContextStep(step = "project") {
+    const isProject = step === "project";
+    el.projectStepPanel.classList.toggle("active", isProject);
+    el.projectStepPanel.setAttribute("aria-hidden", String(!isProject));
+    el.periodStepPanel.classList.toggle("active", !isProject);
+    el.periodStepPanel.setAttribute("aria-hidden", String(isProject));
+
+    el.projectProgress.classList.toggle("active", true);
+    el.projectProgress.classList.toggle("done", !isProject);
+    el.periodProgress.classList.toggle("active", !isProject);
+    el.periodProgress.classList.remove("done");
+    el.ocrProgress.classList.remove("active", "done");
+
+    if (isProject) {
+      el.contextModalTitle.textContent = "Escolha ou crie um projeto";
+      el.contextModalSubtitle.textContent = "Primeiro definimos o projeto. Depois você escolhe Manhã ou Tarde.";
+    } else {
+      el.contextModalTitle.textContent = "Agora escolha o período";
+      el.contextModalSubtitle.textContent = "Todo projeto possui Manhã e Tarde. Após esta escolha, a leitura OCR e o portal de salas ficam disponíveis.";
+    }
+    setContextAlert("");
+  }
+
+  async function loadProjects() {
+    el.projectSelect.innerHTML = '<option value="">Carregando projetos...</option>';
     try {
       const params = new URLSearchParams({ select: "id,name,slug,created_at", order: "name.asc" });
-      const contests = await supabaseRequest(`contests?${params.toString()}`);
+      const projects = await supabaseRequest(`fcc_projects?${params.toString()}`);
       const stored = loadStoredContext();
 
-      el.contestSelect.innerHTML = '<option value="">Selecione um concurso</option>';
-      (Array.isArray(contests) ? contests : []).forEach((contest) => {
+      el.projectSelect.innerHTML = '<option value="">Selecione um projeto</option>';
+      (Array.isArray(projects) ? projects : []).forEach((project) => {
         const option = document.createElement("option");
-        option.value = contest.id;
-        option.textContent = contest.name;
-        option.dataset.name = contest.name;
-        el.contestSelect.appendChild(option);
+        option.value = project.id;
+        option.textContent = project.name;
+        option.dataset.name = project.name;
+        el.projectSelect.appendChild(option);
       });
 
       const newOption = document.createElement("option");
       newOption.value = "__new__";
-      newOption.textContent = "+ Criar novo concurso";
-      el.contestSelect.appendChild(newOption);
+      newOption.textContent = "+ Criar novo projeto";
+      el.projectSelect.appendChild(newOption);
 
-      if (stored?.contestId && [...el.contestSelect.options].some((option) => option.value === stored.contestId)) {
-        el.contestSelect.value = stored.contestId;
+      if (stored?.projectId && [...el.projectSelect.options].some((option) => option.value === stored.projectId)) {
+        el.projectSelect.value = stored.projectId;
       }
 
-      selectedPeriod = stored?.period || "";
-      el.periodOptions.forEach((button) => button.classList.toggle("active", button.dataset.period === selectedPeriod));
+      el.newProjectWrap.classList.toggle("hidden", el.projectSelect.value !== "__new__");
       setContextAlert("");
     } catch (error) {
-      el.contestSelect.innerHTML = '<option value="">Supabase indisponível</option>';
-      setContextAlert(error instanceof Error ? error.message : "Não foi possível carregar os concursos.");
+      el.projectSelect.innerHTML = '<option value="">Supabase indisponível</option>';
+      setContextAlert(error instanceof Error ? error.message : "Não foi possível carregar os projetos.");
     }
   }
 
   function openContextModal() {
+    pendingProject = null;
+    selectedPeriod = "";
+    el.periodOptions.forEach((button) => button.classList.remove("active"));
+    showContextStep("project");
     el.contextModal.classList.add("open");
     el.contextModal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
-    loadContests();
+    loadProjects();
   }
 
   function closeContextModal() {
@@ -651,64 +688,91 @@ ${lastResult.summary}`;
     document.body.classList.remove("modal-open");
   }
 
-  async function upsertContest(name) {
+  async function upsertProject(name) {
     const cleanName = String(name || "").replace(/\s+/g, " ").trim();
-    if (cleanName.length < 2) throw new Error("Informe um nome válido para o concurso.");
+    if (cleanName.length < 2) throw new Error("Informe um nome válido para o projeto.");
     const slug = slugify(cleanName);
-    if (!slug) throw new Error("Não foi possível gerar o identificador do concurso.");
+    if (!slug) throw new Error("Não foi possível gerar o identificador do projeto.");
 
     const params = new URLSearchParams({ on_conflict: "slug" });
-    const data = await supabaseRequest(`contests?${params.toString()}`, {
+    const data = await supabaseRequest(`fcc_projects?${params.toString()}`, {
       method: "POST",
       body: { name: cleanName, slug },
       prefer: "resolution=merge-duplicates,return=representation"
     });
-    const contest = Array.isArray(data) ? data[0] : data;
-    if (!contest?.id) throw new Error("O Supabase não retornou o concurso criado.");
-    return contest;
+    const project = Array.isArray(data) ? data[0] : data;
+    if (!project?.id) throw new Error("O Supabase não retornou o projeto criado.");
+    return project;
   }
 
   function updateContextUi() {
-    const contest = currentContext?.contestName || "Selecione um concurso";
+    const project = currentContext?.projectName || "Selecione um projeto";
     const period = periodLabel(currentContext?.period);
-    el.sideContestName.textContent = contest;
+    el.sideProjectName.textContent = project;
     el.sidePeriodName.textContent = period;
-    el.topContestName.textContent = contest;
+    el.topProjectName.textContent = project;
     el.topPeriodName.textContent = period;
-    el.footerContext.textContent = currentContext ? `${contest} • ${period}` : "Selecione um concurso para começar";
+    el.footerContext.textContent = currentContext ? `${project} • ${period}` : "Selecione um projeto para começar";
     el.portalSubtitle.textContent = currentContext
-      ? `${contest} • ${period} — registros agrupados automaticamente por sala.`
-      : "Selecione um concurso e um período para visualizar as salas.";
+      ? `${project} • ${period} — registros agrupados automaticamente por sala.`
+      : "Selecione um projeto e depois Manhã ou Tarde para visualizar as salas.";
+  }
+
+  async function continueProjectSelection() {
+    setContextAlert("");
+    const selectedValue = el.projectSelect.value;
+    if (!selectedValue) {
+      setContextAlert("Escolha um projeto existente ou selecione + Criar novo projeto.");
+      return;
+    }
+
+    el.continueProject.disabled = true;
+    el.continueProject.textContent = selectedValue === "__new__" ? "Criando projeto..." : "Carregando projeto...";
+
+    try {
+      if (selectedValue === "__new__") {
+        pendingProject = await upsertProject(el.newProjectName.value);
+        await loadProjects();
+        el.projectSelect.value = pendingProject.id;
+      } else {
+        const option = el.projectSelect.selectedOptions[0];
+        pendingProject = {
+          id: selectedValue,
+          name: option?.dataset?.name || option?.textContent || "Projeto"
+        };
+      }
+
+      el.wizardProjectName.textContent = pendingProject.name;
+      selectedPeriod = "";
+      el.periodOptions.forEach((button) => button.classList.remove("active"));
+      showContextStep("period");
+    } catch (error) {
+      setContextAlert(error instanceof Error ? error.message : "Não foi possível preparar o projeto.");
+    } finally {
+      el.continueProject.disabled = false;
+      el.continueProject.textContent = "Continuar para o período →";
+    }
   }
 
   async function enterSelectedContext() {
     setContextAlert("");
-    if (!selectedPeriod) {
-      setContextAlert("Escolha o período da manhã ou da tarde.");
+    if (!pendingProject?.id) {
+      showContextStep("project");
+      setContextAlert("Escolha o projeto primeiro.");
       return;
     }
-
-    const selectedValue = el.contestSelect.value;
-    if (!selectedValue) {
-      setContextAlert("Escolha um concurso ou crie um novo.");
+    if (!selectedPeriod) {
+      setContextAlert("Escolha Manhã ou Tarde.");
       return;
     }
 
     el.enterPortal.disabled = true;
-    el.enterPortal.textContent = "Preparando portal...";
+    el.enterPortal.textContent = "Abrindo portal...";
 
     try {
-      let contest;
-      if (selectedValue === "__new__") {
-        contest = await upsertContest(el.newContestName.value);
-      } else {
-        const option = el.contestSelect.selectedOptions[0];
-        contest = { id: selectedValue, name: option?.dataset?.name || option?.textContent || "Concurso" };
-      }
-
       currentContext = {
-        contestId: contest.id,
-        contestName: contest.name,
+        projectId: pendingProject.id,
+        projectName: pendingProject.name,
         period: selectedPeriod
       };
       storeContext(currentContext);
@@ -717,20 +781,28 @@ ${lastResult.summary}`;
       setActiveView("calculator");
       await loadPortalData();
       startPortalAutoRefresh();
-      showToast(`${contest.name} • ${periodLabel(selectedPeriod)}`);
+      showToast(`${pendingProject.name} • ${periodLabel(selectedPeriod)}`);
     } catch (error) {
       setContextAlert(error instanceof Error ? error.message : "Não foi possível abrir o portal.");
     } finally {
       el.enterPortal.disabled = false;
-      el.enterPortal.textContent = "Entrar no portal →";
+      el.enterPortal.textContent = "Abrir período e entrar no portal →";
     }
   }
 
   function setupPortalContext() {
-    el.contestSelect.addEventListener("change", () => {
-      const isNew = el.contestSelect.value === "__new__";
-      el.newContestWrap.classList.toggle("hidden", !isNew);
-      if (isNew) window.setTimeout(() => el.newContestName.focus(), 80);
+    el.projectSelect.addEventListener("change", () => {
+      const isNew = el.projectSelect.value === "__new__";
+      el.newProjectWrap.classList.toggle("hidden", !isNew);
+      if (isNew) window.setTimeout(() => el.newProjectName.focus(), 80);
+    });
+
+    el.continueProject.addEventListener("click", continueProjectSelection);
+    el.backProject.addEventListener("click", () => {
+      pendingProject = null;
+      selectedPeriod = "";
+      el.periodOptions.forEach((item) => item.classList.remove("active"));
+      showContextStep("project");
     });
 
     el.periodOptions.forEach((button) => {
@@ -745,9 +817,8 @@ ${lastResult.summary}`;
     el.topContext.addEventListener("click", openContextModal);
 
     const stored = loadStoredContext();
-    if (stored) {
+    if (stored && ["manha", "tarde"].includes(stored.period)) {
       currentContext = stored;
-      selectedPeriod = stored.period;
       updateContextUi();
     } else {
       updateContextUi();
@@ -842,8 +913,8 @@ ${lastResult.summary}`;
   }
 
   async function loadPortalData() {
-    if (!currentContext?.contestId) {
-      setPortalStatus("Selecione um concurso e um período.", "error");
+    if (!currentContext?.projectId) {
+      setPortalStatus("Selecione um projeto e um período.", "error");
       return;
     }
 
@@ -851,11 +922,11 @@ ${lastResult.summary}`;
     try {
       const roomParams = new URLSearchParams({
         select: "id,room_code,created_at",
-        contest_id: `eq.${currentContext.contestId}`,
+        project_id: `eq.${currentContext.projectId}`,
         period: `eq.${currentContext.period}`,
         order: "room_code.asc"
       });
-      const rooms = await supabaseRequest(`rooms?${roomParams.toString()}`);
+      const rooms = await supabaseRequest(`fcc_rooms?${roomParams.toString()}`);
       const roomList = Array.isArray(rooms) ? rooms : [];
 
       let cards = [];
@@ -866,12 +937,12 @@ ${lastResult.summary}`;
           room_id: `in.(${roomIds})`,
           order: "start_time.asc"
         });
-        const result = await supabaseRequest(`exam_cards?${cardParams.toString()}`);
+        const result = await supabaseRequest(`fcc_exam_cards?${cardParams.toString()}`);
         cards = Array.isArray(result) ? result : [];
       }
 
       renderPortalRooms(roomList, cards);
-      setPortalStatus(`Atualizado agora • ${currentContext.contestName} • ${periodLabel(currentContext.period)}`);
+      setPortalStatus(`Atualizado agora • ${currentContext.projectName} • ${periodLabel(currentContext.period)}`);
     } catch (error) {
       setPortalStatus(error instanceof Error ? error.message : "Não foi possível carregar o portal.", "error");
     }
@@ -880,18 +951,18 @@ ${lastResult.summary}`;
   function startPortalAutoRefresh() {
     if (portalRefreshTimer) window.clearInterval(portalRefreshTimer);
     portalRefreshTimer = window.setInterval(() => {
-      if (currentContext?.contestId && document.visibilityState === "visible") loadPortalData();
+      if (currentContext?.projectId && document.visibilityState === "visible") loadPortalData();
     }, 60000);
   }
 
   async function ensureRoom(roomCode) {
     const normalized = normalizeRoomCode(roomCode);
     if (!normalized) throw new Error("Informe a sala antes de salvar.");
-    const params = new URLSearchParams({ on_conflict: "contest_id,period,room_code" });
-    const result = await supabaseRequest(`rooms?${params.toString()}`, {
+    const params = new URLSearchParams({ on_conflict: "project_id,period,room_code" });
+    const result = await supabaseRequest(`fcc_rooms?${params.toString()}`, {
       method: "POST",
       body: {
-        contest_id: currentContext.contestId,
+        project_id: currentContext.projectId,
         period: currentContext.period,
         room_code: normalized
       },
@@ -903,7 +974,7 @@ ${lastResult.summary}`;
   }
 
   async function saveExamCardToPortal({ room, modules, result, ocrText }) {
-    if (!currentContext?.contestId) throw new Error("Selecione o concurso e o período antes de salvar.");
+    if (!currentContext?.projectId) throw new Error("Selecione o projeto e o período antes de salvar.");
     const cleanRoom = normalizeRoomCode(room);
     const cleanModules = normalizeModulesText(modules);
     if (!cleanRoom) throw new Error("A sala é obrigatória.");
@@ -911,7 +982,7 @@ ${lastResult.summary}`;
 
     const roomRow = await ensureRoom(cleanRoom);
     const params = new URLSearchParams({ on_conflict: "room_id,modules,start_time" });
-    const data = await supabaseRequest(`exam_cards?${params.toString()}`, {
+    const data = await supabaseRequest(`fcc_exam_cards?${params.toString()}`, {
       method: "POST",
       body: {
         room_id: roomRow.id,
@@ -979,8 +1050,8 @@ ${lastResult.summary}`;
   }
 
   function requestPhoto() {
-    if (!currentContext?.contestId) {
-      showToast("Escolha o concurso e o período antes de fotografar.");
+    if (!currentContext?.projectId) {
+      showToast("Escolha o projeto e o período antes de fotografar.");
       openContextModal();
       return;
     }
@@ -1553,8 +1624,8 @@ ${lastResult.summary}`;
       return;
     }
 
-    if (!currentContext?.contestId) {
-      el.aiValidation.textContent = "Selecione o concurso e o período antes de salvar o cartão.";
+    if (!currentContext?.projectId) {
+      el.aiValidation.textContent = "Selecione o projeto e o período antes de salvar o cartão.";
       return;
     }
 
@@ -1578,7 +1649,7 @@ ${lastResult.summary}`;
         saved: true,
         room: saved.room,
         modules: saved.modules,
-        contestName: currentContext.contestName,
+        projectName: currentContext.projectName,
         period: currentContext.period
       };
       closeAiModal();
@@ -1590,7 +1661,7 @@ ${lastResult.summary}`;
         saved: false,
         room,
         modules,
-        contestName: currentContext.contestName,
+        projectName: currentContext.projectName,
         period: currentContext.period,
         error: error instanceof Error ? error.message : "Falha ao salvar no Supabase."
       };
@@ -1663,7 +1734,7 @@ ${lastResult.summary}`;
       el.resultPortalMeta.classList.remove("hidden");
       el.modalRoom.textContent = lastPortalMeta.room || "—";
       el.modalModules.textContent = lastPortalMeta.modules || "—";
-      el.modalPortalContext.textContent = `${lastPortalMeta.contestName || "Concurso"} • ${periodLabel(lastPortalMeta.period)}`;
+      el.modalPortalContext.textContent = `${lastPortalMeta.projectName || "Projeto"} • ${periodLabel(lastPortalMeta.period)}`;
       el.resultPortalSaved.classList.toggle("error", !lastPortalMeta.saved);
       el.resultPortalSaved.textContent = lastPortalMeta.saved
         ? "✓ Registro salvo no portal"

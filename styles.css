@@ -2794,3 +2794,334 @@ body.modal-open {
   .portal-stat strong { margin-top: 0; }
   .result-portal-grid { grid-template-columns: 1fr; }
 }
+
+/* =========================================================
+   V12 • ENTRADA SEQUENCIAL: PROJETO → PERÍODO → OCR
+   ========================================================= */
+
+.new-project-wrap {
+  display: grid;
+  gap: 7px;
+  margin-top: 3px;
+}
+
+.context-modal-card {
+  width: min(760px, 100%);
+}
+
+.context-modal-brand-copy {
+  min-width: 0;
+}
+
+/* Corrige definitivamente o avatar no modal de entrada. */
+.fcc-avatar-shell--context {
+  position: relative;
+  width: 94px;
+  height: 94px;
+  flex: 0 0 94px;
+  display: grid;
+  place-items: center;
+}
+
+.fcc-avatar--context {
+  position: absolute;
+  inset: 12px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #aa0638;
+  border: 3px solid rgba(255,255,255,.88);
+  box-shadow:
+    0 0 0 6px rgba(196,59,115,.12),
+    0 14px 32px rgba(0,0,0,.28),
+    0 0 28px rgba(196,59,115,.20);
+  animation: fccAvatarBreathe 3s ease-in-out infinite;
+}
+
+.fcc-avatar-shell--context img.fcc-avatar-img--context {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.fcc-avatar-shell--context .fcc-orbit--outer {
+  inset: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 -45px;
+  border: 1.5px dashed rgba(236,168,197,.72);
+  animation: fccOrbitClockwise 8s linear infinite;
+}
+
+.fcc-avatar-shell--context .fcc-orbit--inner {
+  inset: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-top-color: rgba(255,255,255,.88);
+  border-bottom-color: rgba(143,86,255,.76);
+  animation: fccOrbitCounter 5.4s linear infinite;
+}
+
+.context-progress {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 20px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+}
+
+.context-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255,255,255,.42);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .025em;
+  transition: color .22s ease, opacity .22s ease;
+}
+
+.context-progress-item span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: rgba(255,255,255,.55);
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.08);
+  transition: background .22s ease, color .22s ease, transform .22s ease;
+}
+
+.context-progress-item.active,
+.context-progress-item.done {
+  color: #f6d7e4;
+}
+
+.context-progress-item.active span,
+.context-progress-item.done span {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px rgba(196,59,115,.20);
+}
+
+.context-progress-item.active span {
+  transform: scale(1.06);
+}
+
+.context-progress-line {
+  height: 1px;
+  min-width: 18px;
+  background: linear-gradient(90deg, rgba(196,59,115,.32), rgba(255,255,255,.08));
+}
+
+.context-wizard {
+  position: relative;
+  overflow: hidden;
+}
+
+.context-wizard-panel {
+  display: none;
+}
+
+.context-wizard-panel.active {
+  display: block;
+  animation: contextStepIn .34s cubic-bezier(.22,1,.36,1) both;
+}
+
+.context-step--full {
+  grid-template-columns: 40px minmax(0, 1fr);
+}
+
+.context-rule-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #d7d4df;
+  font-size: .78rem;
+  line-height: 1.45;
+  border: 1px solid rgba(196,59,115,.16);
+  background: rgba(196,59,115,.065);
+}
+
+.context-rule-note > span {
+  flex: 0 0 auto;
+  color: #edafca;
+}
+
+.context-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 10px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.07);
+  transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.context-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,.08);
+  transform: translateX(-2px);
+}
+
+.selected-project-card {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(108,201,155,.18);
+  background: rgba(108,201,155,.07);
+}
+
+.selected-project-card span {
+  color: var(--muted);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.selected-project-card strong {
+  font-size: .96rem;
+  overflow-wrap: anywhere;
+}
+
+@keyframes contextStepIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 780px) {
+  .context-modal {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .context-modal-card {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    padding: 20px 16px max(18px, env(safe-area-inset-bottom));
+    border-radius: 26px 26px 18px 18px;
+  }
+
+  .context-modal-brand {
+    gap: 13px;
+    margin-bottom: 16px;
+  }
+
+  .fcc-avatar-shell--context {
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+  }
+
+  .fcc-avatar--context {
+    inset: 10px;
+    border-width: 2px;
+  }
+
+  .fcc-avatar-shell--context .fcc-orbit--outer {
+    width: 70px;
+    height: 70px;
+    margin: -35px 0 0 -35px;
+  }
+
+  .fcc-avatar-shell--context .fcc-orbit--inner {
+    width: 62px;
+    height: 62px;
+    margin: -31px 0 0 -31px;
+  }
+
+  .context-modal-brand h2 {
+    margin-top: 6px;
+    font-size: clamp(1.32rem, 6vw, 1.7rem);
+  }
+
+  .context-modal-brand p {
+    font-size: .78rem;
+    line-height: 1.42;
+  }
+
+  .context-progress {
+    gap: 5px;
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+
+  .context-progress-item {
+    gap: 4px;
+    font-size: .62rem;
+  }
+
+  .context-progress-item span {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+  }
+
+  .context-progress-line {
+    min-width: 8px;
+  }
+
+  .context-step--full {
+    grid-template-columns: 32px minmax(0, 1fr);
+    padding: 13px;
+    gap: 10px;
+  }
+
+  .period-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .period-option {
+    padding: 13px;
+  }
+
+  .context-enter-btn {
+    min-height: 54px;
+  }
+}
+
+@media (max-width: 410px) {
+  .context-progress-item strong {
+    display: none;
+  }
+
+  .context-progress {
+    grid-template-columns: auto 1fr auto 1fr auto;
+  }
+
+  .context-modal-brand-copy .ai-chip {
+    font-size: .62rem;
+  }
+}
