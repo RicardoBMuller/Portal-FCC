@@ -1,37 +1,28 @@
-# Portal FCC v13 — Diretórios de Salas
+# Portal FCC v14
 
-Versão do Portal FCC com navegação por diretórios de salas.
+Portal estático para GitHub Pages com Supabase + OCR.Space.
 
-## Fluxo
+## Nova hierarquia
 
-1. Escolher ou criar o Projeto.
-2. Selecionar Manhã ou Tarde.
-3. Usar a calculadora/OCR para ler os cartões.
-4. Os cartões validados são armazenados no Supabase.
-5. Em **Diretório de salas**, cada sala aparece como uma pasta fechada.
-6. Toque na pasta para entrar na sala; use **Voltar para salas** para retornar à raiz.
-7. Dentro da sala também é possível navegar diretamente para a sala anterior ou seguinte.
+```text
+Projeto
+└── Diretórios (período escolhido individualmente: Manhã ou Tarde)
+    ├── Calculadora / OCR
+    ├── Salas
+    │   └── Cartões e módulos
+    └── Checklist
+```
 
-## Menu principal
+Ao criar um projeto, o formulário abre com **dois diretórios iniciais** e permite adicionar outros com o botão `+ Adicionar`.
 
-O botão ☰ no topo abre o menu com:
+Cada diretório possui seu próprio período, suas próprias salas e seu próprio checklist.
 
-- **Início / Projetos** — volta para a seleção/criação do projeto e período.
-- **Calculadora** — abre cálculo manual e OCR.
-- **Diretório de salas** — abre a raiz das pastas de salas.
+## Checklist
 
-## Banco
+A estrutura inicial possui Item 1, Item 2, Item 3, Item 4 e Comentários. Os estados são persistidos no Supabase por diretório.
 
-Esta versão não altera a estrutura do banco da v12.1. Se o Supabase já está funcionando, não é necessário recriar as tabelas.
+## OCR
 
-Para uma instalação nova, execute `SUPABASE_SETUP_V13.sql` no SQL Editor do Supabase.
+A leitura busca Sala, Módulo(s), Início, Duração e Permanência mínima. O campo Término do cartão não é usado no cálculo.
 
-## Configuração
-
-Preencha `config.js` com:
-
-- `OCRSPACE_API_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
-
-Depois publique os arquivos na raiz do GitHub Pages.
+Consulte `PASSO_A_PASSO.txt` antes da publicação.
