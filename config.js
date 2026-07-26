@@ -19,10 +19,10 @@
   Projeto -> Manhã ou Tarde -> Sala -> Cartões
 */
 window.FCC_CONFIG = {
-  OCRSPACE_API_KEY: "COLE_AQUI_SUA_CHAVE_OCR_SPACE",
+  OCRSPACE_API_KEY: "K82786113188957",
   OCRSPACE_ENDPOINT: "https://api.ocr.space/parse/image",
   OCRSPACE_ENGINE: "3",
 
-  SUPABASE_URL: "COLE_AQUI_SUA_PROJECT_URL_DO_SUPABASE",
-  SUPABASE_PUBLISHABLE_KEY: "COLE_AQUI_SUA_PUBLISHABLE_KEY_DO_SUPABASE"
+  SUPABASE_URL: "https://fxkjikfurlvfftpncunp.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_tla6br_lPVuEPBgsMFEDCw_58Pp-7jA"
 };
