@@ -100,3 +100,17 @@ body.auth-pending .app-shell{visibility:hidden}
 @media(max-width:470px){
   .google-login-btn{min-width:210px;min-height:46px;padding:8px 16px}
 }
+
+/* =========================================================
+   V15.3 — CALCULADORA PÚBLICA + CICLO DE VIDA DO PROJETO
+   ========================================================= */
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:rgba(255,255,255,.42);font-size:.76rem;text-transform:uppercase;letter-spacing:.12em}.auth-divider::before,.auth-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,.10)}
+.guest-calc-btn{width:100%;min-height:50px;padding:0 18px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:14px;color:#fff;cursor:pointer;font-weight:780;background:linear-gradient(145deg,rgba(196,59,115,.16),rgba(255,255,255,.07));border:1px solid rgba(196,59,115,.30);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:.18s ease}.guest-calc-btn:hover{transform:translateY(-1px);background:linear-gradient(145deg,rgba(196,59,115,.23),rgba(255,255,255,.09));border-color:rgba(196,59,115,.48)}.guest-calc-btn span{font-size:1.15rem;color:#efb5ce}
+body.guest-mode .user-avatar-btn{display:none!important}body.guest-mode .header-frame .brand-card{padding-right:8px}.guest-only-action{display:none}.guest-mode .guest-only-action{display:inline-flex!important}
+
+.project-heading{align-items:center}.project-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}.project-status-badge,.project-card-status{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:.72rem;font-weight:850;letter-spacing:.05em;text-transform:uppercase}.project-status-badge{min-height:36px;padding:0 12px}.project-status-badge.active,.project-card-status.active{color:#bcf2d5;background:rgba(104,208,155,.10);border:1px solid rgba(104,208,155,.24)}.project-status-badge.closed,.project-card-status.closed{color:#ffd3dc;background:rgba(225,123,145,.10);border:1px solid rgba(225,123,145,.24)}.project-card-status{position:absolute;right:14px;top:14px;padding:5px 9px}.project-card.closed-project{opacity:.80}.project-card.closed-project .folder{filter:grayscale(.35)}
+.btn-danger{color:#ffe2e8;background:rgba(225,86,112,.10);border:1px solid rgba(225,86,112,.28)}.btn-danger:hover{background:rgba(225,86,112,.17);border-color:rgba(225,86,112,.44);transform:translateY(-1px)}.btn-warning{color:#fff0c7;background:rgba(232,185,106,.11);border:1px solid rgba(232,185,106,.30)}.btn-warning:hover{background:rgba(232,185,106,.18);transform:translateY(-1px)}
+button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.project-is-closed .capture-button,.project-is-closed #saveChecklistBtn{filter:saturate(.35)}
+
+@media(max-width:760px){.project-heading{align-items:stretch}.project-heading-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.project-heading-actions .project-status-badge{grid-column:1/-1;justify-self:start}.project-heading-actions #addDirectoryBtn{grid-column:1/-1}.project-heading-actions .btn{width:100%}}
+@media(max-width:470px){.project-heading-actions{grid-template-columns:1fr}.project-heading-actions .project-status-badge,.project-heading-actions #addDirectoryBtn{grid-column:auto}}

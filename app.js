@@ -24,6 +24,8 @@
     projectGrid: $("projectGrid"), projectsStatus: $("projectsStatus"), projectsEmpty: $("projectsEmpty"),
     projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
     projectParticipantsGrid: $("projectParticipantsGrid"), manageParticipantsBtn: $("manageParticipantsBtn"),
+    projectStatusBadge: $("projectStatusBadge"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
+    projectActionModal: $("projectActionModal"), projectActionChip: $("projectActionChip"), projectActionTitle: $("projectActionTitle"), projectActionText: $("projectActionText"), projectActionValidation: $("projectActionValidation"), projectActionConfirm: $("projectActionConfirm"), deleteProjectConfirmField: $("deleteProjectConfirmField"), deleteProjectConfirmInput: $("deleteProjectConfirmInput"),
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
     menuDrawer: $("menuDrawer"), menuProjectLabel: $("menuProjectLabel"), menuDirectoryLabel: $("menuDirectoryLabel"),
     menuProjectBtn: $("menuProjectBtn"), menuCalculatorBtn: $("menuCalculatorBtn"), menuRoomsBtn: $("menuRoomsBtn"), menuChecklistBtn: $("menuChecklistBtn"),
@@ -54,6 +56,7 @@
   let searchTimers = {};
   let ocrMode = "directory";
   let toastTimer = null;
+  let projectActionMode = null;
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -143,17 +146,35 @@
 
   function showLogin(errorMessage = "") {
     session = null; currentUser = null; currentProject = null; currentDirectory = null;
+    document.body.classList.remove("guest-mode");
     el.appShell.classList.add("hidden"); el.authGate.classList.remove("hidden"); document.body.classList.remove("auth-pending");
     el.authError.textContent = errorMessage;
+    const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.add("hidden");
+  }
+
+  function showPublicCalculator() {
+    currentProject = null; currentDirectory = null;
+    document.body.classList.add("guest-mode");
+    el.authGate.classList.add("hidden"); el.appShell.classList.remove("hidden"); document.body.classList.remove("auth-pending");
+    const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.remove("hidden");
+    resetQuickManual(); showView("quickCalculatorView");
+  }
+
+  function goQuickHome() {
+    if (currentUser) { showView("projectsView"); loadProjects(); }
+    else showLogin();
   }
 
   async function activateSession(nextSession) {
     session = nextSession; currentUser = nextSession?.user || null;
     if (!currentUser) return showLogin();
+    document.body.classList.remove("guest-mode");
     renderSignedUser();
     try { await syncMyProfile(); } catch (error) { console.warn("Perfil não sincronizado:", error); }
     el.authGate.classList.add("hidden"); el.appShell.classList.remove("hidden"); document.body.classList.remove("auth-pending");
+    const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.add("hidden");
     updateMenuContext();
+    showView("projectsView");
     await loadProjects();
   }
 
@@ -190,7 +211,7 @@
     if (!currentUser) return;
     el.projectsStatus.innerHTML = "<span></span> Sincronizando com o Supabase...";
     try {
-      const params = new URLSearchParams({ select: "id,name,slug,created_by,created_at", order: "created_at.desc" });
+      const params = new URLSearchParams({ select: "id,name,slug,created_by,status,closed_at,closed_by,created_at", order: "created_at.desc" });
       const projects = await supabaseRequest(`fcc_projects?${params}`);
       renderProjects(Array.isArray(projects) ? projects : []);
       el.projectsStatus.innerHTML = "<span></span> Projetos disponíveis para sua conta";
@@ -203,8 +224,9 @@
     el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.toggle("hidden", projects.length > 0);
     projects.forEach(project => {
       const btn = document.createElement("button"); btn.className = "project-card"; btn.type = "button";
-      const legacy = !project.created_by;
-      btn.innerHTML = `<span class="folder">▰</span><h3>${escapeHtml(project.name)}</h3><p>${legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>`;
+      const legacy = !project.created_by; const closed = project.status === "encerrado";
+      btn.classList.toggle("closed-project", closed);
+      btn.innerHTML = `<span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Encerrado" : "Ativo"}</span><span class="folder">▰</span><h3>${escapeHtml(project.name)}</h3><p>${closed ? "Projeto encerrado • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>`;
       btn.addEventListener("click", () => openProject(project)); el.projectGrid.appendChild(btn);
     });
   }
@@ -247,6 +269,7 @@
       });
       const project = Array.isArray(created) ? created[0] : created;
       if (!project?.id) throw new Error("O Supabase não retornou o projeto criado.");
+      project.status = project.status || "ativo";
       closeModal(el.projectModal); showToast("Projeto criado."); await loadProjects(); await openProject(project);
       await openParticipantsModal(true);
     } catch (error) { el.projectModalValidation.textContent = `Erro: ${error.message}`; }
@@ -256,14 +279,15 @@
     if (project.created_by) return project;
     const result = await supabaseRequest("rpc/fcc_claim_project", { method: "POST", body: { p_project_id: project.id } });
     if (result === false) throw new Error("Este projeto legado já foi vinculado a outra conta.");
-    return { ...project, created_by: currentUser.id };
+    return { ...project, created_by: currentUser.id, status: project.status || "ativo" };
   }
 
   async function openProject(project) {
     try { project = await claimLegacyProject(project); }
     catch (error) { showToast(error.message); await loadProjects(); return; }
-    currentProject = project; currentDirectory = null; updateMenuContext();
-    el.projectTitle.textContent = project.name; el.projectCrumb.textContent = project.name; showView("projectView");
+    currentProject = { ...project, status: project.status || "ativo" }; currentDirectory = null; projectMembersCache = []; updateMenuContext();
+    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; showView("projectView");
+    renderProjectState();
     await Promise.all([loadDirectories(), loadProjectMembers()]);
   }
 
@@ -286,7 +310,9 @@
 
   async function createSingleDirectory() {
     const name = el.singleDirectoryName.value.trim(); const period = el.singleDirectoryPeriod.value;
-    if (!currentProject) return; if (!name) return void (el.directoryModalValidation.textContent = "Informe o nome do diretório.");
+    if (!currentProject) return;
+    if (isCurrentProjectClosed()) return void (el.directoryModalValidation.textContent = "Este projeto está encerrado e não aceita novos diretórios.");
+    if (!name) return void (el.directoryModalValidation.textContent = "Informe o nome do diretório.");
     try {
       await supabaseRequest("fcc_directories", { method: "POST", body: { project_id: currentProject.id, name, period, sort_order: 999 }, prefer: "return=representation" });
       closeModal(el.directoryModal); showToast("Diretório criado."); await loadDirectories();
@@ -318,15 +344,71 @@
     return Boolean(currentProject && currentUser && (currentProject.created_by === currentUser.id || projectMembersCache.some(m => m.user_id === currentUser.id && m.role === "po")));
   }
 
+  function isProjectOwner() { return Boolean(currentProject && currentUser && currentProject.created_by === currentUser.id); }
+  function isCurrentProjectClosed() { return currentProject?.status === "encerrado"; }
+  function renderProjectState() {
+    if (!currentProject) return;
+    const closed = isCurrentProjectClosed(); const canManage = canManageParticipants(); const owner = isProjectOwner();
+    el.projectStatusBadge.textContent = closed ? "Encerrado" : "Ativo";
+    el.projectStatusBadge.className = `project-status-badge ${closed ? "closed" : "active"}`;
+    el.addDirectoryBtn.disabled = closed;
+    el.addDirectoryBtn.classList.toggle("hidden", closed);
+    el.closeProjectBtn.classList.toggle("hidden", closed || !canManage);
+    el.deleteProjectBtn.classList.toggle("hidden", !owner);
+    el.manageParticipantsBtn.classList.toggle("hidden", closed || !canManage);
+    [$("takePhotoBtn"), $("roomsCaptureBtn"), $("saveChecklistBtn")].forEach(btn => { if (btn) btn.disabled = closed; });
+    [el.check1, el.check2, el.check3, el.check4, el.checkComments].forEach(field => { if (field) field.disabled = closed; });
+    el.projectView.classList.toggle("project-is-closed", closed);
+    el.directoryView.classList.toggle("project-is-closed", closed);
+  }
+
+  function openProjectAction(mode) {
+    if (!currentProject) return;
+    projectActionMode = mode; el.projectActionValidation.textContent = ""; el.deleteProjectConfirmInput.value = "";
+    const deleting = mode === "delete";
+    el.projectActionChip.textContent = deleting ? "EXCLUIR PROJETO" : "ENCERRAR PROJETO";
+    el.projectActionTitle.textContent = deleting ? `Excluir ${currentProject.name}?` : `Encerrar ${currentProject.name}?`;
+    el.projectActionText.textContent = deleting
+      ? "Esta ação exclui definitivamente o projeto, diretórios, salas, cartões, checklist e participantes. Não poderá ser desfeita."
+      : "O projeto ficará disponível para consulta, mas novos diretórios, cartões, alterações de equipe e checklist ficarão bloqueados.";
+    el.deleteProjectConfirmField.classList.toggle("hidden", !deleting);
+    el.projectActionConfirm.textContent = deleting ? "⌫ Excluir definitivamente" : "⏹ Encerrar projeto";
+    el.projectActionConfirm.classList.toggle("btn-danger", deleting);
+    el.projectActionConfirm.classList.toggle("btn-warning", !deleting);
+    openModal(el.projectActionModal);
+  }
+
+  async function confirmProjectAction() {
+    if (!currentProject || !projectActionMode) return;
+    el.projectActionValidation.textContent = "";
+    try {
+      if (projectActionMode === "delete") {
+        if (!isProjectOwner()) throw new Error("Somente o criador pode excluir definitivamente o projeto.");
+        if (el.deleteProjectConfirmInput.value.trim() !== currentProject.name) {
+          el.projectActionValidation.textContent = "Digite exatamente o nome do projeto para confirmar a exclusão."; return;
+        }
+        el.projectActionValidation.textContent = "Excluindo projeto...";
+        await supabaseRequest("rpc/fcc_delete_project", { method: "POST", body: { p_project_id: currentProject.id } });
+        closeModal(el.projectActionModal); showToast("Projeto excluído."); currentProject = null; currentDirectory = null; projectMembersCache = []; updateMenuContext(); showView("projectsView"); await loadProjects();
+      } else {
+        if (!canManageParticipants()) throw new Error("Somente o criador ou o PO pode encerrar o projeto.");
+        el.projectActionValidation.textContent = "Encerrando projeto...";
+        const data = await supabaseRequest("rpc/fcc_close_project", { method: "POST", body: { p_project_id: currentProject.id } });
+        const updated = Array.isArray(data) ? data[0] : data; currentProject = { ...currentProject, ...(updated || {}), status: "encerrado" };
+        closeModal(el.projectActionModal); showToast("Projeto encerrado."); renderProjectState(); await loadProjects();
+      }
+    } catch (error) { el.projectActionValidation.textContent = `Erro: ${error.message}`; }
+  }
+
   async function loadProjectMembers() {
     if (!currentProject) return;
     try {
       const data = await supabaseRequest("rpc/fcc_get_project_members", { method: "POST", body: { p_project_id: currentProject.id } });
       projectMembersCache = Array.isArray(data) ? data : [];
       el.projectParticipantsGrid.innerHTML = ROLE_ORDER.map(role => roleCardHtml(role, projectMembersCache.find(m => m.role === role))).join("");
-      el.manageParticipantsBtn.classList.toggle("hidden", !canManageParticipants());
+      renderProjectState();
     } catch (error) {
-      projectMembersCache = []; el.projectParticipantsGrid.innerHTML = `<div class="status-line">Não foi possível carregar participantes: ${escapeHtml(error.message)}</div>`; el.manageParticipantsBtn.classList.add("hidden");
+      projectMembersCache = []; el.projectParticipantsGrid.innerHTML = `<div class="status-line">Não foi possível carregar participantes: ${escapeHtml(error.message)}</div>`; renderProjectState();
     }
   }
 
@@ -356,6 +438,7 @@
 
   async function openParticipantsModal(prefillCreator = false) {
     if (!currentProject) return;
+    if (isCurrentProjectClosed()) return showToast("Projeto encerrado: participantes disponíveis somente para consulta.");
     resetParticipantPicker();
     if (!prefillCreator && !projectMembersCache.length) await loadProjectMembers();
     projectMembersCache.forEach(member => { originalRoleUsers[member.role] = member.user_id; renderSelectedPerson(member.role, member); });
@@ -394,6 +477,7 @@
 
   async function saveParticipants() {
     if (!currentProject) return;
+    if (isCurrentProjectClosed()) return void (el.participantsValidation.textContent = "Projeto encerrado: não é possível alterar participantes.");
     const chosen = ROLE_ORDER.filter(role => selectedParticipants[role]?.user_id || selectedParticipants[role]?.id);
     if (!chosen.length) return void (el.participantsValidation.textContent = "Selecione pelo menos um participante ou use ‘Agora não’." );
     el.participantsValidation.textContent = "Salvando participantes...";
@@ -494,6 +578,7 @@
     } catch (error) { el.checklistStatus.textContent = `Erro: ${error.message}`; }
   }
   async function saveChecklist() {
+    if (isCurrentProjectClosed()) return void (el.checklistStatus.textContent = "Projeto encerrado • checklist somente para consulta");
     if (!currentDirectory) return; el.checklistStatus.textContent = "Salvando...";
     try {
       const params = new URLSearchParams({ on_conflict: "directory_id" });
@@ -510,6 +595,7 @@
   function requestPhoto(mode = "directory") {
     ocrMode = mode;
     if (mode === "directory" && !currentDirectory) return showToast("Abra um diretório primeiro.");
+    if (mode === "directory" && isCurrentProjectClosed()) return showToast("Projeto encerrado: novos cartões estão bloqueados.");
     const input = mode === "quick" ? el.quickPhotoInput : el.photoInput; input.value = ""; input.click();
   }
   function setOcrState(state) { el.ocrLoading.classList.toggle("hidden", state !== "loading"); el.ocrConfirm.classList.toggle("hidden", state !== "confirm"); el.ocrError.classList.toggle("hidden", state !== "error"); }
@@ -547,24 +633,25 @@
   function findTextAfterLabel(lines,label,kind){for(let i=0;i<lines.length;i++){if(!label.test(stripDiacritics(lines[i]).toLowerCase()))continue;for(let o=0;o<=1&&i+o<lines.length;o++){let c=cleanOcrLine(lines[i+o]);if(o===0){const pos=c.indexOf(":");c=pos>=0?c.slice(pos+1).trim():c.replace(/m[oó]dulo(?:\(s\))?s?/i,"").replace(/sala/i,"").replace(/^\s*[-–—:]\s*/,"").trim()}if(!c)continue;if(kind==="room"){c=c.replace(/\b(?:m[oó]dulo|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const m=c.match(/\b([A-Za-z0-9][A-Za-z0-9._-]{0,19})\b/);if(m)return{value:normalizeRoomCode(m[1]),anchored:true}}else{c=c.replace(/\b(?:sala|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const nums=c.match(/\b\d{3,}\b/g);if(nums?.length)return{value:normalizeModulesText([...new Set(nums)].join(", ")),anchored:true}}}}return{value:"",anchored:false}}
   function parseOcr(raw){const lines=String(raw||"").split(/\r?\n/).map(cleanOcrLine).filter(Boolean);const dur=findValueNearLabel(lines,/duracao(?:\s+da)?\s+prova|duracao/,{duration:true,lookAhead:1});const start=findValueNearLabel(lines,/\binicio\b/,{duration:false,lookAhead:1});const min=findValueNearLabel(lines,/permanencia(?:\s+minima)?|minima/,{duration:true,lookAhead:1});const room=findTextAfterLabel(lines,/\bsala\b/,"room");const modules=findTextAfterLabel(lines,/modulo(?:\(s\))?s?/,"modules");let inicio=normalizeAiClock(start.value),duration=durationStringToMinutes(dur.value),minimum=durationStringToMinutes(min.value);const requiredFound=[inicio,duration!==null].filter(Boolean).length;const projectFound=[room.value,modules.value].filter(Boolean).length;return{room:normalizeRoomCode(room.value),modules:normalizeModulesText(modules.value),start:inicio,duration:duration===null?"":formatDurationClock(duration),minimum:minimum===null?"":formatDurationClock(minimum),quality:requiredFound===2&&start.anchored&&dur.anchored&&(ocrMode==="quick"||projectFound===2)?"Alta":requiredFound===2?"Média":"Baixa",raw};}
   async function analyzePhoto(file, mode){ocrMode=mode; el.ocrModal.classList.toggle("quick-mode",mode==="quick"); $("ocrConfirmBtn").textContent=mode==="quick"?"✓ Calcular":"✓ Calcular e salvar"; openModal(el.ocrModal);setOcrState("loading");try{const img=await prepareImage(file);el.ocrPreview.src=img.preview;const raw=await callOcr(img.blob);const data=parseOcr(raw);el.ocrRoom.value=data.room;el.ocrModules.value=data.modules;el.ocrStart.value=data.start;el.ocrDuration.value=data.duration;el.ocrMinimum.value=data.minimum;el.ocrQuality.textContent=data.quality;el.ocrRawText.textContent=raw;el.ocrValidation.textContent="";setOcrState("confirm")}catch(error){el.ocrErrorText.textContent=error.message;setOcrState("error")}}
-  async function confirmOcr(){const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value);if(ocrMode==="directory"&&!room)return void(el.ocrValidation.textContent="Informe a sala.");if(ocrMode==="directory"&&!modules)return void(el.ocrValidation.textContent="Informe o(s) módulo(s).");if(!start)return void(el.ocrValidation.textContent="Informe um horário de início válido.");if(duration===null||duration<1)return void(el.ocrValidation.textContent="Informe uma duração válida maior que 00:00.");if(minimum===null)return void(el.ocrValidation.textContent="Informe uma permanência mínima válida.");const result=calculateResult(start,duration,minimum);if(ocrMode==="quick"){closeModal(el.ocrModal);showResult(result,null);return}el.ocrValidation.textContent="Salvando no Supabase...";try{const roomRow=await ensureRoom(room);await saveExamCard(roomRow,{room,modules,start,duration,minimum},result);closeModal(el.ocrModal);showResult(result,{room,modules});await loadRooms();}catch(error){el.ocrValidation.textContent=`Erro ao salvar: ${error.message}`}}
+  async function confirmOcr(){if(ocrMode==="directory"&&isCurrentProjectClosed())return void(el.ocrValidation.textContent="Projeto encerrado: novos cartões estão bloqueados.");const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value);if(ocrMode==="directory"&&!room)return void(el.ocrValidation.textContent="Informe a sala.");if(ocrMode==="directory"&&!modules)return void(el.ocrValidation.textContent="Informe o(s) módulo(s).");if(!start)return void(el.ocrValidation.textContent="Informe um horário de início válido.");if(duration===null||duration<1)return void(el.ocrValidation.textContent="Informe uma duração válida maior que 00:00.");if(minimum===null)return void(el.ocrValidation.textContent="Informe uma permanência mínima válida.");const result=calculateResult(start,duration,minimum);if(ocrMode==="quick"){closeModal(el.ocrModal);showResult(result,null);return}el.ocrValidation.textContent="Salvando no Supabase...";try{const roomRow=await ensureRoom(room);await saveExamCard(roomRow,{room,modules,start,duration,minimum},result);closeModal(el.ocrModal);showResult(result,{room,modules});await loadRooms();}catch(error){el.ocrValidation.textContent=`Erro ao salvar: ${error.message}`}}
 
   // -------------------- EVENTOS --------------------
   function bindEvents() {
-    $("googleLoginBtn").addEventListener("click", signInWithGoogle); $("signOutBtn").addEventListener("click", signOut);
+    $("googleLoginBtn").addEventListener("click", signInWithGoogle); $("guestCalculatorBtn").addEventListener("click", showPublicCalculator); $("guestLoginReturnBtn").addEventListener("click", showLogin); $("signOutBtn").addEventListener("click", signOut);
     $("menuOpenBtn").addEventListener("click", openMenu); $("menuCloseBtn").addEventListener("click", closeMenu); $("menuBackdrop").addEventListener("click", closeMenu);
     $("menuHomeBtn").addEventListener("click",()=>{closeMenu();showView("projectsView");loadProjects()}); $("menuQuickCalcBtn").addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
     el.menuProjectBtn.addEventListener("click",()=>{if(!currentProject)return;closeMenu();showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])});
     el.menuCalculatorBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"calculator")}); el.menuRoomsBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"rooms")}); el.menuChecklistBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"checklist")});
 
-    $("quickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",()=>{showView("projectsView");loadProjects()});
+    $("quickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome);
 
     $("newProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("emptyNewProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("projectModalClose").addEventListener("click",()=>closeModal(el.projectModal)); $("addDirectoryRowBtn").addEventListener("click",()=>addDirectoryRow()); $("createProjectConfirmBtn").addEventListener("click",createProjectWithDirectories);
     $("backProjectsBtn").addEventListener("click",()=>{showView("projectsView");loadProjects()});
+    el.closeProjectBtn.addEventListener("click",()=>openProjectAction("close")); el.deleteProjectBtn.addEventListener("click",()=>openProjectAction("delete")); $("projectActionClose").addEventListener("click",()=>closeModal(el.projectActionModal)); $("projectActionCancel").addEventListener("click",()=>closeModal(el.projectActionModal)); el.projectActionConfirm.addEventListener("click",confirmProjectAction);
     $("manageParticipantsBtn").addEventListener("click",()=>openParticipantsModal(false)); $("participantsModalClose").addEventListener("click",()=>closeModal(el.participantsModal)); $("participantsLaterBtn").addEventListener("click",()=>closeModal(el.participantsModal)); $("saveParticipantsBtn").addEventListener("click",saveParticipants);
     el.participantInputs.forEach(input=>input.addEventListener("input",()=>handleParticipantSearch(input)));
 
-    $("addDirectoryBtn").addEventListener("click",()=>{el.singleDirectoryName.value="";el.singleDirectoryPeriod.value="manha";el.directoryModalValidation.textContent="";openModal(el.directoryModal)}); $("directoryModalClose").addEventListener("click",()=>closeModal(el.directoryModal)); $("createDirectoryConfirmBtn").addEventListener("click",createSingleDirectory);
+    el.addDirectoryBtn.addEventListener("click",()=>{if(isCurrentProjectClosed())return showToast("Projeto encerrado.");el.singleDirectoryName.value="";el.singleDirectoryPeriod.value="manha";el.directoryModalValidation.textContent="";openModal(el.directoryModal)}); $("directoryModalClose").addEventListener("click",()=>closeModal(el.directoryModal)); $("createDirectoryConfirmBtn").addEventListener("click",createSingleDirectory);
     $("dirHomeBtn").addEventListener("click",()=>{showView("projectsView");loadProjects()}); $("dirProjectBtn").addEventListener("click",()=>{showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])}); el.sectionTabs.forEach(tab=>tab.addEventListener("click",()=>switchSection(tab.dataset.section)));
 
     $("takePhotoBtn").addEventListener("click",()=>requestPhoto("directory")); $("roomsCaptureBtn").addEventListener("click",()=>requestPhoto("directory")); el.photoInput.addEventListener("change",()=>{const file=el.photoInput.files?.[0];if(file)analyzePhoto(file,"directory")});

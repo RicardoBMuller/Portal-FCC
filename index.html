@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15.2">
+  <link rel="stylesheet" href="styles.css?v=15.3">
 </head>
 <body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -29,7 +29,7 @@
   <div class="ambient ambient-two" aria-hidden="true"></div>
   <div class="grid-noise" aria-hidden="true"></div>
 
-  <!-- Login obrigatório. Depois do login a calculadora rápida fica disponível mesmo sem projeto. -->
+  <!-- Login para projetos. A calculadora de tempo permanece disponível sem autenticação. -->
   <section class="auth-gate hidden" id="authGate" aria-labelledby="authTitle">
     <div class="auth-card">
       <div class="avatar-rings avatar-rings--login">
@@ -43,7 +43,10 @@
         <span class="google-icon-wrap" aria-hidden="true"><img src="google-g.svg" width="22" height="22" alt=""></span>
         <strong>Entrar com Google</strong>
       </button>
-      <div class="auth-note">Mesmo sem participar de um projeto, você poderá usar a <b>Calculadora rápida</b>.</div>
+      <div class="auth-divider"><span>ou</span></div>
+      <button class="guest-calc-btn" id="guestCalculatorBtn" type="button">
+        <span aria-hidden="true">⌁</span><strong>Calcular tempo de prova</strong>
+      </button>
       <p class="auth-error" id="authError" role="alert"></p>
     </div>
   </section>
@@ -117,7 +120,8 @@
       <section class="view" id="quickCalculatorView">
         <div class="breadcrumbs"><button id="quickHomeBtn" type="button">Início</button><span>›</span><strong>Calculadora rápida</strong></div>
         <div class="page-heading framed-heading compact-heading">
-          <div><span class="eyebrow">USO LIVRE</span><h2>Calculadora rápida</h2><p>Faça o cálculo do cartão sem vincular ou salvar em nenhum projeto.</p></div>
+          <div><span class="eyebrow">USO LIVRE</span><h2>Calculadora do tempo de prova</h2><p>Faça o cálculo do cartão sem vincular ou salvar em nenhum projeto.</p></div>
+          <div class="heading-actions"><button class="btn btn-soft guest-only-action hidden" id="guestLoginReturnBtn" type="button">Entrar no portal</button></div>
         </div>
         <article class="camera-card">
           <input id="quickPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
@@ -140,9 +144,14 @@
       <!-- PROJETO -->
       <section class="view" id="projectView">
         <div class="breadcrumbs"><button id="backProjectsBtn" type="button">Início</button><span>›</span><strong id="projectCrumb">Projeto</strong></div>
-        <div class="page-heading framed-heading">
+        <div class="page-heading framed-heading project-heading">
           <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p>Abra um diretório para acessar OCR, salas e checklist.</p></div>
-          <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
+          <div class="project-heading-actions">
+            <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
+            <button class="btn btn-soft project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
+            <button class="btn btn-danger" id="deleteProjectBtn" type="button">⌫ Excluir projeto</button>
+            <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
+          </div>
         </div>
 
         <section class="participants-panel">
@@ -246,6 +255,20 @@
     </section>
   </div>
 
+  <!-- ENCERRAR / EXCLUIR PROJETO -->
+  <div class="modal" id="projectActionModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="projectActionModal"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="projectActionTitle">
+      <button class="modal-close" id="projectActionClose" type="button">×</button>
+      <span class="modal-chip" id="projectActionChip">PROJETO</span>
+      <h2 id="projectActionTitle">Confirmar ação</h2>
+      <p class="modal-intro" id="projectActionText"></p>
+      <label class="modal-field hidden" id="deleteProjectConfirmField"><span>Digite o nome do projeto para confirmar</span><input id="deleteProjectConfirmInput" type="text" autocomplete="off"></label>
+      <p class="validation" id="projectActionValidation"></p>
+      <div class="modal-actions"><button class="btn btn-soft" id="projectActionCancel" type="button">Cancelar</button><button class="btn btn-danger" id="projectActionConfirm" type="button">Confirmar</button></div>
+    </section>
+  </div>
+
   <!-- NOVO DIRETÓRIO -->
   <div class="modal" id="directoryModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="directoryModal"></div>
@@ -301,7 +324,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15.2"></script>
-  <script src="app.js?v=15.2"></script>
+  <script src="config.js?v=15.3"></script>
+  <script src="app.js?v=15.3"></script>
 </body>
 </html>
