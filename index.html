@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=15.1">
 </head>
 <body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -40,8 +40,8 @@
       <h1 id="authTitle">Entre com sua conta Google</h1>
       <p>O login identifica os profissionais e libera projetos conforme a participação cadastrada.</p>
       <button class="google-login-btn" id="googleLoginBtn" type="button">
-        <span class="google-mark" aria-hidden="true">G</span>
-        <strong>Continuar com Google</strong>
+        <span class="google-icon-wrap" aria-hidden="true"><img src="google-g.svg" width="22" height="22" alt=""></span>
+        <strong>Entrar com Google</strong>
       </button>
       <div class="auth-note">Mesmo sem participar de um projeto, você poderá usar a <b>Calculadora rápida</b>.</div>
       <p class="auth-error" id="authError" role="alert"></p>
@@ -301,7 +301,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="config.js?v=15.1"></script>
+  <script src="app.js?v=15.1"></script>
 </body>
 </html>

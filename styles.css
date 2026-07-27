@@ -55,3 +55,48 @@ body.auth-pending .app-shell{visibility:hidden}
   .app-header{padding:10px 12px}.header-frame{padding:8px 10px;border-radius:21px}.header-frame .brand-card{gap:11px}.avatar-rings--site{width:48px;height:48px}.avatar-rings--site img{width:48px;height:48px}.user-avatar-btn{width:48px;height:48px;flex-basis:48px}.user-avatar-btn img{width:40px;height:40px}.framed-heading{padding:17px 16px}.heading-actions{display:grid;width:100%;grid-template-columns:1fr}.heading-actions .btn{width:100%}.participants-head{align-items:flex-start;display:grid}.participants-head .btn{width:100%}.participant-role-grid{grid-template-columns:1fr 1fr}.role-assignment{grid-template-columns:1fr;gap:9px}.person-results{position:static;margin-top:7px}.menu-panel{width:92vw}.auth-card{padding:28px 20px}.brand-copy h1{font-size:.98rem}.brand-copy p{font-size:.68rem}
 }
 @media(max-width:470px){.participant-role-grid{grid-template-columns:1fr}.header-frame .brand-card{padding:0}.header-frame{gap:8px}.brand-copy h1{font-size:.92rem}.brand-copy p{font-size:.64rem}.avatar-rings--site{width:44px;height:44px}.avatar-rings--site img{width:44px;height:44px}.user-avatar-btn{width:44px;height:44px;flex-basis:44px}.user-avatar-btn img{width:36px;height:36px}#ocrModal.quick-mode .ocr-grid{grid-template-columns:1fr}}
+
+/* =========================================================
+   V15.1 — BOTÃO GOOGLE PADRONIZADO COM O KANBAN
+   ========================================================= */
+.google-login-btn{
+  width:auto;
+  min-width:220px;
+  min-height:48px;
+  margin:0 auto;
+  padding:8px 18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.18);
+  color:#f7f4f7;
+  background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.065));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 24px rgba(0,0,0,.16);
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.google-login-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,255,255,.27);
+  background:linear-gradient(145deg,rgba(255,255,255,.135),rgba(196,59,115,.105));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 13px 28px rgba(0,0,0,.21);
+}
+.google-login-btn:active{transform:translateY(0) scale(.99)}
+.google-login-btn:focus-visible{outline:3px solid rgba(196,59,115,.28);outline-offset:3px}
+.google-login-btn strong{font-size:.96rem;font-weight:760;letter-spacing:-.015em}
+.google-icon-wrap{
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(255,255,255,.075);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.google-icon-wrap img{display:block;width:21px;height:21px}
+@media(max-width:470px){
+  .google-login-btn{min-width:210px;min-height:46px;padding:8px 16px}
+}
