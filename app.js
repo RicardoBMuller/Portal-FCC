@@ -230,11 +230,23 @@
     if (new Set(normalizedNames).size !== normalizedNames.length) return void (el.projectModalValidation.textContent = "Use nomes diferentes nos diretórios.");
     el.projectModalValidation.textContent = "Criando projeto...";
     try {
-      const created = await supabaseRequest("fcc_projects", { method: "POST", body: { name, slug: slugify(name), created_by: currentUser.id }, prefer: "return=representation" });
+      // A criação é feita por uma RPC autenticada no Supabase. Além de evitar
+      // o problema de INSERT/RETURNING com RLS, projeto + diretórios são criados
+      // na mesma transação e o proprietário é sempre auth.uid() no servidor.
+      const created = await supabaseRequest("rpc/fcc_create_project_with_directories", {
+        method: "POST",
+        body: {
+          p_name: name,
+          p_slug: slugify(name),
+          p_directories: rows.map((row, index) => ({
+            name: row.name,
+            period: row.period,
+            sort_order: index + 1
+          }))
+        }
+      });
       const project = Array.isArray(created) ? created[0] : created;
       if (!project?.id) throw new Error("O Supabase não retornou o projeto criado.");
-      const payload = rows.map((row, index) => ({ project_id: project.id, name: row.name, period: row.period, sort_order: index + 1 }));
-      await supabaseRequest("fcc_directories", { method: "POST", body: payload, prefer: "return=representation" });
       closeModal(el.projectModal); showToast("Projeto criado."); await loadProjects(); await openProject(project);
       await openParticipantsModal(true);
     } catch (error) { el.projectModalValidation.textContent = `Erro: ${error.message}`; }
