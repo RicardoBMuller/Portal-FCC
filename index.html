@@ -4,29 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
-  <meta name="description" content="Portal FCC para organização de projetos, diretórios, salas e horários de prova.">
+  <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <style>
-    .fcc-avatar-img{display:block;object-fit:cover;border-radius:50%}
-    .fcc-avatar-img--intro{width:108px;height:108px;max-width:108px;max-height:108px}
-    .fcc-avatar-img--site{width:58px;height:58px;max-width:58px;max-height:58px}
-    @media(max-width:760px){.fcc-avatar-img--intro{width:92px;height:92px;max-width:92px;max-height:92px}.fcc-avatar-img--site{width:50px;height:50px;max-width:50px;max-height:50px}}
-  </style>
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
-<body class="intro-playing">
+<body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
     <div class="intro-glow intro-glow-one"></div>
     <div class="intro-glow intro-glow-two"></div>
     <div class="intro-content">
       <div class="avatar-rings avatar-rings--intro">
         <span></span><span></span>
-        <img class="fcc-avatar-img fcc-avatar-img--intro" src="logo-fcc-avatar.png" width="108" height="108" alt="Fundação Carlos Chagas">
+        <img class="fcc-avatar-img" src="logo-fcc-avatar.png" width="108" height="108" alt="Fundação Carlos Chagas">
       </div>
       <span class="intro-kicker">FUNDAÇÃO CARLOS CHAGAS</span>
       <h1>Portal de Provas</h1>
-      <p>Organizando o ambiente...</p>
+      <p>Preparando seu ambiente...</p>
       <div class="intro-dots"><i></i><i></i><i></i></div>
     </div>
   </div>
@@ -35,16 +29,36 @@
   <div class="ambient ambient-two" aria-hidden="true"></div>
   <div class="grid-noise" aria-hidden="true"></div>
 
+  <!-- Login obrigatório. Depois do login a calculadora rápida fica disponível mesmo sem projeto. -->
+  <section class="auth-gate hidden" id="authGate" aria-labelledby="authTitle">
+    <div class="auth-card">
+      <div class="avatar-rings avatar-rings--login">
+        <span></span><span></span>
+        <img src="logo-fcc-avatar.png" width="86" height="86" alt="Fundação Carlos Chagas">
+      </div>
+      <span class="modal-chip">ACESSO AO PORTAL</span>
+      <h1 id="authTitle">Entre com sua conta Google</h1>
+      <p>O login identifica os profissionais e libera projetos conforme a participação cadastrada.</p>
+      <button class="google-login-btn" id="googleLoginBtn" type="button">
+        <span class="google-mark" aria-hidden="true">G</span>
+        <strong>Continuar com Google</strong>
+      </button>
+      <div class="auth-note">Mesmo sem participar de um projeto, você poderá usar a <b>Calculadora rápida</b>.</div>
+      <p class="auth-error" id="authError" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- Menu do usuário: aberto ao tocar no avatar Google -->
   <div class="menu-drawer" id="menuDrawer" aria-hidden="true">
     <div class="menu-backdrop" id="menuBackdrop"></div>
-    <aside class="menu-panel" role="dialog" aria-modal="true" aria-label="Menu principal">
-      <div class="menu-head">
-        <div class="menu-brand">
-          <div class="avatar-rings avatar-rings--menu">
-            <span></span><span></span>
-            <img src="logo-fcc-avatar.png" width="48" height="48" alt="">
+    <aside class="menu-panel" role="dialog" aria-modal="true" aria-label="Menu do usuário">
+      <div class="user-drawer-head">
+        <div class="user-drawer-profile">
+          <div class="profile-avatar small">
+            <img id="drawerAvatarImg" alt="Foto de perfil" class="hidden">
+            <span id="drawerAvatarFallback">U</span>
           </div>
-          <div><strong>Portal FCC</strong><small>Navegação</small></div>
+          <div><strong id="drawerUserName">Usuário</strong><small id="drawerUserEmail">—</small></div>
         </div>
         <button class="icon-btn" id="menuCloseBtn" type="button" aria-label="Fechar menu">×</button>
       </div>
@@ -53,51 +67,94 @@
         <span>Diretório</span><strong id="menuDirectoryLabel">Nenhum selecionado</strong>
       </div>
       <nav class="menu-nav">
-        <button class="menu-item" id="menuHomeBtn" type="button"><b>⌂</b><span><strong>Início / Projetos</strong><small>Escolher ou criar projeto</small></span><i>›</i></button>
-        <button class="menu-item" id="menuProjectBtn" type="button"><b>▰</b><span><strong>Projeto atual</strong><small>Ver os diretórios do projeto</small></span><i>›</i></button>
-        <button class="menu-item" id="menuCalculatorBtn" type="button"><b>✦</b><span><strong>Calculadora / OCR</strong><small>Capturar novo cartão</small></span><i>›</i></button>
+        <button class="menu-item" id="menuHomeBtn" type="button"><b>⌂</b><span><strong>Início / Projetos</strong><small>Projetos aos quais você tem acesso</small></span><i>›</i></button>
+        <button class="menu-item" id="menuQuickCalcBtn" type="button"><b>⌁</b><span><strong>Calculadora rápida</strong><small>Calcular sem entrar em projeto</small></span><i>›</i></button>
+        <button class="menu-item" id="menuProjectBtn" type="button"><b>▰</b><span><strong>Projeto atual</strong><small>Diretórios e participantes</small></span><i>›</i></button>
+        <button class="menu-item" id="menuCalculatorBtn" type="button"><b>✦</b><span><strong>OCR do diretório</strong><small>Capturar novo cartão</small></span><i>›</i></button>
         <button class="menu-item" id="menuRoomsBtn" type="button"><b>📁</b><span><strong>Salas</strong><small>Navegar pelas salas</small></span><i>›</i></button>
         <button class="menu-item" id="menuChecklistBtn" type="button"><b>✓</b><span><strong>Checklist</strong><small>Acompanhamento do diretório</small></span><i>›</i></button>
       </nav>
+      <button class="signout-btn" id="signOutBtn" type="button">Sair da conta</button>
     </aside>
   </div>
 
-  <div class="app-shell">
+  <div class="app-shell hidden" id="appShell">
     <header class="app-header">
-      <div class="brand-card">
-        <div class="avatar-rings avatar-rings--site">
-          <span></span><span></span>
-          <img class="fcc-avatar-img fcc-avatar-img--site" src="logo-fcc-avatar.png" width="58" height="58" alt="Fundação Carlos Chagas">
+      <div class="header-frame">
+        <div class="brand-card">
+          <div class="avatar-rings avatar-rings--site">
+            <span></span><span></span>
+            <img src="logo-fcc-avatar.png" width="58" height="58" alt="Fundação Carlos Chagas">
+          </div>
+          <div class="brand-copy"><h1>Portal de Provas</h1><p>FCC • controle de aplicação</p></div>
         </div>
-        <div><h1>Portal de Provas</h1><p>FCC • controle de aplicação</p></div>
+        <button class="user-avatar-btn" id="menuOpenBtn" type="button" aria-label="Abrir menu da conta">
+          <img id="headerAvatarImg" alt="Foto de perfil" class="hidden">
+          <span id="headerAvatarFallback">U</span>
+        </button>
       </div>
-      <button class="hamburger" id="menuOpenBtn" type="button" aria-label="Abrir menu"><span></span><span></span><span></span></button>
     </header>
 
     <main class="main-content">
+      <!-- INÍCIO / PROJETOS -->
       <section class="view active" id="projectsView">
-        <div class="page-heading">
-          <div><span class="eyebrow">INÍCIO</span><h2>Projetos</h2><p>Escolha um projeto existente ou crie um novo com seus diretórios.</p></div>
-          <button class="btn btn-primary" id="newProjectBtn" type="button">＋ Criar projeto</button>
+        <div class="page-heading framed-heading">
+          <div><span class="eyebrow">INÍCIO</span><h2>Projetos</h2><p>Abra um projeto do qual você participa ou crie um novo.</p></div>
+          <div class="heading-actions">
+            <button class="btn btn-soft" id="quickCalcBtn" type="button">⌁ Calculadora rápida</button>
+            <button class="btn btn-primary" id="newProjectBtn" type="button">＋ Criar projeto</button>
+          </div>
         </div>
-        <div class="status-line" id="projectsStatus"><span></span> Sincronizando com o Supabase...</div>
+        <div class="status-line" id="projectsStatus"><span></span> Sincronizando...</div>
         <div class="project-grid" id="projectGrid"></div>
         <div class="empty-state hidden" id="projectsEmpty">
-          <div class="empty-icon">▰</div><h3>Nenhum projeto ainda</h3><p>Crie o primeiro projeto para começar.</p>
-          <button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar primeiro projeto</button>
+          <div class="empty-icon">▰</div><h3>Você ainda não possui projetos</h3><p>A calculadora rápida continua disponível normalmente.</p>
+          <div class="empty-actions"><button class="btn btn-soft" id="emptyQuickCalcBtn" type="button">⌁ Usar calculadora</button><button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar projeto</button></div>
         </div>
       </section>
 
+      <!-- CALCULADORA RÁPIDA SEM PROJETO -->
+      <section class="view" id="quickCalculatorView">
+        <div class="breadcrumbs"><button id="quickHomeBtn" type="button">Início</button><span>›</span><strong>Calculadora rápida</strong></div>
+        <div class="page-heading framed-heading compact-heading">
+          <div><span class="eyebrow">USO LIVRE</span><h2>Calculadora rápida</h2><p>Faça o cálculo do cartão sem vincular ou salvar em nenhum projeto.</p></div>
+        </div>
+        <article class="camera-card">
+          <input id="quickPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
+          <button class="capture-button" id="quickTakePhotoBtn" type="button"><span>📷</span><strong>Capturar informações do cartão</strong></button>
+        </article>
+        <article class="manual-card">
+          <div class="section-title"><span class="eyebrow">PREENCHIMENTO MANUAL</span><h3>Horários</h3></div>
+          <form id="quickManualForm" novalidate>
+            <div class="manual-grid">
+              <label><span>Horário de início</span><input id="quickStart" type="time" value="00:00" required></label>
+              <label><span>Duração</span><div class="clock-input"><input id="quickDurationHours" inputmode="numeric" maxlength="2" value="00"><b>:</b><input id="quickDurationMinutes" inputmode="numeric" maxlength="2" value="00"></div></label>
+              <label><span>Permanência mínima</span><div class="clock-input"><input id="quickMinimumHours" inputmode="numeric" maxlength="2" value="00"><b>:</b><input id="quickMinimumMinutes" inputmode="numeric" maxlength="2" value="00"></div></label>
+            </div>
+            <p class="validation" id="quickValidation"></p>
+            <div class="manual-actions"><button class="btn btn-soft" id="quickResetBtn" type="button">↺ Zerar</button><button class="btn btn-primary" type="submit">✦ Calcular</button></div>
+          </form>
+        </article>
+      </section>
+
+      <!-- PROJETO -->
       <section class="view" id="projectView">
         <div class="breadcrumbs"><button id="backProjectsBtn" type="button">Início</button><span>›</span><strong id="projectCrumb">Projeto</strong></div>
-        <div class="page-heading">
+        <div class="page-heading framed-heading">
           <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p>Abra um diretório para acessar OCR, salas e checklist.</p></div>
           <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
         </div>
+
+        <section class="participants-panel">
+          <div class="participants-head"><div><span class="eyebrow">EQUIPE DO PROJETO</span><h3>Participantes</h3></div><button class="btn btn-soft" id="manageParticipantsBtn" type="button">👥 Gerenciar participantes</button></div>
+          <div class="participant-role-grid" id="projectParticipantsGrid"></div>
+        </section>
+
         <div class="directory-grid" id="directoryGrid"></div>
         <div class="empty-state hidden" id="directoriesEmpty"><div class="empty-icon">📁</div><h3>Projeto sem diretórios</h3><p>Adicione um diretório e escolha seu período.</p></div>
       </section>
 
+      <!-- DIRETÓRIO -->
       <section class="view" id="directoryView">
         <div class="breadcrumbs"><button id="dirHomeBtn" type="button">Início</button><span>›</span><button id="dirProjectBtn" type="button">Projeto</button><span>›</span><strong id="directoryCrumb">Diretório</strong></div>
         <div class="directory-hero">
@@ -115,7 +172,6 @@
             <input id="examPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
             <button class="capture-button" id="takePhotoBtn" type="button"><span>📷</span><strong>Capturar informações do cartão</strong></button>
           </article>
-
           <article class="manual-card">
             <div class="section-title"><span class="eyebrow">PREENCHIMENTO MANUAL</span><h3>Calculadora</h3></div>
             <form id="manualForm" novalidate>
@@ -131,7 +187,7 @@
         </section>
 
         <section class="directory-section" id="roomsSection">
-          <div class="rooms-toolbar"><div><span class="eyebrow">SALAS</span><h3 id="roomsSectionTitle">Diretório de salas</h3></div><div><button class="btn btn-soft" id="refreshRoomsBtn" type="button">↻ Atualizar</button><button class="btn btn-primary" id="roomsCaptureBtn" type="button">📷 Novo cartão</button></div></div>
+          <div class="rooms-toolbar"><div><span class="eyebrow">SALAS</span><h3>Diretório de salas</h3></div><div><button class="btn btn-soft" id="refreshRoomsBtn" type="button">↻ Atualizar</button><button class="btn btn-primary" id="roomsCaptureBtn" type="button">📷 Novo cartão</button></div></div>
           <div class="rooms-status" id="roomsStatus">Carregando...</div>
           <div id="roomsRoot"><div class="rooms-grid" id="roomsGrid"></div><div class="empty-state hidden" id="roomsEmpty"><div class="empty-icon">📁</div><h3>Nenhuma sala criada</h3><p>As pastas surgem automaticamente após a validação do OCR.</p></div></div>
           <div class="room-detail hidden" id="roomDetail">
@@ -158,6 +214,7 @@
     </main>
   </div>
 
+  <!-- CRIAÇÃO DE PROJETO + DIRETÓRIOS -->
   <div class="modal" id="projectModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="projectModal"></div>
     <section class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
@@ -167,10 +224,29 @@
       <div class="subdir-head"><div><strong>Diretórios iniciais</strong><small>Defina o nome e o período de cada diretório.</small></div><button class="small-add-btn" id="addDirectoryRowBtn" type="button">＋ Adicionar</button></div>
       <div class="directory-row-list" id="directoryRowList"></div>
       <p class="validation" id="projectModalValidation"></p>
-      <button class="btn btn-primary full" id="createProjectConfirmBtn" type="button">✓ Criar projeto</button>
+      <button class="btn btn-primary full" id="createProjectConfirmBtn" type="button">✓ Criar projeto e continuar</button>
     </section>
   </div>
 
+  <!-- PARTICIPANTES: aparece automaticamente após criar projeto -->
+  <div class="modal" id="participantsModal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <section class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="participantsModalTitle">
+      <button class="modal-close" id="participantsModalClose" type="button">×</button>
+      <span class="modal-chip">EQUIPE DO PROJETO</span><h2 id="participantsModalTitle">Defina os participantes</h2>
+      <p class="modal-intro">Digite o nome do profissional. A busca considera pessoas que já fizeram pelo menos um login no Portal FCC.</p>
+      <div class="role-assignment-list">
+        <div class="role-assignment" data-role="po"><div class="role-title"><strong>PO do Projeto</strong><small>Responsável principal</small></div><div class="person-picker"><input class="participant-search-input" data-role="po" type="search" autocomplete="off" placeholder="Buscar pelo nome..."><div class="person-results" data-results="po"></div><div class="selected-person hidden" data-selected="po"></div></div></div>
+        <div class="role-assignment" data-role="coordenador"><div class="role-title"><strong>Coordenador</strong><small>Coordenação da aplicação</small></div><div class="person-picker"><input class="participant-search-input" data-role="coordenador" type="search" autocomplete="off" placeholder="Buscar pelo nome..."><div class="person-results" data-results="coordenador"></div><div class="selected-person hidden" data-selected="coordenador"></div></div></div>
+        <div class="role-assignment" data-role="auxiliar_coordenacao"><div class="role-title"><strong>Auxiliar de Coordenação</strong><small>Apoio à coordenação</small></div><div class="person-picker"><input class="participant-search-input" data-role="auxiliar_coordenacao" type="search" autocomplete="off" placeholder="Buscar pelo nome..."><div class="person-results" data-results="auxiliar_coordenacao"></div><div class="selected-person hidden" data-selected="auxiliar_coordenacao"></div></div></div>
+        <div class="role-assignment" data-role="fiscal_controle"><div class="role-title"><strong>Fiscal Controle</strong><small>Controle operacional</small></div><div class="person-picker"><input class="participant-search-input" data-role="fiscal_controle" type="search" autocomplete="off" placeholder="Buscar pelo nome..."><div class="person-results" data-results="fiscal_controle"></div><div class="selected-person hidden" data-selected="fiscal_controle"></div></div></div>
+      </div>
+      <p class="validation" id="participantsValidation"></p>
+      <div class="modal-actions"><button class="btn btn-soft" id="participantsLaterBtn" type="button">Agora não</button><button class="btn btn-primary" id="saveParticipantsBtn" type="button">✓ Salvar participantes</button></div>
+    </section>
+  </div>
+
+  <!-- NOVO DIRETÓRIO -->
   <div class="modal" id="directoryModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="directoryModal"></div>
     <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="directoryModalTitle">
@@ -183,17 +259,18 @@
     </section>
   </div>
 
+  <!-- OCR compartilhado entre diretório e calculadora rápida -->
   <div class="modal" id="ocrModal" aria-hidden="true">
     <div class="modal-backdrop"></div>
     <section class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="ocrModalTitle">
       <button class="modal-close" id="ocrModalClose" type="button">×</button>
       <div id="ocrLoading" class="ocr-state"><div class="spinner"></div><span class="modal-chip">LENDO CARTÃO</span><h2>Processando a foto...</h2></div>
       <div id="ocrConfirm" class="ocr-state hidden">
-        <span class="modal-chip">DADOS IDENTIFICADOS</span><h2 id="ocrModalTitle">Confira antes de salvar</h2>
+        <span class="modal-chip">DADOS IDENTIFICADOS</span><h2 id="ocrModalTitle">Confira antes de calcular</h2>
         <img class="ocr-preview" id="ocrPreview" alt="Prévia do cartão">
         <div class="ocr-grid">
-          <label class="modal-field"><span>Sala</span><input id="ocrRoom" type="text" maxlength="40"></label>
-          <label class="modal-field"><span>Módulo(s)</span><input id="ocrModules" type="text" maxlength="120"></label>
+          <label class="modal-field project-only-field"><span>Sala</span><input id="ocrRoom" type="text" maxlength="40"></label>
+          <label class="modal-field project-only-field"><span>Módulo(s)</span><input id="ocrModules" type="text" maxlength="120"></label>
           <label class="modal-field"><span>Horário de início</span><input id="ocrStart" type="time"></label>
           <label class="modal-field"><span>Duração</span><input id="ocrDuration" type="text" maxlength="5" placeholder="00:00"></label>
           <label class="modal-field"><span>Permanência mínima</span><input id="ocrMinimum" type="text" maxlength="5" placeholder="00:00"></label>
@@ -201,12 +278,13 @@
         </div>
         <details class="raw-ocr"><summary>Ver texto reconhecido</summary><pre id="ocrRawText"></pre></details>
         <p class="validation" id="ocrValidation"></p>
-        <div class="modal-actions"><button class="btn btn-soft" id="ocrRetryBtn" type="button">↺ Tirar outra foto</button><button class="btn btn-primary" id="ocrConfirmBtn" type="button">✓ Calcular e salvar</button></div>
+        <div class="modal-actions"><button class="btn btn-soft" id="ocrRetryBtn" type="button">↺ Tirar outra foto</button><button class="btn btn-primary" id="ocrConfirmBtn" type="button">✓ Calcular</button></div>
       </div>
       <div id="ocrError" class="ocr-state hidden"><div class="error-icon">!</div><span class="modal-chip">FALHA NA LEITURA</span><h2>Não foi possível ler o cartão</h2><p id="ocrErrorText"></p><button class="btn btn-primary full" id="ocrErrorRetryBtn" type="button">📷 Tentar novamente</button></div>
     </section>
   </div>
 
+  <!-- RESULTADO -->
   <div class="modal" id="resultModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="resultModal"></div>
     <section class="modal-card result-card-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
@@ -222,7 +300,8 @@
 
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
-  <script src="config.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

@@ -1,28 +1,28 @@
-# Portal FCC v14
+# Portal FCC v15
 
-Portal estático para GitHub Pages com Supabase + OCR.Space.
+Portal estático para GitHub Pages com:
 
-## Nova hierarquia
+- Google Login via Supabase Auth;
+- avatar da conta Google no menu;
+- calculadora rápida disponível a qualquer usuário autenticado;
+- projetos privados por criador/participantes;
+- diretórios com período Manhã/Tarde;
+- OCR.Space para leitura de cartões;
+- salas criadas automaticamente;
+- checklist por diretório;
+- participantes por cargo:
+  - PO do Projeto;
+  - Coordenador;
+  - Auxiliar de Coordenação;
+  - Fiscal Controle.
 
-```text
-Projeto
-└── Diretórios (período escolhido individualmente: Manhã ou Tarde)
-    ├── Calculadora / OCR
-    ├── Salas
-    │   └── Cartões e módulos
-    └── Checklist
-```
+## Arquivos principais
 
-Ao criar um projeto, o formulário abre com **dois diretórios iniciais** e permite adicionar outros com o botão `+ Adicionar`.
+- `index.html`
+- `styles.css`
+- `app.js`
+- `config.js`
+- `SUPABASE_SETUP_V15.sql`
+- `PASSO_A_PASSO_V15.txt`
 
-Cada diretório possui seu próprio período, suas próprias salas e seu próprio checklist.
-
-## Checklist
-
-A estrutura inicial possui Item 1, Item 2, Item 3, Item 4 e Comentários. Os estados são persistidos no Supabase por diretório.
-
-## OCR
-
-A leitura busca Sala, Módulo(s), Início, Duração e Permanência mínima. O campo Término do cartão não é usado no cálculo.
-
-Consulte `PASSO_A_PASSO.txt` antes da publicação.
+Leia `PASSO_A_PASSO_V15.txt` antes de publicar.
