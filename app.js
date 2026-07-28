@@ -21,15 +21,16 @@
     headerAvatarImg: $("headerAvatarImg"), headerAvatarFallback: $("headerAvatarFallback"),
     drawerAvatarImg: $("drawerAvatarImg"), drawerAvatarFallback: $("drawerAvatarFallback"), drawerUserName: $("drawerUserName"), drawerUserEmail: $("drawerUserEmail"),
     views: qa(".view"), projectsView: $("projectsView"), quickCalculatorView: $("quickCalculatorView"), projectView: $("projectView"), directoryView: $("directoryView"),
-    projectGrid: $("projectGrid"), projectsStatus: $("projectsStatus"), projectsEmpty: $("projectsEmpty"),
-    projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
+    navDrawer: $("navDrawer"), navActiveProjectsBtn: $("navActiveProjectsBtn"), navClosedProjectsBtn: $("navClosedProjectsBtn"),
+    projectGrid: $("projectGrid"), projectsStatus: $("projectsStatus"), projectsEmpty: $("projectsEmpty"), projectsEyebrow: $("projectsEyebrow"), projectsTitle: $("projectsTitle"), projectsDescription: $("projectsDescription"), projectsEmptyTitle: $("projectsEmptyTitle"), projectsEmptyText: $("projectsEmptyText"),
+    projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), projectDateLabel: $("projectDateLabel"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
     projectParticipantsGrid: $("projectParticipantsGrid"), manageParticipantsBtn: $("manageParticipantsBtn"),
     projectStatusBadge: $("projectStatusBadge"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
     projectActionModal: $("projectActionModal"), projectActionChip: $("projectActionChip"), projectActionTitle: $("projectActionTitle"), projectActionText: $("projectActionText"), projectActionValidation: $("projectActionValidation"), projectActionConfirm: $("projectActionConfirm"), deleteProjectConfirmField: $("deleteProjectConfirmField"), deleteProjectConfirmInput: $("deleteProjectConfirmInput"),
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
     menuDrawer: $("menuDrawer"), menuProjectLabel: $("menuProjectLabel"), menuDirectoryLabel: $("menuDirectoryLabel"),
     menuProjectBtn: $("menuProjectBtn"), menuCalculatorBtn: $("menuCalculatorBtn"), menuRoomsBtn: $("menuRoomsBtn"), menuChecklistBtn: $("menuChecklistBtn"),
-    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), directoryRowList: $("directoryRowList"),
+    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), directoryRowList: $("directoryRowList"),
     participantsModal: $("participantsModal"), participantsValidation: $("participantsValidation"), participantInputs: qa(".participant-search-input"),
     directoryModal: $("directoryModal"), singleDirectoryName: $("singleDirectoryName"), singleDirectoryPeriod: $("singleDirectoryPeriod"), directoryModalValidation: $("directoryModalValidation"),
     sections: qa(".directory-section"), sectionTabs: qa(".section-tab"),
@@ -57,6 +58,8 @@
   let ocrMode = "directory";
   let toastTimer = null;
   let projectActionMode = null;
+  let currentProjectFilter = "ativo";
+  let projectsCache = [];
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -73,6 +76,19 @@
   function initials(name, email = "") { const source = String(name || email || "U").trim(); const parts = source.split(/\s+/).filter(Boolean); return ((parts[0]?.[0] || "U") + (parts.length > 1 ? parts.at(-1)[0] : "")).toUpperCase().slice(0, 2); }
   function displayNameFromUser(user) { return String(user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Usuário"); }
   function avatarFromUser(user) { return safeAvatarUrl(user?.user_metadata?.avatar_url || user?.user_metadata?.picture); }
+  function parseLocalDate(value) {
+    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+  function formatProjectDate(value, fallback = "") {
+    const date = parseLocalDate(value) || (fallback ? new Date(fallback) : null);
+    if (!date || Number.isNaN(date.getTime())) return "Data não informada";
+    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
+  }
+  function projectDateSortValue(project) {
+    return parseLocalDate(project.project_date)?.getTime() || new Date(project.created_at || 0).getTime() || 0;
+  }
 
   function showToast(message) {
     el.toastText.textContent = message;
@@ -91,7 +107,7 @@
   function closeModal(node) {
     if (!node) return;
     node.classList.remove("open"); node.setAttribute("aria-hidden", "true");
-    if (!qa(".modal.open").length && !el.menuDrawer.classList.contains("open")) document.body.classList.remove("modal-open");
+    if (!qa(".modal.open").length && !el.menuDrawer.classList.contains("open") && !el.navDrawer.classList.contains("open")) document.body.classList.remove("modal-open");
   }
 
   // -------------------- SUPABASE / AUTH --------------------
@@ -161,7 +177,7 @@
   }
 
   function goQuickHome() {
-    if (currentUser) { showView("projectsView"); loadProjects(); }
+    if (currentUser) goProjects("ativo");
     else showLogin();
   }
 
@@ -174,6 +190,7 @@
     el.authGate.classList.add("hidden"); el.appShell.classList.remove("hidden"); document.body.classList.remove("auth-pending");
     const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.add("hidden");
     updateMenuContext();
+    currentProjectFilter = "ativo";
     showView("projectsView");
     await loadProjects();
   }
@@ -188,7 +205,7 @@
   }
 
   async function signOut() {
-    closeMenu();
+    closeMenu(); closeNav();
     try { if (authClient) await authClient.auth.signOut(); } finally { showLogin(); }
   }
 
@@ -207,32 +224,79 @@
   }
 
   // -------------------- PROJETOS / DIRETÓRIOS --------------------
+  function updateProjectsNavigation() {
+    const closed = currentProjectFilter === "encerrado";
+    el.projectsEyebrow.textContent = closed ? "HISTÓRICO" : "INÍCIO";
+    el.projectsTitle.textContent = closed ? "Projetos Concluídos" : "Projetos Ativos";
+    el.projectsDescription.textContent = closed
+      ? "Projetos encerrados, disponíveis para consulta."
+      : "Projetos em andamento, organizados pela data de realização.";
+    el.projectsEmptyTitle.textContent = closed ? "Nenhum projeto concluído" : "Você ainda não possui projetos ativos";
+    el.projectsEmptyText.textContent = closed
+      ? "Os projetos aparecerão aqui após serem encerrados."
+      : "Crie um projeto ou consulte os projetos concluídos pelo menu lateral.";
+    el.navActiveProjectsBtn.classList.toggle("active", !closed);
+    el.navClosedProjectsBtn.classList.toggle("active", closed);
+    $("newProjectBtn").classList.toggle("hidden", closed);
+    $("emptyNewProjectBtn").classList.toggle("hidden", closed);
+  }
+
+  async function goProjects(filter = "ativo") {
+    currentProjectFilter = filter === "encerrado" ? "encerrado" : "ativo";
+    updateProjectsNavigation();
+    showView("projectsView");
+    await loadProjects();
+  }
+
   async function loadProjects() {
     if (!currentUser) return;
+    updateProjectsNavigation();
     el.projectsStatus.innerHTML = "<span></span> Sincronizando com o Supabase...";
     try {
-      const params = new URLSearchParams({ select: "id,name,slug,created_by,status,closed_at,closed_by,created_at", order: "created_at.desc" });
-      const projects = await supabaseRequest(`fcc_projects?${params}`);
-      renderProjects(Array.isArray(projects) ? projects : []);
-      el.projectsStatus.innerHTML = "<span></span> Projetos disponíveis para sua conta";
+      const projects = await supabaseRequest("rpc/fcc_list_my_projects", { method: "POST", body: {} });
+      projectsCache = Array.isArray(projects) ? projects : [];
+      renderProjects(projectsCache);
+      const count = projectsCache.filter(project => (project.status || "ativo") === currentProjectFilter).length;
+      el.projectsStatus.innerHTML = `<span></span> ${count} ${count === 1 ? "projeto" : "projetos"} ${currentProjectFilter === "encerrado" ? "concluído" : "ativo"}${count === 1 ? "" : "s"}`;
     } catch (error) {
-      el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.add("hidden"); el.projectsStatus.textContent = `Supabase: ${error.message}`;
+      projectsCache = []; el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.add("hidden"); el.projectsStatus.textContent = `Supabase: ${error.message}`;
     }
   }
 
+  function projectAvatarHtml(name, email, avatarUrl, label) {
+    const avatar = safeAvatarUrl(avatarUrl);
+    const title = `${label}: ${name || "Não definido"}`;
+    if (avatar) return `<span class="project-team-avatar" title="${escapeHtml(title)}"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(title)}"></span>`;
+    return `<span class="project-team-avatar fallback" title="${escapeHtml(title)}">${escapeHtml(initials(name || label, email))}</span>`;
+  }
+
   function renderProjects(projects) {
-    el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.toggle("hidden", projects.length > 0);
-    projects.forEach(project => {
-      const btn = document.createElement("button"); btn.className = "project-card"; btn.type = "button";
+    const filtered = projects
+      .filter(project => (project.status || "ativo") === currentProjectFilter)
+      .sort((a, b) => projectDateSortValue(b) - projectDateSortValue(a));
+    el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.toggle("hidden", filtered.length > 0);
+    filtered.forEach(project => {
+      const btn = document.createElement("button"); btn.className = "project-card kanban-project-card"; btn.type = "button";
       const legacy = !project.created_by; const closed = project.status === "encerrado";
+      const dateText = formatProjectDate(project.project_date, project.created_at);
+      const poAvatar = projectAvatarHtml(project.po_name, project.po_email, project.po_avatar_url, "PO");
+      const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
       btn.classList.toggle("closed-project", closed);
-      btn.innerHTML = `<span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Encerrado" : "Ativo"}</span><span class="folder">▰</span><h3>${escapeHtml(project.name)}</h3><p>${closed ? "Projeto encerrado • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>`;
+      btn.innerHTML = `
+        <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
+        <span class="folder">▰</span>
+        <h3>${escapeHtml(project.name)}</h3>
+        <p>${closed ? "Projeto concluído • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>
+        <div class="project-card-footer">
+          <div class="project-team-preview" aria-label="Equipe principal">${poAvatar}${coordinatorAvatar}</div>
+          <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
+        </div>`;
       btn.addEventListener("click", () => openProject(project)); el.projectGrid.appendChild(btn);
     });
   }
 
   function resetProjectModal() {
-    el.newProjectName.value = ""; el.projectModalValidation.textContent = ""; el.directoryRowList.innerHTML = "";
+    el.newProjectName.value = ""; el.newProjectDate.value = ""; el.projectModalValidation.textContent = ""; el.directoryRowList.innerHTML = "";
     addDirectoryRow("", "manha"); addDirectoryRow("", "tarde");
   }
 
@@ -245,8 +309,10 @@
 
   async function createProjectWithDirectories() {
     const name = el.newProjectName.value.trim();
+    const projectDate = el.newProjectDate.value;
     const rows = [...el.directoryRowList.querySelectorAll(".directory-create-row")].map(row => ({ name: row.querySelector(".dir-row-name").value.trim(), period: row.querySelector(".dir-row-period").value }));
     if (name.length < 2) return void (el.projectModalValidation.textContent = "Informe o nome do projeto.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) return void (el.projectModalValidation.textContent = "Informe a data de realização do projeto.");
     if (!rows.length || rows.some(row => !row.name)) return void (el.projectModalValidation.textContent = "Preencha o nome de todos os diretórios.");
     const normalizedNames = rows.map(row => row.name.toLocaleLowerCase("pt-BR"));
     if (new Set(normalizedNames).size !== normalizedNames.length) return void (el.projectModalValidation.textContent = "Use nomes diferentes nos diretórios.");
@@ -260,6 +326,7 @@
         body: {
           p_name: name,
           p_slug: slugify(name),
+          p_project_date: projectDate,
           p_directories: rows.map((row, index) => ({
             name: row.name,
             period: row.period,
@@ -270,6 +337,8 @@
       const project = Array.isArray(created) ? created[0] : created;
       if (!project?.id) throw new Error("O Supabase não retornou o projeto criado.");
       project.status = project.status || "ativo";
+      project.project_date = project.project_date || projectDate;
+      currentProjectFilter = "ativo";
       closeModal(el.projectModal); showToast("Projeto criado."); await loadProjects(); await openProject(project);
       await openParticipantsModal(true);
     } catch (error) { el.projectModalValidation.textContent = `Erro: ${error.message}`; }
@@ -286,7 +355,7 @@
     try { project = await claimLegacyProject(project); }
     catch (error) { showToast(error.message); await loadProjects(); return; }
     currentProject = { ...project, status: project.status || "ativo" }; currentDirectory = null; projectMembersCache = []; updateMenuContext();
-    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; showView("projectView");
+    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`; showView("projectView");
     renderProjectState();
     await Promise.all([loadDirectories(), loadProjectMembers()]);
   }
@@ -389,12 +458,13 @@
         }
         el.projectActionValidation.textContent = "Excluindo projeto...";
         await supabaseRequest("rpc/fcc_delete_project", { method: "POST", body: { p_project_id: currentProject.id } });
-        closeModal(el.projectActionModal); showToast("Projeto excluído."); currentProject = null; currentDirectory = null; projectMembersCache = []; updateMenuContext(); showView("projectsView"); await loadProjects();
+        closeModal(el.projectActionModal); showToast("Projeto excluído."); currentProject = null; currentDirectory = null; projectMembersCache = []; updateMenuContext(); await goProjects(currentProjectFilter);
       } else {
         if (!canManageParticipants()) throw new Error("Somente o criador ou o PO pode encerrar o projeto.");
         el.projectActionValidation.textContent = "Encerrando projeto...";
         const data = await supabaseRequest("rpc/fcc_close_project", { method: "POST", body: { p_project_id: currentProject.id } });
         const updated = Array.isArray(data) ? data[0] : data; currentProject = { ...currentProject, ...(updated || {}), status: "encerrado" };
+        currentProjectFilter = "encerrado";
         closeModal(el.projectActionModal); showToast("Projeto encerrado."); renderProjectState(); await loadProjects();
       }
     } catch (error) { el.projectActionValidation.textContent = `Erro: ${error.message}`; }
@@ -498,7 +568,9 @@
     el.menuProjectBtn.disabled = !currentProject; [el.menuCalculatorBtn, el.menuRoomsBtn, el.menuChecklistBtn].forEach(btn => btn.disabled = !currentDirectory);
   }
   function openMenu() { el.menuDrawer.classList.add("open"); el.menuDrawer.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); }
-  function closeMenu() { el.menuDrawer.classList.remove("open"); el.menuDrawer.setAttribute("aria-hidden", "true"); if (!qa(".modal.open").length) document.body.classList.remove("modal-open"); }
+  function closeMenu() { el.menuDrawer.classList.remove("open"); el.menuDrawer.setAttribute("aria-hidden", "true"); if (!qa(".modal.open").length && !el.navDrawer.classList.contains("open")) document.body.classList.remove("modal-open"); }
+  function openNav() { if (!currentUser) return; el.navDrawer.classList.add("open"); el.navDrawer.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); }
+  function closeNav() { el.navDrawer.classList.remove("open"); el.navDrawer.setAttribute("aria-hidden", "true"); if (!qa(".modal.open").length && !el.menuDrawer.classList.contains("open")) document.body.classList.remove("modal-open"); }
 
   // -------------------- TEMPO / RESULTADO --------------------
   function parseClock(value) { const m = String(value || "").match(/^(\d{2}):(\d{2})$/); if (!m) return null; const h = +m[1], min = +m[2]; return h <= 23 && min <= 59 ? h * 60 + min : null; }
@@ -639,20 +711,25 @@
   function bindEvents() {
     $("googleLoginBtn").addEventListener("click", signInWithGoogle); $("guestCalculatorBtn").addEventListener("click", showPublicCalculator); $("guestLoginReturnBtn").addEventListener("click", showLogin); $("signOutBtn").addEventListener("click", signOut);
     $("menuOpenBtn").addEventListener("click", openMenu); $("menuCloseBtn").addEventListener("click", closeMenu); $("menuBackdrop").addEventListener("click", closeMenu);
-    $("menuHomeBtn").addEventListener("click",()=>{closeMenu();showView("projectsView");loadProjects()}); $("menuQuickCalcBtn").addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
+    $("navOpenBtn").addEventListener("click", openNav); $("navCloseBtn").addEventListener("click", closeNav); $("navBackdrop").addEventListener("click", closeNav);
+    el.navActiveProjectsBtn.addEventListener("click",()=>{closeNav();goProjects("ativo")});
+    el.navClosedProjectsBtn.addEventListener("click",()=>{closeNav();goProjects("encerrado")});
+    $("navQuickCalcBtn").addEventListener("click",()=>{closeNav();showView("quickCalculatorView")});
+    $("navCreateProjectBtn").addEventListener("click",()=>{closeNav();resetProjectModal();openModal(el.projectModal)});
+    $("menuHomeBtn").addEventListener("click",()=>{closeMenu();goProjects("ativo")}); $("menuQuickCalcBtn").addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
     el.menuProjectBtn.addEventListener("click",()=>{if(!currentProject)return;closeMenu();showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])});
     el.menuCalculatorBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"calculator")}); el.menuRoomsBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"rooms")}); el.menuChecklistBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"checklist")});
 
-    $("quickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome);
+    $("quickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome); $("quickBackBtn").addEventListener("click",goQuickHome);
 
     $("newProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("emptyNewProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("projectModalClose").addEventListener("click",()=>closeModal(el.projectModal)); $("addDirectoryRowBtn").addEventListener("click",()=>addDirectoryRow()); $("createProjectConfirmBtn").addEventListener("click",createProjectWithDirectories);
-    $("backProjectsBtn").addEventListener("click",()=>{showView("projectsView");loadProjects()});
+    $("backProjectsBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo")); $("projectBackBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo"));
     el.closeProjectBtn.addEventListener("click",()=>openProjectAction("close")); el.deleteProjectBtn.addEventListener("click",()=>openProjectAction("delete")); $("projectActionClose").addEventListener("click",()=>closeModal(el.projectActionModal)); $("projectActionCancel").addEventListener("click",()=>closeModal(el.projectActionModal)); el.projectActionConfirm.addEventListener("click",confirmProjectAction);
     $("manageParticipantsBtn").addEventListener("click",()=>openParticipantsModal(false)); $("participantsModalClose").addEventListener("click",()=>closeModal(el.participantsModal)); $("participantsLaterBtn").addEventListener("click",()=>closeModal(el.participantsModal)); $("saveParticipantsBtn").addEventListener("click",saveParticipants);
     el.participantInputs.forEach(input=>input.addEventListener("input",()=>handleParticipantSearch(input)));
 
     el.addDirectoryBtn.addEventListener("click",()=>{if(isCurrentProjectClosed())return showToast("Projeto encerrado.");el.singleDirectoryName.value="";el.singleDirectoryPeriod.value="manha";el.directoryModalValidation.textContent="";openModal(el.directoryModal)}); $("directoryModalClose").addEventListener("click",()=>closeModal(el.directoryModal)); $("createDirectoryConfirmBtn").addEventListener("click",createSingleDirectory);
-    $("dirHomeBtn").addEventListener("click",()=>{showView("projectsView");loadProjects()}); $("dirProjectBtn").addEventListener("click",()=>{showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])}); el.sectionTabs.forEach(tab=>tab.addEventListener("click",()=>switchSection(tab.dataset.section)));
+    $("dirHomeBtn").addEventListener("click",()=>goProjects("ativo")); $("dirProjectBtn").addEventListener("click",()=>{showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])}); $("directoryBackBtn").addEventListener("click",()=>{showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])}); el.sectionTabs.forEach(tab=>tab.addEventListener("click",()=>switchSection(tab.dataset.section)));
 
     $("takePhotoBtn").addEventListener("click",()=>requestPhoto("directory")); $("roomsCaptureBtn").addEventListener("click",()=>requestPhoto("directory")); el.photoInput.addEventListener("change",()=>{const file=el.photoInput.files?.[0];if(file)analyzePhoto(file,"directory")});
     $("quickTakePhotoBtn").addEventListener("click",()=>requestPhoto("quick")); el.quickPhotoInput.addEventListener("change",()=>{const file=el.quickPhotoInput.files?.[0];if(file)analyzePhoto(file,"quick")});

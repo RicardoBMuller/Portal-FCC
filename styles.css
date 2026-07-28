@@ -114,3 +114,49 @@ button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}.project
 
 @media(max-width:760px){.project-heading{align-items:stretch}.project-heading-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.project-heading-actions .project-status-badge{grid-column:1/-1;justify-self:start}.project-heading-actions #addDirectoryBtn{grid-column:1/-1}.project-heading-actions .btn{width:100%}}
 @media(max-width:470px){.project-heading-actions{grid-template-columns:1fr}.project-heading-actions .project-status-badge,.project-heading-actions #addDirectoryBtn{grid-column:auto}}
+
+/* =========================================================
+   V15.4 — NAVEGAÇÃO LATERAL, LISTAS ATIVAS/CONCLUÍDAS E CARDS
+   ========================================================= */
+.nav-toggle{
+  width:48px;height:48px;flex:0 0 48px;padding:0 13px;
+  display:grid;align-content:center;gap:5px;border-radius:15px;
+  color:#fff;cursor:pointer;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.055));
+  border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:.18s ease
+}
+.nav-toggle:hover{transform:translateY(-1px);border-color:rgba(196,59,115,.40);background:rgba(196,59,115,.11)}
+.nav-toggle span{height:2px;border-radius:999px;background:#fff}
+body.guest-mode .nav-toggle{display:none!important}
+
+.nav-drawer{position:fixed;inset:0;z-index:75;visibility:hidden;opacity:0;transition:.2s ease}
+.nav-drawer.open{visibility:visible;opacity:1}
+.nav-backdrop{position:absolute;inset:0;background:rgba(7,7,12,.72);backdrop-filter:blur(5px)}
+.nav-panel{position:absolute;left:0;top:0;width:min(380px,88vw);height:100%;padding:18px;overflow:auto;
+  background:linear-gradient(180deg,#272634,#191923);border-right:1px solid var(--line);box-shadow:30px 0 60px rgba(0,0,0,.36);
+  transform:translateX(-102%);transition:.28s cubic-bezier(.22,1,.36,1)}
+.nav-drawer.open .nav-panel{transform:translateX(0)}
+.nav-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.nav-brand{display:flex;align-items:center;gap:12px;min-width:0}.nav-brand img{width:48px;height:48px;border-radius:50%;object-fit:cover;box-shadow:0 8px 24px rgba(196,59,115,.22)}
+.nav-brand div{min-width:0}.nav-brand strong,.nav-brand small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nav-brand small{margin-top:3px;color:var(--muted);font-size:.72rem}
+.nav-main-links{display:grid;gap:9px;margin-top:18px}.nav-main-item{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;width:100%;padding:13px;border-radius:16px;text-align:left;color:#fff;cursor:pointer;background:rgba(255,255,255,.045);border:1px solid transparent;transition:.18s ease}
+.nav-main-item:hover,.nav-main-item.active{background:rgba(196,59,115,.10);border-color:rgba(196,59,115,.30)}
+.nav-main-item.active{box-shadow:inset 3px 0 0 var(--accent)}.nav-main-item>b{font-size:1.2rem}.nav-main-item span strong,.nav-main-item span small{display:block}.nav-main-item span small{margin-top:3px;color:var(--muted);font-size:.72rem}.nav-main-item>i{font-style:normal;color:var(--muted);font-size:1.35rem}
+
+.projects-heading{align-items:center!important;flex-direction:column;text-align:center}.projects-heading-copy{max-width:680px}.projects-heading-actions{width:100%;justify-content:center!important}.projects-heading-actions .btn{min-width:210px}
+.page-back-btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;margin:0 0 14px;padding:0 14px;border-radius:13px;color:#f1d5e1;cursor:pointer;background:rgba(255,255,255,.055);border:1px solid var(--line);transition:.18s ease}.page-back-btn:hover{transform:translateX(-2px);border-color:rgba(196,59,115,.35);background:rgba(196,59,115,.08)}
+
+.kanban-project-card{display:flex;flex-direction:column;min-height:215px;padding-bottom:16px}.kanban-project-card .folder{margin-bottom:15px}.kanban-project-card>p{padding-right:6px}.project-card-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+.project-team-preview{display:flex;align-items:center;min-width:72px;padding-left:3px}.project-team-avatar{width:38px;height:38px;display:grid;place-items:center;overflow:hidden;margin-left:-7px;border-radius:50%;color:#fff;font-size:.68rem;font-weight:850;background:linear-gradient(135deg,#cf3f7b,#8f56ff);border:2px solid #292834;box-shadow:0 7px 18px rgba(0,0,0,.24)}.project-team-avatar:first-child{margin-left:0}.project-team-avatar img{width:100%;height:100%;object-fit:cover}.project-team-avatar.fallback{letter-spacing:-.02em}
+.project-date-chip{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 10px;border-radius:11px;white-space:nowrap;color:#f6d4e2;background:rgba(196,59,115,.10);border:1px solid rgba(196,59,115,.22);font-size:.75rem;font-weight:790}
+.project-heading-date{display:inline-flex;align-items:center;margin-top:12px;padding:7px 10px;border-radius:11px;color:#f5d1df;background:rgba(196,59,115,.09);border:1px solid rgba(196,59,115,.20);font-size:.8rem;font-weight:760}
+.project-basic-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(190px,.65fr);gap:12px}.modal-field input[type="date"]{color-scheme:dark}
+
+@media(max-width:760px){
+  .nav-toggle{width:44px;height:44px;flex-basis:44px;padding:0 11px;border-radius:13px}.nav-panel{width:90vw}
+  .header-frame{gap:8px}.header-frame .brand-card{gap:9px}.projects-heading-actions{display:flex!important;flex-direction:column;align-items:center}.projects-heading-actions .btn{width:min(100%,360px)!important;min-width:0}
+  .project-basic-grid{grid-template-columns:1fr}.kanban-project-card{min-height:200px}.project-date-chip{font-size:.71rem}.project-card-footer{align-items:center}
+}
+@media(max-width:470px){
+  .nav-toggle{width:42px;height:42px;flex-basis:42px}.header-frame{padding:7px 8px}.header-frame .brand-card{min-width:0}.brand-copy h1{font-size:.84rem}.brand-copy p{font-size:.59rem}
+  .project-card-footer{gap:8px}.project-team-avatar{width:35px;height:35px}.project-date-chip{padding:0 8px;font-size:.68rem}.page-back-btn{width:100%}
+}

@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15.3">
+  <link rel="stylesheet" href="styles.css?v=15.4">
 </head>
 <body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -51,6 +51,26 @@
     </div>
   </section>
 
+  <!-- Navegação principal: abre pela lateral esquerda -->
+  <div class="nav-drawer" id="navDrawer" aria-hidden="true">
+    <div class="nav-backdrop" id="navBackdrop"></div>
+    <aside class="nav-panel" role="dialog" aria-modal="true" aria-label="Navegação principal">
+      <div class="nav-head">
+        <div class="nav-brand">
+          <img src="logo-fcc-avatar.png" width="48" height="48" alt="Fundação Carlos Chagas">
+          <div><strong>Portal de Provas</strong><small>Navegação principal</small></div>
+        </div>
+        <button class="icon-btn" id="navCloseBtn" type="button" aria-label="Fechar navegação">×</button>
+      </div>
+      <nav class="nav-main-links">
+        <button class="nav-main-item active" id="navActiveProjectsBtn" type="button"><b>▰</b><span><strong>Projetos Ativos</strong><small>Do mais atual para o mais antigo</small></span><i>›</i></button>
+        <button class="nav-main-item" id="navClosedProjectsBtn" type="button"><b>✓</b><span><strong>Projetos Concluídos</strong><small>Projetos encerrados para consulta</small></span><i>›</i></button>
+        <button class="nav-main-item" id="navQuickCalcBtn" type="button"><b>⌁</b><span><strong>Calculadora rápida</strong><small>Calcular sem vincular a projeto</small></span><i>›</i></button>
+        <button class="nav-main-item" id="navCreateProjectBtn" type="button"><b>＋</b><span><strong>Criar projeto</strong><small>Novo projeto e diretórios</small></span><i>›</i></button>
+      </nav>
+    </aside>
+  </div>
+
   <!-- Menu do usuário: aberto ao tocar no avatar Google -->
   <div class="menu-drawer" id="menuDrawer" aria-hidden="true">
     <div class="menu-backdrop" id="menuBackdrop"></div>
@@ -84,6 +104,7 @@
   <div class="app-shell hidden" id="appShell">
     <header class="app-header">
       <div class="header-frame">
+        <button class="nav-toggle" id="navOpenBtn" type="button" aria-label="Abrir navegação principal"><span></span><span></span><span></span></button>
         <div class="brand-card">
           <div class="avatar-rings avatar-rings--site">
             <span></span><span></span>
@@ -101,9 +122,9 @@
     <main class="main-content">
       <!-- INÍCIO / PROJETOS -->
       <section class="view active" id="projectsView">
-        <div class="page-heading framed-heading">
-          <div><span class="eyebrow">INÍCIO</span><h2>Projetos</h2><p>Abra um projeto do qual você participa ou crie um novo.</p></div>
-          <div class="heading-actions">
+        <div class="page-heading framed-heading projects-heading">
+          <div class="projects-heading-copy"><span class="eyebrow" id="projectsEyebrow">INÍCIO</span><h2 id="projectsTitle">Projetos Ativos</h2><p id="projectsDescription">Projetos em andamento, organizados pela data de realização.</p></div>
+          <div class="heading-actions projects-heading-actions">
             <button class="btn btn-soft" id="quickCalcBtn" type="button">⌁ Calculadora rápida</button>
             <button class="btn btn-primary" id="newProjectBtn" type="button">＋ Criar projeto</button>
           </div>
@@ -111,13 +132,14 @@
         <div class="status-line" id="projectsStatus"><span></span> Sincronizando...</div>
         <div class="project-grid" id="projectGrid"></div>
         <div class="empty-state hidden" id="projectsEmpty">
-          <div class="empty-icon">▰</div><h3>Você ainda não possui projetos</h3><p>A calculadora rápida continua disponível normalmente.</p>
+          <div class="empty-icon">▰</div><h3 id="projectsEmptyTitle">Você ainda não possui projetos ativos</h3><p id="projectsEmptyText">Crie um projeto ou consulte os projetos concluídos pelo menu lateral.</p>
           <div class="empty-actions"><button class="btn btn-soft" id="emptyQuickCalcBtn" type="button">⌁ Usar calculadora</button><button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar projeto</button></div>
         </div>
       </section>
 
       <!-- CALCULADORA RÁPIDA SEM PROJETO -->
       <section class="view" id="quickCalculatorView">
+        <button class="page-back-btn" id="quickBackBtn" type="button">← Voltar</button>
         <div class="breadcrumbs"><button id="quickHomeBtn" type="button">Início</button><span>›</span><strong>Calculadora rápida</strong></div>
         <div class="page-heading framed-heading compact-heading">
           <div><span class="eyebrow">USO LIVRE</span><h2>Calculadora do tempo de prova</h2><p>Faça o cálculo do cartão sem vincular ou salvar em nenhum projeto.</p></div>
@@ -143,9 +165,10 @@
 
       <!-- PROJETO -->
       <section class="view" id="projectView">
+        <button class="page-back-btn" id="projectBackBtn" type="button">← Voltar aos projetos</button>
         <div class="breadcrumbs"><button id="backProjectsBtn" type="button">Início</button><span>›</span><strong id="projectCrumb">Projeto</strong></div>
         <div class="page-heading framed-heading project-heading">
-          <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p>Abra um diretório para acessar OCR, salas e checklist.</p></div>
+          <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p>Abra um diretório para acessar OCR, salas e checklist.</p><div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div></div>
           <div class="project-heading-actions">
             <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
             <button class="btn btn-soft project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
@@ -165,6 +188,7 @@
 
       <!-- DIRETÓRIO -->
       <section class="view" id="directoryView">
+        <button class="page-back-btn" id="directoryBackBtn" type="button">← Voltar ao projeto</button>
         <div class="breadcrumbs"><button id="dirHomeBtn" type="button">Início</button><span>›</span><button id="dirProjectBtn" type="button">Projeto</button><span>›</span><strong id="directoryCrumb">Diretório</strong></div>
         <div class="directory-hero">
           <div class="folder-hero-icon">📁</div>
@@ -229,7 +253,10 @@
     <section class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
       <button class="modal-close" id="projectModalClose" type="button">×</button>
       <span class="modal-chip">NOVO PROJETO</span><h2 id="projectModalTitle">Criar projeto e diretórios</h2>
-      <label class="modal-field"><span>Nome do projeto</span><input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Planejamento 2026"></label>
+      <div class="project-basic-grid">
+        <label class="modal-field"><span>Nome do projeto</span><input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Planejamento 2026"></label>
+        <label class="modal-field"><span>Data de realização</span><input id="newProjectDate" type="date" required></label>
+      </div>
       <div class="subdir-head"><div><strong>Diretórios iniciais</strong><small>Defina o nome e o período de cada diretório.</small></div><button class="small-add-btn" id="addDirectoryRowBtn" type="button">＋ Adicionar</button></div>
       <div class="directory-row-list" id="directoryRowList"></div>
       <p class="validation" id="projectModalValidation"></p>
@@ -324,7 +351,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15.3"></script>
-  <script src="app.js?v=15.3"></script>
+  <script src="config.js?v=15.4"></script>
+  <script src="app.js?v=15.4"></script>
 </body>
 </html>
