@@ -417,172 +417,511 @@ body.guest-mode .nav-toggle{display:none!important}
   .profile-bio-card{padding:15px}
 }
 
-/* =========================================================
-   V15.7 — ADMINISTRAÇÃO PROFISSIONAL E EDIÇÃO EXCLUSIVA DO PO
-   ========================================================= */
+/* =====================================================================
+   V16 EXPERIMENTAL — NOVA LINGUAGEM VISUAL
+   Base funcional preservada da V15.6. Alterações apenas de experiência.
+   ===================================================================== */
+body.design-v16{
+  --bg:#11121a;
+  --bg2:#181927;
+  --panel:rgba(255,255,255,.075);
+  --panel2:rgba(255,255,255,.12);
+  --line:rgba(255,255,255,.11);
+  --text:#f8f7fb;
+  --muted:#b9b7c7;
+  --accent:#c43b73;
+  --accent2:#8173e9;
+  --accent3:#ff9b78;
+  --lavender:#d9d8f5;
+  --lavender-soft:#eeedf9;
+  --light-card:#f6f4fa;
+  --light-card-2:#eceaf5;
+  --ink:#242333;
+  --ink-soft:#6c6878;
+  --success:#67cfa0;
+  --danger:#e36e87;
+  --shadow:0 28px 80px rgba(5,5,12,.36);
+  background:
+    radial-gradient(circle at 7% 5%,rgba(196,59,115,.22),transparent 24%),
+    radial-gradient(circle at 92% 82%,rgba(129,115,233,.18),transparent 28%),
+    linear-gradient(155deg,#101119 0%,#191927 58%,#131420 100%);
+}
+body.design-v16::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(110deg,transparent 0 47%,rgba(255,255,255,.018) 47% 48%,transparent 48% 100%),
+    radial-gradient(circle at 50% 0,rgba(255,255,255,.035),transparent 40%);
+  background-size:120px 120px,100% 100%;
+}
+body.design-v16 .ambient{opacity:.42;filter:blur(30px);animation:v16Float 13s ease-in-out infinite alternate}
+body.design-v16 .ambient-one{width:420px;height:420px;left:-220px;top:18%;background:radial-gradient(circle,rgba(231,73,140,.55),transparent 67%)}
+body.design-v16 .ambient-two{width:520px;height:520px;right:-290px;bottom:-40px;background:radial-gradient(circle,rgba(111,95,235,.48),transparent 67%)}
+body.design-v16 .grid-noise{opacity:.018;background-size:72px 72px}
 
-/* O cabeçalho interno do projeto passa a ter uma única coluna real.
-   Isto evita o desalinhamento visto em telas mobile estreitas. */
-.project-heading{
+/* Intro: composição editorial, mais próxima de um produto mobile premium. */
+body.design-v16 .intro-screen{
+  background:
+    radial-gradient(circle at 16% 20%,rgba(255,139,106,.19),transparent 25%),
+    radial-gradient(circle at 82% 74%,rgba(129,115,233,.23),transparent 28%),
+    linear-gradient(150deg,#11121a,#1b1b2b 62%,#141522);
+}
+body.design-v16 .intro-content{
+  width:min(520px,92vw);
+  padding:42px 28px 34px;
+  border-radius:38px;
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.045));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 36px 90px rgba(0,0,0,.38);
+  backdrop-filter:blur(24px);
+}
+body.design-v16 .intro-content::before,
+body.design-v16 .intro-content::after{
+  content:"";position:absolute;border-radius:999px;filter:blur(.2px);pointer-events:none
+}
+body.design-v16 .intro-content::before{width:110px;height:110px;right:-35px;top:-35px;background:linear-gradient(135deg,rgba(255,159,121,.65),rgba(196,59,115,.22));transform:rotate(24deg)}
+body.design-v16 .intro-content::after{width:74px;height:74px;left:-22px;bottom:30px;background:linear-gradient(135deg,rgba(129,115,233,.52),rgba(255,255,255,.08))}
+body.design-v16 .intro-kicker{letter-spacing:.22em}
+body.design-v16 .intro-content h1{font-size:clamp(2.45rem,8vw,4.2rem);line-height:.95;margin-top:18px}
+body.design-v16 .intro-content p{max-width:390px;margin:14px auto 0;line-height:1.55}
+body.design-v16 .intro-progress{height:5px;margin:28px auto 8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08)}
+body.design-v16 .intro-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent3),var(--accent),var(--accent2));animation:v16IntroProgress 3.7s cubic-bezier(.22,1,.36,1) both}
+body.design-v16 .avatar-rings--intro{width:116px;height:116px}
+body.design-v16 .avatar-rings--intro img{width:116px;height:116px}
+
+/* Login: cartão claro sobre fundo escuro, inspirado em apps editoriais. */
+body.design-v16 .auth-gate{background:rgba(12,13,20,.38);backdrop-filter:blur(10px)}
+body.design-v16 .auth-card{
+  width:min(500px,calc(100% - 28px));
+  padding:38px 30px 32px;
+  border-radius:36px;
+  color:var(--ink);
+  background:linear-gradient(155deg,#f8f6fb,#e7e5f5);
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 36px 90px rgba(5,5,12,.44);
+}
+body.design-v16 .auth-card h1{color:var(--ink);font-size:clamp(1.8rem,6vw,2.7rem)}
+body.design-v16 .auth-card p{color:var(--ink-soft)}
+body.design-v16 .auth-card .modal-chip{color:var(--accent)}
+body.design-v16 .google-login-btn,
+body.design-v16 .guest-calc-btn{
+  border-radius:18px;
+  min-height:58px;
+  border:1px solid rgba(36,35,51,.10);
+  background:rgba(255,255,255,.72);
+  color:var(--ink);
+  box-shadow:0 12px 28px rgba(59,52,82,.10);
+}
+body.design-v16 .google-login-btn:hover,
+body.design-v16 .guest-calc-btn:hover{transform:translateY(-2px);box-shadow:0 17px 34px rgba(59,52,82,.16)}
+body.design-v16 .auth-divider::before,
+body.design-v16 .auth-divider::after{background:rgba(36,35,51,.12)}
+body.design-v16 .auth-divider span{color:#858092}
+
+/* Cabeçalho flutuante. */
+body.design-v16 .app-header{
+  top:0;
+  padding:14px clamp(12px,3vw,30px) 8px;
+  border:0;
+  background:linear-gradient(180deg,rgba(17,18,26,.96),rgba(17,18,26,.35),transparent);
+  backdrop-filter:none;
+}
+body.design-v16 .header-frame{
+  max-width:1180px;
+  min-height:78px;
+  padding:10px 12px;
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 48px rgba(0,0,0,.25);
+  backdrop-filter:blur(22px);
+}
+body.design-v16 .header-frame .brand-card{gap:13px}
+body.design-v16 .brand-copy h1{font-size:1.12rem}
+body.design-v16 .brand-copy p{font-size:.76rem}
+body.design-v16 .nav-toggle,
+body.design-v16 .user-avatar-btn{
+  border-radius:19px;
+  background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.16);
+}
+body.design-v16 .nav-toggle:hover,
+body.design-v16 .user-avatar-btn:hover{transform:translateY(-2px) scale(1.02)}
+body.design-v16 .user-avatar-btn{outline:3px solid rgba(196,59,115,.22);outline-offset:2px}
+body.design-v16 .avatar-rings--site>span:first-child{border-style:solid;border-color:rgba(255,255,255,.15)}
+
+/* Conteúdo com ritmo editorial e mais respiro. */
+body.design-v16 .main-content{max-width:1180px;padding:34px clamp(16px,4vw,38px) 138px}
+body.design-v16 .view.active{animation:v16ViewIn .48s cubic-bezier(.22,1,.36,1) both}
+body.design-v16 .framed-heading{
+  position:relative;
+  overflow:hidden;
+  padding:32px clamp(22px,4vw,42px);
+  border-radius:34px;
+  background:
+    radial-gradient(circle at 84% 12%,rgba(255,157,120,.17),transparent 31%),
+    radial-gradient(circle at 14% 90%,rgba(129,115,233,.17),transparent 35%),
+    linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.045));
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 26px 70px rgba(0,0,0,.22);
+}
+body.design-v16 .framed-heading::after{
+  content:"";position:absolute;width:180px;height:180px;right:-80px;bottom:-100px;border-radius:48px;
+  border:1px solid rgba(255,255,255,.07);transform:rotate(28deg);pointer-events:none
+}
+body.design-v16 .page-heading h2,
+body.design-v16 .directory-hero h2{font-size:clamp(2.35rem,7vw,4.4rem);letter-spacing:-.07em}
+body.design-v16 .page-heading p{max-width:680px}
+body.design-v16 .eyebrow,
+body.design-v16 .modal-chip{color:#f2a9c8;letter-spacing:.2em}
+body.design-v16 .projects-heading-actions .btn{width:min(100%,320px)!important}
+body.design-v16 .btn{
+  position:relative;
+  overflow:hidden;
+  min-height:54px;
+  border-radius:18px;
+  letter-spacing:-.01em;
+  transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease,filter .22s ease;
+}
+body.design-v16 .btn:hover{transform:translateY(-2px)}
+body.design-v16 .btn-primary{
+  background:linear-gradient(125deg,#e34986 0%,#c43b73 48%,#826fe6 125%);
+  box-shadow:0 16px 34px rgba(196,59,115,.25);
+}
+body.design-v16 .btn-soft{background:rgba(255,255,255,.085);border-color:rgba(255,255,255,.11)}
+body.design-v16 .status-line,
+body.design-v16 .rooms-status{
+  border:0;
+  background:rgba(255,255,255,.04);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.075);
+  border-radius:18px;
+}
+
+/* Cards claros, em formato de ficha/ticket. */
+body.design-v16 .project-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+body.design-v16 .project-card,
+body.design-v16 .directory-card,
+body.design-v16 .room-folder{
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 92% 12%,rgba(129,115,233,.12),transparent 30%),
+    linear-gradient(145deg,var(--light-card),var(--light-card-2));
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:0 22px 45px rgba(5,5,12,.24);
+}
+body.design-v16 .project-card::before,
+body.design-v16 .directory-card::before,
+body.design-v16 .room-folder::before{
+  content:"";position:absolute;left:0;top:22px;bottom:22px;width:5px;border-radius:0 999px 999px 0;
+  background:linear-gradient(180deg,var(--accent3),var(--accent),var(--accent2));
+}
+body.design-v16 .project-card:hover,
+body.design-v16 .directory-card:hover,
+body.design-v16 .room-folder:hover{
+  transform:translateY(-7px) rotateX(1.5deg);
+  border-color:#fff;
+  box-shadow:0 30px 60px rgba(5,5,12,.31);
+}
+body.design-v16 .kanban-project-card{min-height:230px;padding:24px 24px 20px}
+body.design-v16 .kanban-project-card .folder,
+body.design-v16 .directory-card .folder,
+body.design-v16 .room-folder .folder{color:var(--accent);filter:none}
+body.design-v16 .project-card-topline{align-items:flex-start}
+body.design-v16 .project-card-badges{gap:8px}
+body.design-v16 .project-date-chip{
+  color:#76405a;
+  background:#f6dfe9;
+  border-color:rgba(196,59,115,.12);
+}
+body.design-v16 .project-card-status.active{color:#246a4a;background:#dff4e9;border-color:#b9e7cf}
+body.design-v16 .project-card-status.closed{color:#8b4152;background:#f5dfe4;border-color:#ecc3cc}
+body.design-v16 .project-card-content{border-top-color:rgba(36,35,51,.09);min-height:118px}
+body.design-v16 .project-card-copy h3,
+body.design-v16 .directory-card h3,
+body.design-v16 .room-folder h3{color:var(--ink);font-size:1.48rem}
+body.design-v16 .project-card-copy p,
+body.design-v16 .directory-card p,
+body.design-v16 .room-folder p{color:var(--ink-soft)}
+body.design-v16 .project-team-avatar{border-color:#f5f2fa;box-shadow:0 9px 20px rgba(30,26,43,.18)}
+body.design-v16 .period-badge{color:#74344f;background:#f3dce6;border-color:#eac5d5}
+body.design-v16 .closed-project{filter:saturate(.72)}
+body.design-v16 .directory-grid,
+body.design-v16 .rooms-grid{gap:18px}
+body.design-v16 .directory-card,
+body.design-v16 .room-folder{min-height:170px;padding:24px}
+
+/* Projeto e equipe: duas placas independentes. */
+body.design-v16 .project-heading{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-columns:minmax(0,1.1fr) minmax(290px,.9fr);
   align-items:stretch!important;
-  justify-items:center!important;
-  gap:22px!important;
-  width:100%!important;
-  text-align:center!important;
+  text-align:left!important;
+  gap:22px;
 }
-.project-heading-main{
-  width:min(100%,780px);
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
+body.design-v16 .project-heading>div:first-child{
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:0
 }
-.project-heading-main h2{
-  max-width:100%;
-  overflow-wrap:anywhere;
-}
-.project-heading-main>p{
-  max-width:680px;
-}
-.project-meta-row{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
+body.design-v16 .project-heading-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  align-content:center;
+  justify-content:stretch!important;
   gap:10px;
-  margin-top:14px;
-}
-.project-meta-row .project-heading-date{
-  margin-top:0!important;
-}
-
-/* Painel administrativo separado do conteúdo informativo. */
-.project-admin-panel{
-  width:min(100%,760px);
-  min-width:0;
+  width:100%;
   padding:18px;
+  border-radius:26px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.09);
+}
+body.design-v16 .project-heading-actions .btn{width:100%!important;min-width:0!important}
+body.design-v16 .project-heading-actions .project-status-badge{grid-column:1/-1;justify-self:start}
+body.design-v16 .project-heading-actions #addDirectoryBtn{grid-column:1/-1}
+body.design-v16 .project-heading-date{border-radius:14px;padding:9px 12px}
+body.design-v16 .participants-panel{
+  padding:25px;
+  border-radius:32px;
+  background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+  box-shadow:0 22px 58px rgba(0,0,0,.18);
+}
+body.design-v16 .participant-role-grid{gap:14px}
+body.design-v16 .participant-role-card{
+  padding:16px;
   border-radius:20px;
-  border:1px solid rgba(255,255,255,.10);
-  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+  background:rgba(255,255,255,.06);
+  transition:.2s ease;
 }
-.project-admin-heading{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:14px;
-  text-align:left;
-}
-.project-admin-heading>span{
-  color:#efb1cc;
-  font-size:.69rem;
-  font-weight:850;
-  letter-spacing:.13em;
-}
-.project-admin-heading>small{
-  color:var(--muted);
-  font-size:.75rem;
-}
+body.design-v16 .participant-role-card:hover{transform:translateY(-3px);background:rgba(255,255,255,.085)}
 
-.project-admin-panel .project-heading-actions{
-  width:100%!important;
-  max-width:none!important;
-  margin:0!important;
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  align-items:stretch!important;
-  justify-content:center!important;
-  gap:11px!important;
+/* Diretório: navegação em barra flutuante como apps móveis. */
+body.design-v16 .directory-hero{
+  padding:28px;
+  border-radius:32px;
+  background:
+    radial-gradient(circle at 90% 20%,rgba(255,155,120,.18),transparent 35%),
+    linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.045));
+  box-shadow:0 24px 64px rgba(0,0,0,.20);
 }
-.project-admin-panel .project-heading-actions .btn,
-.project-admin-panel .project-heading-actions #addDirectoryBtn{
-  width:100%!important;
-  min-width:0!important;
-  min-height:58px!important;
-  margin:0!important;
-  padding:0 16px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  text-align:center!important;
-  line-height:1.2;
-  border-radius:16px;
+body.design-v16 .folder-hero-icon{
+  width:84px;height:84px;display:grid;place-items:center;flex:0 0 84px;border-radius:27px;
+  background:linear-gradient(135deg,#ffd7c4,#eea5c4 55%,#b5adef);box-shadow:0 18px 35px rgba(196,59,115,.18)
 }
-.project-edit-btn{
-  color:#f7e8ef;
-  border-color:rgba(196,59,115,.23);
-  background:linear-gradient(145deg,rgba(196,59,115,.13),rgba(255,255,255,.065));
+body.design-v16 .section-tabs{
+  position:sticky;top:104px;z-index:14;
+  width:min(680px,100%);margin:-7px auto 22px;padding:8px;
+  border-radius:24px;
+  background:rgba(35,34,50,.84);
+  border:1px solid rgba(255,255,255,.11);
+  backdrop-filter:blur(22px);
+  box-shadow:0 18px 45px rgba(0,0,0,.24);
 }
-.project-edit-btn:hover{
-  border-color:rgba(196,59,115,.44);
-  background:linear-gradient(145deg,rgba(196,59,115,.21),rgba(255,255,255,.085));
+body.design-v16 .section-tab{border-radius:18px;transition:.22s cubic-bezier(.22,1,.36,1)}
+body.design-v16 .section-tab.active{background:linear-gradient(125deg,var(--accent),#a9499b 58%,var(--accent2));transform:translateY(-2px)}
+body.design-v16 .camera-card,
+body.design-v16 .manual-card,
+body.design-v16 .checklist-card{
+  border-radius:32px;
+  background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+  box-shadow:0 24px 60px rgba(0,0,0,.18);
 }
-
-/* Formulário de edição. */
-.edit-project-form{
-  display:grid;
-  gap:13px;
-  margin-top:18px;
-}
-.edit-project-form textarea{
-  width:100%;
+body.design-v16 .capture-button{
   min-height:112px;
-  padding:13px 14px;
-  resize:vertical;
-  border-radius:14px;
-  color:#fff;
-  background:rgba(11,11,18,.48);
-  border:1px solid var(--line);
-  outline:none;
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 12% 20%,rgba(255,255,255,.18),transparent 26%),
+    linear-gradient(125deg,#e34b87,#c43b73 50%,#7768df);
+  box-shadow:0 24px 50px rgba(196,59,115,.28);
 }
-.edit-project-form textarea:focus,
-.edit-project-form input:focus{
-  border-color:rgba(196,59,115,.55);
-  box-shadow:0 0 0 3px rgba(196,59,115,.10);
+body.design-v16 .capture-button:hover{transform:translateY(-4px) scale(1.008)}
+body.design-v16 .manual-grid input,
+body.design-v16 .clock-input,
+body.design-v16 .modal-field input,
+body.design-v16 .modal-field select,
+body.design-v16 .comment-box textarea{
+  border-radius:17px;
+  background:rgba(12,12,20,.55);
+  border-color:rgba(255,255,255,.10);
 }
-.edit-project-form .modal-field small{
-  justify-self:end;
-  color:var(--muted);
-  font-size:.72rem;
-}
+body.design-v16 .check-row{border-radius:18px}
 
-/* O botão de gestão da equipe mantém o mesmo eixo visual do projeto. */
-.participants-head{
-  width:100%;
+/* Navegações laterais como painéis premium. */
+body.design-v16 .nav-backdrop,
+body.design-v16 .menu-backdrop{background:rgba(6,7,12,.66);backdrop-filter:blur(10px)}
+body.design-v16 .nav-panel,
+body.design-v16 .menu-panel{
+  width:min(420px,92vw);
+  padding:22px;
+  background:
+    radial-gradient(circle at 10% 5%,rgba(196,59,115,.18),transparent 28%),
+    linear-gradient(180deg,#252536,#171822);
+  border-color:rgba(255,255,255,.10);
 }
-.participants-head .btn{
-  width:min(100%,420px)!important;
-  min-height:56px;
-  display:flex;
+body.design-v16 .nav-panel{border-radius:0 34px 34px 0}
+body.design-v16 .menu-panel{border-radius:34px 0 0 34px}
+body.design-v16 .nav-main-links,
+body.design-v16 .profile-bio-actions{gap:12px}
+body.design-v16 .nav-main-item,
+body.design-v16 .menu-item{
+  min-height:76px;
+  border-radius:22px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.06);
+}
+body.design-v16 .nav-main-item:hover,
+body.design-v16 .nav-main-item.active,
+body.design-v16 .menu-item:hover{
+  transform:translateX(5px);
+  background:linear-gradient(135deg,rgba(196,59,115,.16),rgba(129,115,233,.10));
+}
+body.design-v16 .profile-bio-card{border-radius:25px;background:rgba(255,255,255,.065)}
+
+/* Modais em estilo sheet no mobile e diálogo flutuante no desktop. */
+body.design-v16 .modal{padding:24px}
+body.design-v16 .modal-backdrop{background:rgba(7,7,14,.72);backdrop-filter:blur(11px)}
+body.design-v16 .modal-card{
+  border-radius:34px;
+  background:
+    radial-gradient(circle at 90% 0,rgba(129,115,233,.16),transparent 28%),
+    linear-gradient(150deg,#343243,#20202d);
+  border-color:rgba(255,255,255,.13);
+  box-shadow:0 38px 100px rgba(0,0,0,.45);
+  transform:translateY(34px) scale(.97);
+  transition:.34s cubic-bezier(.22,1,.36,1);
+}
+body.design-v16 .modal.open .modal-card{transform:translateY(0) scale(1)}
+body.design-v16 .modal-close{border-radius:16px}
+body.design-v16 .directory-create-row,
+body.design-v16 .role-assignment,
+body.design-v16 .read-quality,
+body.design-v16 .raw-ocr{border-radius:19px;background:rgba(255,255,255,.055)}
+body.design-v16 .result-time{background:linear-gradient(135deg,#ff9272,#d84380 48%,#826fe6);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.design-v16 .minimum-highlight{border-radius:22px}
+
+/* Dock principal fixo: referência de navegação inferior mobile. */
+.neo-dock{
+  position:fixed;
+  z-index:40;
+  left:50%;
+  bottom:max(14px,env(safe-area-inset-bottom));
+  width:min(620px,calc(100% - 24px));
+  min-height:76px;
+  display:grid;
+  grid-template-columns:1fr 1fr 84px 1fr 1fr;
   align-items:center;
-  justify-content:center;
-  margin-inline:auto;
+  gap:4px;
+  padding:8px 10px;
+  border-radius:28px;
+  background:rgba(40,38,57,.86);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 24px 60px rgba(0,0,0,.38);
+  backdrop-filter:blur(22px);
+  transform:translateX(-50%);
+}
+.neo-dock-item,
+.neo-dock-create{
+  color:#cbc7d4;
+  cursor:pointer;
+  transition:.22s cubic-bezier(.22,1,.36,1);
+}
+.neo-dock-item{
+  min-height:56px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:2px;
+  border-radius:18px;
+  background:transparent;
+}
+.neo-dock-item small{font-size:.64rem;font-weight:740}
+.neo-dock-icon{font-size:1.2rem;line-height:1}
+.neo-dock-item:hover,
+.neo-dock-item.active{color:#fff;background:rgba(255,255,255,.085);transform:translateY(-2px)}
+.neo-dock-create{
+  width:68px;height:68px;justify-self:center;margin-top:-28px;border-radius:23px;
+  display:grid;place-items:center;color:#fff;font-size:2rem;
+  background:linear-gradient(135deg,#ff9574,#d94382 52%,#806ee7);
+  box-shadow:0 18px 35px rgba(196,59,115,.42);
+  border:4px solid #222130;
+}
+.neo-dock-create:hover{transform:translateY(-5px) rotate(4deg) scale(1.04)}
+body.guest-mode .neo-dock{display:none!important}
+
+/* Efeitos inseridos pelo enhancement JS. */
+.v16-reveal{opacity:0;transform:translateY(22px) scale(.985)}
+.v16-reveal.is-visible{opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.22,1,.36,1)}
+.v16-ripple{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.35);transform:scale(0);animation:v16Ripple .62s ease-out forwards}
+body.design-v16 .app-header.is-scrolled .header-frame{background:rgba(35,34,50,.92);box-shadow:0 22px 58px rgba(0,0,0,.32)}
+
+/* Desktop: dock mais discreto; cards aproveitam o espaço. */
+@media(min-width:980px){
+  .neo-dock{width:560px;min-height:70px}
+  body.design-v16 .project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.design-v16 .directory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
-@media(max-width:640px){
-  .project-heading{
-    padding:19px 14px!important;
-    gap:18px!important;
+/* Mobile-first: cards, sheets e dock com área segura. */
+@media(max-width:760px){
+  body.design-v16 .app-header{padding:9px 8px 5px}
+  body.design-v16 .header-frame{min-height:66px;border-radius:23px;padding:7px 8px}
+  body.design-v16 .avatar-rings--site{width:46px;height:46px}
+  body.design-v16 .avatar-rings--site img{width:46px;height:46px}
+  body.design-v16 .brand-copy h1{font-size:.96rem}
+  body.design-v16 .brand-copy p{font-size:.64rem}
+  body.design-v16 .main-content{padding:24px 12px 132px}
+  body.design-v16 .framed-heading{padding:28px 18px;border-radius:29px}
+  body.design-v16 .page-heading h2,
+  body.design-v16 .directory-hero h2{font-size:clamp(2.15rem,11vw,3.3rem)}
+  body.design-v16 .project-grid,
+  body.design-v16 .directory-grid,
+  body.design-v16 .rooms-grid,
+  body.design-v16 .record-grid{grid-template-columns:1fr}
+  body.design-v16 .kanban-project-card{min-height:218px;border-radius:28px}
+  body.design-v16 .project-heading{grid-template-columns:1fr!important;text-align:center!important}
+  body.design-v16 .project-heading>div:first-child{align-items:center;text-align:center}
+  body.design-v16 .project-heading-actions{grid-template-columns:1fr;padding:14px;border-radius:23px}
+  body.design-v16 .project-heading-actions .project-status-badge,
+  body.design-v16 .project-heading-actions #addDirectoryBtn{grid-column:auto;justify-self:stretch}
+  body.design-v16 .project-heading-actions .project-status-badge{justify-content:center}
+  body.design-v16 .participants-panel{padding:19px 15px;border-radius:28px}
+  body.design-v16 .participant-role-grid{grid-template-columns:1fr 1fr}
+  body.design-v16 .directory-hero{display:grid;text-align:center;justify-items:center;padding:23px 18px}
+  body.design-v16 .folder-hero-icon{width:74px;height:74px;flex-basis:74px}
+  body.design-v16 .section-tabs{top:82px;margin-top:0;border-radius:21px}
+  body.design-v16 .section-tab{font-size:.72rem}
+  body.design-v16 .modal{padding:0;align-items:end}
+  body.design-v16 .modal-card,
+  body.design-v16 .modal-card-wide{
+    width:100%;max-height:91vh;border-radius:32px 32px 0 0;padding:24px 18px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(100%);border-left:0;border-right:0;border-bottom:0
   }
-  .project-admin-panel{
-    padding:14px;
-    border-radius:18px;
-  }
-  .project-admin-heading{
-    display:grid;
-    justify-items:center;
-    gap:5px;
-    text-align:center;
-  }
-  .project-admin-panel .project-heading-actions{
-    grid-template-columns:1fr!important;
-  }
-  .project-admin-panel .project-heading-actions .btn,
-  .project-admin-panel .project-heading-actions #addDirectoryBtn{
-    min-height:56px!important;
-  }
+  body.design-v16 .modal.open .modal-card{transform:translateY(0)}
+  body.design-v16 .modal-card::before{content:"";display:block;width:52px;height:5px;margin:-9px auto 17px;border-radius:999px;background:rgba(255,255,255,.25)}
+  body.design-v16 .nav-panel,
+  body.design-v16 .menu-panel{width:92vw}
+  .neo-dock{grid-template-columns:1fr 1fr 76px 1fr 1fr;min-height:70px;border-radius:25px;padding:7px 7px}
+  .neo-dock-create{width:62px;height:62px;border-radius:21px;font-size:1.8rem}
+  .neo-dock-item small{font-size:.58rem}
 }
+@media(max-width:470px){
+  body.design-v16 .intro-content{padding:34px 20px 28px;border-radius:31px}
+  body.design-v16 .project-card-badges{gap:5px}
+  body.design-v16 .project-date-chip{max-width:118px}
+  body.design-v16 .project-card-content{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  body.design-v16 .project-team-avatar{width:34px;height:34px}
+  body.design-v16 .participant-role-grid{grid-template-columns:1fr}
+  .neo-dock{width:calc(100% - 14px);bottom:max(7px,env(safe-area-inset-bottom));border-radius:22px}
+  .neo-dock-item small{display:none}
+  .neo-dock-item{min-height:52px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.design-v16 *,body.design-v16 *::before,body.design-v16 *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+
+@keyframes v16Float{from{transform:translate3d(-12px,-8px,0) scale(.96)}to{transform:translate3d(18px,16px,0) scale(1.05)}}
+@keyframes v16ViewIn{from{opacity:0;transform:translateY(18px) scale(.988)}to{opacity:1;transform:none}}
+@keyframes v16IntroProgress{from{width:0}to{width:100%}}
+@keyframes v16Ripple{to{transform:scale(4);opacity:0}}

@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
-  <title>FCC • Portal de Provas</title>
+  <title>FCC • Portal de Provas — V16 Experimental</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15.7">
+  <link rel="stylesheet" href="styles.css?v=16.0">
 </head>
-<body class="intro-playing auth-pending">
+<body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
     <div class="intro-glow intro-glow-one"></div>
     <div class="intro-glow intro-glow-two"></div>
@@ -20,7 +20,8 @@
       </div>
       <span class="intro-kicker">FUNDAÇÃO CARLOS CHAGAS</span>
       <h1>Portal de Provas</h1>
-      <p>Preparando seu ambiente...</p>
+      <p>Organizando projetos, salas e equipes em uma nova experiência.</p>
+      <div class="intro-progress" aria-hidden="true"><span></span></div>
       <div class="intro-dots"><i></i><i></i><i></i></div>
     </div>
   </div>
@@ -179,28 +180,13 @@
         <button class="page-back-btn" id="projectBackBtn" type="button">← Voltar aos projetos</button>
         <div class="breadcrumbs"><button id="backProjectsBtn" type="button">Início</button><span>›</span><strong id="projectCrumb">Projeto</strong></div>
         <div class="page-heading framed-heading project-heading">
-          <div class="project-heading-main">
-            <span class="eyebrow">PROJETO</span>
-            <h2 id="projectTitle">—</h2>
-            <p id="projectDescription">Abra um diretório para acessar OCR, salas e checklist.</p>
-            <div class="project-meta-row">
-              <div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div>
-              <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
-            </div>
+          <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p id="projectDescription">Abra um diretório para acessar OCR, salas e checklist.</p><div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div></div>
+          <div class="project-heading-actions">
+            <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
+            <button class="btn btn-soft project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
+            <button class="btn btn-danger" id="deleteProjectBtn" type="button">⌫ Excluir projeto</button>
+            <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
           </div>
-
-          <section class="project-admin-panel hidden" id="projectAdminPanel" aria-label="Administração do projeto">
-            <div class="project-admin-heading">
-              <span>ADMINISTRAÇÃO DO PROJETO</span>
-              <small>Disponível exclusivamente para o PO do projeto</small>
-            </div>
-            <div class="project-heading-actions">
-              <button class="btn btn-soft project-edit-btn" id="editProjectBtn" type="button">✎ Editar projeto</button>
-              <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
-              <button class="btn btn-warning project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
-              <button class="btn btn-danger" id="deleteProjectBtn" type="button">⌫ Excluir projeto</button>
-            </div>
-          </section>
         </div>
 
         <section class="participants-panel">
@@ -271,6 +257,24 @@
         </section>
       </section>
     </main>
+
+    <nav class="neo-dock" id="neoDock" aria-label="Atalhos principais">
+      <button class="neo-dock-item active" id="dockHomeBtn" type="button" aria-label="Projetos ativos">
+        <span class="neo-dock-icon">⌂</span><small>Projetos</small>
+      </button>
+      <button class="neo-dock-item" id="dockCalcBtn" type="button" aria-label="Calculadora rápida">
+        <span class="neo-dock-icon">⌁</span><small>Calcular</small>
+      </button>
+      <button class="neo-dock-create" id="dockCreateBtn" type="button" aria-label="Criar novo projeto">
+        <span>＋</span>
+      </button>
+      <button class="neo-dock-item" id="dockClosedBtn" type="button" aria-label="Projetos concluídos">
+        <span class="neo-dock-icon">✓</span><small>Concluídos</small>
+      </button>
+      <button class="neo-dock-item" id="dockProfileBtn" type="button" aria-label="Abrir perfil">
+        <span class="neo-dock-icon">◉</span><small>Perfil</small>
+      </button>
+    </nav>
   </div>
 
   <!-- EDIÇÃO DA BIO PROFISSIONAL -->
@@ -306,27 +310,6 @@
       <div class="directory-row-list" id="directoryRowList"></div>
       <p class="validation" id="projectModalValidation"></p>
       <button class="btn btn-primary full" id="createProjectConfirmBtn" type="button">✓ Criar projeto e continuar</button>
-    </section>
-  </div>
-
-  <!-- EDIÇÃO DO PROJETO: somente o PO pode salvar alterações -->
-  <div class="modal" id="editProjectModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="editProjectModal"></div>
-    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editProjectModalTitle">
-      <button class="modal-close" id="editProjectModalClose" type="button">×</button>
-      <span class="modal-chip">ADMINISTRAÇÃO DO PROJETO</span>
-      <h2 id="editProjectModalTitle">Editar projeto</h2>
-      <p class="modal-intro">Somente o PO do projeto pode alterar estas informações.</p>
-      <div class="edit-project-form">
-        <label class="modal-field"><span>Nome do projeto</span><input id="editProjectName" type="text" maxlength="120"></label>
-        <label class="modal-field"><span>Data de realização</span><input id="editProjectDate" type="date" required></label>
-        <label class="modal-field"><span>Texto exibido no card</span><textarea id="editProjectDescription" maxlength="180" rows="4" placeholder="Descreva brevemente o projeto"></textarea><small id="editProjectDescriptionCount">0/180</small></label>
-      </div>
-      <p class="validation" id="editProjectValidation"></p>
-      <div class="modal-actions">
-        <button class="btn btn-soft" id="editProjectCancelBtn" type="button">Cancelar</button>
-        <button class="btn btn-primary" id="saveProjectEditsBtn" type="button">✓ Salvar alterações</button>
-      </div>
     </section>
   </div>
 
@@ -417,7 +400,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15.7"></script>
-  <script src="app.js?v=15.7"></script>
+  <script src="config.js?v=16.0"></script>
+  <script src="app.js?v=16.0"></script>
 </body>
 </html>
