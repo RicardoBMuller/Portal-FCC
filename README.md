@@ -1,41 +1,20 @@
-# Portal FCC — V16 Experimental
+# Portal FCC — V16.1 Experimental
 
-Esta versão é uma experiência visual criada sobre a base funcional estável da **V15.6**.
+Ramificação visual experimental baseada no ponto estável V15.6.
 
-## O que foi preservado
+## Destaques
 
-- Google Login pelo Supabase Auth;
-- BIO profissional;
-- projetos e participantes;
-- diretórios por período;
-- OCR.Space;
-- calculadora pública e vinculada aos diretórios;
-- salas, cartões e checklist;
-- projetos ativos e concluídos;
-- banco de dados e regras da V15.6.
+- navegação principal concentrada no dock inferior;
+- avatar Google integrado ao botão Perfil;
+- animações inspiradas em interfaces mobile com menus fluidos e botões elevados;
+- identidade visual automática do órgão no card do projeto;
+- busca pública de imagens via Wikimedia Commons e Wikipédia;
+- login Google, Supabase, OCR.Space, diretórios, salas e checklist preservados.
 
-## Nova experiência visual
+## Instalação
 
-- navegação inferior flutuante;
-- cabeçalho compacto em glassmorphism;
-- cards claros em estilo ficha/ticket;
-- telas internas com composição editorial;
-- menus laterais redesenhados;
-- modais no formato bottom sheet em celulares;
-- movimentos suaves na troca de telas;
-- animações de entrada, ripple e elevação de cards;
-- layout mobile-first com adaptação para desktop;
-- suporte a `prefers-reduced-motion`.
+1. Execute `SUPABASE_HOTFIX_V16_1.sql` no projeto Supabase atual.
+2. Atualize `config.js` com as chaves já utilizadas na versão anterior.
+3. Publique os arquivos na raiz do GitHub Pages.
 
-## Banco de dados
-
-Esta versão **não exige SQL novo**. Ela utiliza exatamente as tabelas e funções da V15.6.
-
-## Publicação
-
-1. Copie suas chaves atuais para `config.js`.
-2. Substitua os arquivos do GitHub Pages pelos desta pasta.
-3. Aguarde a publicação.
-4. Abra o portal novamente em uma aba anônima ou limpe o cache.
-
-A V15.6 deve permanecer guardada como ponto de restauração.
+Leia `PASSO_A_PASSO_V16_1.txt`.

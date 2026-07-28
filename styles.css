@@ -925,3 +925,270 @@ body.design-v16 .app-header.is-scrolled .header-frame{background:rgba(35,34,50,.
 @keyframes v16ViewIn{from{opacity:0;transform:translateY(18px) scale(.988)}to{opacity:1;transform:none}}
 @keyframes v16IntroProgress{from{width:0}to{width:100%}}
 @keyframes v16Ripple{to{transform:scale(4);opacity:0}}
+
+/* =========================================================
+   V16.1 EXPERIMENTAL — DOCK ORGÂNICO + IDENTIDADE DO ÓRGÃO
+   A intro e o refresh da V16 permanecem inalterados.
+   ========================================================= */
+
+/* Cabeçalho limpo: a navegação principal migra integralmente para o dock. */
+body.design-v16 .header-frame--clean{
+  display:flex;
+  justify-content:center;
+  grid-template-columns:1fr;
+  padding-inline:14px;
+}
+body.design-v16 .brand-card--centered{
+  width:min(100%,420px);
+  justify-content:center;
+}
+body.design-v16 .header-frame--clean .brand-copy{text-align:left}
+
+/* Ícone Projetos: três linhas, inspirado no menu lateral das referências. */
+.dock-menu-lines{
+  width:25px;
+  height:22px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+}
+.dock-menu-lines i{
+  display:block;
+  height:2px;
+  border-radius:999px;
+  background:currentColor;
+  transform-origin:left center;
+  transition:width .3s cubic-bezier(.22,1,.36,1),transform .3s cubic-bezier(.22,1,.36,1);
+}
+.dock-menu-lines i:nth-child(1){width:18px}
+.dock-menu-lines i:nth-child(2){width:25px}
+.dock-menu-lines i:nth-child(3){width:13px}
+.neo-dock-item.active .dock-menu-lines i:nth-child(1){width:25px;transform:translateX(1px)}
+.neo-dock-item.active .dock-menu-lines i:nth-child(2){width:17px;transform:translateX(5px)}
+.neo-dock-item.active .dock-menu-lines i:nth-child(3){width:22px;transform:translateX(2px)}
+
+/* Avatar real no canto inferior direito, agora como ícone do Perfil. */
+.neo-dock-profile{position:relative}
+.dock-profile-avatar{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:50%;
+  color:#fff;
+  font-size:.68rem;
+  font-weight:850;
+  background:linear-gradient(135deg,#d94382,#806ee7);
+  border:2px solid rgba(255,255,255,.76);
+  box-shadow:0 7px 18px rgba(0,0,0,.25),0 0 0 3px rgba(216,67,130,.12);
+  transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s ease;
+}
+.dock-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.neo-dock-profile:hover .dock-profile-avatar,
+.neo-dock-profile.active .dock-profile-avatar{
+  transform:translateY(-3px) scale(1.08);
+  box-shadow:0 11px 24px rgba(0,0,0,.30),0 0 0 5px rgba(216,67,130,.17);
+}
+
+/* Dock com transições orgânicas e indicador flutuante. */
+.neo-dock{overflow:visible;isolation:isolate}
+.neo-dock-item{position:relative;z-index:2}
+.neo-dock-item::before{
+  content:"";
+  position:absolute;
+  inset:5px 8px;
+  z-index:-1;
+  border-radius:17px;
+  opacity:0;
+  transform:scale(.65) translateY(10px);
+  background:linear-gradient(145deg,rgba(255,149,116,.14),rgba(217,67,130,.20) 52%,rgba(128,110,231,.18));
+  transition:opacity .3s ease,transform .34s cubic-bezier(.22,1,.36,1);
+}
+.neo-dock-item.active::before{opacity:1;transform:scale(1) translateY(0)}
+.neo-dock-item.active .neo-dock-icon,
+.neo-dock-item.active .dock-profile-avatar{animation:v161DockBounce .48s cubic-bezier(.22,1,.36,1)}
+.neo-dock-create::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:28px;
+  border:1px solid rgba(255,149,116,.34);
+  opacity:.55;
+  animation:v161CreateRing 2.8s ease-in-out infinite;
+}
+
+/* Identidade visual no cadastro do projeto. */
+.organization-picker{
+  margin-top:16px;
+  padding:17px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+}
+.organization-picker-copy h3{margin:7px 0 5px;font-size:1.12rem}
+.organization-picker-copy p{margin:0;color:var(--muted);font-size:.82rem;line-height:1.45}
+.organization-search-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:10px;
+  margin-top:14px;
+}
+.organization-field{margin:0}
+.organization-search-btn{min-height:52px;white-space:nowrap}
+.organization-search-btn:disabled{opacity:.55;cursor:wait}
+.organization-preview{
+  position:relative;
+  min-height:165px;
+  margin-top:13px;
+  overflow:hidden;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(135deg,#39364f,#242332);
+  isolation:isolate;
+}
+.organization-preview-image{
+  position:absolute;
+  inset:0;
+  z-index:-3;
+  background-position:center;
+  background-size:cover;
+  filter:saturate(.90) contrast(.95);
+  transform:scale(1.02);
+  transition:background-image .35s ease,transform 1.2s cubic-bezier(.22,1,.36,1),filter .35s ease;
+}
+.organization-preview:hover .organization-preview-image{transform:scale(1.08)}
+.organization-preview-overlay{
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  background:linear-gradient(90deg,rgba(17,16,27,.93) 0%,rgba(28,25,42,.70) 56%,rgba(28,25,42,.18) 100%);
+}
+.organization-preview::after{
+  content:"";
+  position:absolute;
+  inset:auto -50px -90px auto;
+  width:190px;
+  height:190px;
+  z-index:-1;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(217,67,130,.33),transparent 70%);
+}
+.organization-preview-copy{
+  min-height:165px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:22px;
+  text-align:left;
+}
+.organization-preview-copy strong{max-width:75%;font-size:1.08rem;line-height:1.2}
+.organization-preview-copy small{max-width:78%;margin-top:6px;color:#d4cfdd;font-size:.74rem}
+.organization-next-btn{
+  position:absolute;
+  right:14px;
+  bottom:14px;
+  min-height:38px;
+  padding:0 12px;
+  border-radius:13px;
+  color:#fff;
+  cursor:pointer;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.15);
+  backdrop-filter:blur(12px);
+}
+.organization-preview.is-empty .organization-preview-image{background-image:linear-gradient(135deg,rgba(255,149,116,.28),rgba(217,67,130,.20),rgba(128,110,231,.26))!important}
+.organization-preview.is-loading .organization-preview-image{animation:v161PreviewShimmer 1.15s ease-in-out infinite alternate}
+
+/* Cards de projeto com imagem institucional e overlay editorial. */
+body.design-v16 .kanban-project-card{
+  isolation:isolate;
+  background:linear-gradient(145deg,#fff,#f2eef8);
+}
+.project-card-visual,
+.project-card-shade,
+.project-card-layer{position:absolute;inset:0;border-radius:inherit}
+.project-card-visual{
+  z-index:-3;
+  background-position:center;
+  background-size:cover;
+  opacity:0;
+  transform:scale(1.035);
+  transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .35s ease;
+}
+.project-card-shade{
+  z-index:-2;
+  opacity:0;
+  background:
+    linear-gradient(115deg,rgba(16,15,25,.92) 0%,rgba(25,22,38,.80) 48%,rgba(25,22,38,.34) 100%),
+    linear-gradient(180deg,rgba(217,67,130,.12),rgba(0,0,0,.10));
+  transition:opacity .35s ease;
+}
+.project-card-layer{
+  position:relative;
+  z-index:1;
+  padding:24px 24px 20px;
+  display:flex;
+  flex-direction:column;
+}
+body.design-v16 .kanban-project-card.has-project-background .project-card-visual,
+body.design-v16 .kanban-project-card.has-project-background .project-card-shade{opacity:1}
+body.design-v16 .kanban-project-card.has-project-background:hover .project-card-visual{transform:scale(1.105)}
+body.design-v16 .kanban-project-card.has-project-background::before{background:linear-gradient(180deg,#ff9574,#d94382 55%,#806ee7)}
+body.design-v16 .kanban-project-card.has-project-background .project-card-content{border-top-color:rgba(255,255,255,.15)}
+body.design-v16 .kanban-project-card.has-project-background .project-card-copy h3{color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.34)}
+body.design-v16 .kanban-project-card.has-project-background .project-card-copy p{color:rgba(255,255,255,.80)}
+body.design-v16 .kanban-project-card.has-project-background .folder{color:#fff}
+body.design-v16 .kanban-project-card.has-project-background .project-date-chip{color:#fff;background:rgba(18,17,27,.44);border-color:rgba(255,255,255,.18);backdrop-filter:blur(12px)}
+.project-organization-chip{
+  display:inline-flex;
+  max-width:100%;
+  margin-bottom:9px;
+  padding:5px 9px;
+  overflow:hidden;
+  border-radius:999px;
+  color:#7b3757;
+  background:#fae4ee;
+  font-size:.66rem;
+  font-weight:850;
+  letter-spacing:.07em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.has-project-background .project-organization-chip{color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px)}
+
+@media(max-width:760px){
+  body.design-v16 .header-frame--clean{min-height:66px;padding:7px 12px}
+  body.design-v16 .brand-card--centered{justify-content:flex-start}
+  .organization-search-row{grid-template-columns:1fr}
+  .organization-search-btn{width:100%}
+  .organization-preview{min-height:150px}
+  .organization-preview-copy{min-height:150px;padding:18px}
+  .organization-preview-copy strong,.organization-preview-copy small{max-width:88%}
+  .project-card-layer{padding:20px 19px 18px}
+  .dock-profile-avatar{width:32px;height:32px}
+}
+
+@media(max-width:470px){
+  .neo-dock-profile small{display:none}
+  .dock-profile-avatar{width:35px;height:35px}
+  .organization-picker{padding:14px;border-radius:21px}
+  .organization-preview-copy strong,.organization-preview-copy small{max-width:100%;padding-right:90px}
+  .project-card-layer{padding:18px 17px 17px}
+}
+
+@keyframes v161DockBounce{0%{transform:translateY(2px) scale(.92)}65%{transform:translateY(-4px) scale(1.08)}100%{transform:none}}
+@keyframes v161CreateRing{0%,100%{transform:scale(.88);opacity:.15}50%{transform:scale(1.08);opacity:.72}}
+@keyframes v161PreviewShimmer{from{filter:saturate(.7) brightness(.72)}to{filter:saturate(1.05) brightness(1.08)}}
+
+/* Correção de composição: o conteúdo passa a ser controlado pela camada interna. */
+body.design-v16 .kanban-project-card{padding:0!important}
+.project-card-layer{width:100%;min-height:inherit}
+body.design-v16 .kanban-project-card{overflow:hidden}
+.project-card-visual{z-index:0}
+.project-card-shade{z-index:1}
+.project-card-layer{z-index:2}
+body.design-v16 .kanban-project-card::before{z-index:4}

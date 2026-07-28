@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
-  <title>FCC • Portal de Provas — V16 Experimental</title>
+  <title>FCC • Portal de Provas — V16.1 Experimental</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=16.0">
+  <link rel="stylesheet" href="styles.css?v=16.1">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -105,19 +105,17 @@
 
   <div class="app-shell hidden" id="appShell">
     <header class="app-header">
-      <div class="header-frame">
-        <button class="nav-toggle" id="navOpenBtn" type="button" aria-label="Abrir navegação principal"><span></span><span></span><span></span></button>
-        <div class="brand-card">
+      <div class="header-frame header-frame--clean">
+        <!-- Mantidos como proxies invisíveis para preservar a lógica estável da V15.6. -->
+        <button class="visually-hidden" id="navOpenBtn" type="button" tabindex="-1" aria-hidden="true">Menu</button>
+        <button class="visually-hidden" id="menuOpenBtn" type="button" tabindex="-1" aria-hidden="true">Perfil</button>
+        <div class="brand-card brand-card--centered">
           <div class="avatar-rings avatar-rings--site">
             <span></span><span></span>
             <img src="logo-fcc-avatar.png" width="58" height="58" alt="Fundação Carlos Chagas">
           </div>
           <div class="brand-copy"><h1>Portal de Provas</h1><p>FCC • controle de aplicação</p></div>
         </div>
-        <button class="user-avatar-btn" id="menuOpenBtn" type="button" aria-label="Abrir menu da conta">
-          <img id="headerAvatarImg" alt="Foto de perfil" class="hidden">
-          <span id="headerAvatarFallback">U</span>
-        </button>
       </div>
     </header>
 
@@ -133,7 +131,7 @@
         <div class="status-line" id="projectsStatus"><span></span> Sincronizando...</div>
         <div class="project-grid" id="projectGrid"></div>
         <div class="empty-state hidden" id="projectsEmpty">
-          <div class="empty-icon">▰</div><h3 id="projectsEmptyTitle">Você ainda não possui projetos ativos</h3><p id="projectsEmptyText">Crie um projeto ou consulte os projetos concluídos pelo menu lateral.</p>
+          <div class="empty-icon">▰</div><h3 id="projectsEmptyTitle">Você ainda não possui projetos ativos</h3><p id="projectsEmptyText">Crie um projeto ou consulte os projetos concluídos pelo menu inferior.</p>
           <div class="empty-actions"><button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar projeto</button></div>
         </div>
       </section>
@@ -260,7 +258,7 @@
 
     <nav class="neo-dock" id="neoDock" aria-label="Atalhos principais">
       <button class="neo-dock-item active" id="dockHomeBtn" type="button" aria-label="Projetos ativos">
-        <span class="neo-dock-icon">⌂</span><small>Projetos</small>
+        <span class="neo-dock-icon dock-menu-lines" aria-hidden="true"><i></i><i></i><i></i></span><small>Projetos</small>
       </button>
       <button class="neo-dock-item" id="dockCalcBtn" type="button" aria-label="Calculadora rápida">
         <span class="neo-dock-icon">⌁</span><small>Calcular</small>
@@ -271,8 +269,12 @@
       <button class="neo-dock-item" id="dockClosedBtn" type="button" aria-label="Projetos concluídos">
         <span class="neo-dock-icon">✓</span><small>Concluídos</small>
       </button>
-      <button class="neo-dock-item" id="dockProfileBtn" type="button" aria-label="Abrir perfil">
-        <span class="neo-dock-icon">◉</span><small>Perfil</small>
+      <button class="neo-dock-item neo-dock-profile" id="dockProfileBtn" type="button" aria-label="Abrir perfil">
+        <span class="dock-profile-avatar" aria-hidden="true">
+          <img id="headerAvatarImg" alt="Foto de perfil" class="hidden">
+          <span id="headerAvatarFallback">U</span>
+        </span>
+        <small>Perfil</small>
       </button>
     </nav>
   </div>
@@ -306,6 +308,26 @@
         <label class="modal-field"><span>Data de realização</span><input id="newProjectDate" type="date" required></label>
       </div>
       <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" value="Abrir diretórios do projeto" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
+      <section class="organization-picker" aria-labelledby="organizationPickerTitle">
+        <div class="organization-picker-copy">
+          <span class="modal-chip">IDENTIDADE VISUAL</span>
+          <h3 id="organizationPickerTitle">Órgão do concurso</h3>
+          <p>Digite o órgão. O portal buscará uma imagem pública para compor o fundo do card.</p>
+        </div>
+        <div class="organization-search-row">
+          <label class="modal-field organization-field"><span>Órgão</span><input id="newProjectOrganization" type="text" maxlength="180" placeholder="Ex.: Tribunal de Justiça do Estado de São Paulo" autocomplete="off"></label>
+          <button class="btn btn-soft organization-search-btn" id="searchOrganizationImageBtn" type="button"><span>⌕</span> Buscar imagem</button>
+        </div>
+        <div class="organization-preview is-empty" id="organizationPreview">
+          <div class="organization-preview-image" id="organizationPreviewImage" aria-hidden="true"></div>
+          <div class="organization-preview-overlay"></div>
+          <div class="organization-preview-copy">
+            <strong id="organizationPreviewTitle">A identidade visual aparecerá aqui</strong>
+            <small id="organizationPreviewStatus">Digite o nome do órgão para iniciar a busca.</small>
+          </div>
+          <button class="organization-next-btn hidden" id="nextOrganizationImageBtn" type="button">Próxima imagem →</button>
+        </div>
+      </section>
       <div class="subdir-head"><div><strong>Diretórios iniciais</strong><small>Defina o nome e o período de cada diretório.</small></div><button class="small-add-btn" id="addDirectoryRowBtn" type="button">＋ Adicionar</button></div>
       <div class="directory-row-list" id="directoryRowList"></div>
       <p class="validation" id="projectModalValidation"></p>
@@ -400,7 +422,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=16.0"></script>
-  <script src="app.js?v=16.0"></script>
+  <script src="config.js?v=16.1"></script>
+  <script src="app.js?v=16.1"></script>
 </body>
 </html>

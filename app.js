@@ -31,7 +31,7 @@
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
     menuDrawer: $("menuDrawer"), bioSector: $("bioSector"), bioJobTitle: $("bioJobTitle"), bioPhone: $("bioPhone"), bioExtension: $("bioExtension"),
     profileModal: $("profileModal"), profileValidation: $("profileValidation"), profileSectorInput: $("profileSectorInput"), profileJobTitleInput: $("profileJobTitleInput"), profilePhoneInput: $("profilePhoneInput"), profileExtensionInput: $("profileExtensionInput"),
-    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), newProjectDescription: $("newProjectDescription"), directoryRowList: $("directoryRowList"),
+    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), newProjectDescription: $("newProjectDescription"), newProjectOrganization: $("newProjectOrganization"), searchOrganizationImageBtn: $("searchOrganizationImageBtn"), nextOrganizationImageBtn: $("nextOrganizationImageBtn"), organizationPreview: $("organizationPreview"), organizationPreviewImage: $("organizationPreviewImage"), organizationPreviewTitle: $("organizationPreviewTitle"), organizationPreviewStatus: $("organizationPreviewStatus"), directoryRowList: $("directoryRowList"),
     participantsModal: $("participantsModal"), participantsValidation: $("participantsValidation"), participantInputs: qa(".participant-search-input"),
     directoryModal: $("directoryModal"), singleDirectoryName: $("singleDirectoryName"), singleDirectoryPeriod: $("singleDirectoryPeriod"), directoryModalValidation: $("directoryModalValidation"),
     sections: qa(".directory-section"), sectionTabs: qa(".section-tab"),
@@ -62,6 +62,10 @@
   let projectActionMode = null;
   let currentProjectFilter = "ativo";
   let projectsCache = [];
+  let organizationImageCandidates = [];
+  let selectedOrganizationImageIndex = -1;
+  let organizationSearchTimer = null;
+  let organizationSearchQuery = "";
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -75,6 +79,7 @@
   function normalizeRoomCode(value) { return String(value || "").replace(/^sala\s*[:\-]?\s*/i, "").replace(/\s+/g, " ").trim().slice(0, 40); }
   function normalizeModulesText(value) { return String(value || "").replace(/^m[oó]dulo\(s\)\s*[:\-]?\s*/i, "").replace(/^m[oó]dulos?\s*[:\-]?\s*/i, "").replace(/\s*[|;]+\s*/g, ", ").replace(/\s*\/\s*/g, ", ").replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ").trim().slice(0, 120); }
   function safeAvatarUrl(value) { const v = String(value || "").trim(); return /^https:\/\//i.test(v) ? v : ""; }
+  function safeImageUrl(value) { const v = String(value || "").trim(); return /^https:\/\//i.test(v) ? v : ""; }
   function initials(name, email = "") { const source = String(name || email || "U").trim(); const parts = source.split(/\s+/).filter(Boolean); return ((parts[0]?.[0] || "U") + (parts.length > 1 ? parts.at(-1)[0] : "")).toUpperCase().slice(0, 2); }
   function displayNameFromUser(user) { return String(user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Usuário"); }
   function avatarFromUser(user) { return safeAvatarUrl(user?.user_metadata?.avatar_url || user?.user_metadata?.picture); }
@@ -90,6 +95,149 @@
   }
   function projectDateSortValue(project) {
     return parseLocalDate(project.project_date)?.getTime() || new Date(project.created_at || 0).getTime() || 0;
+  }
+
+  function currentOrganizationImage() {
+    return selectedOrganizationImageIndex >= 0
+      ? organizationImageCandidates[selectedOrganizationImageIndex] || null
+      : null;
+  }
+
+  function normalizeOrganizationCandidate(candidate) {
+    const imageUrl = safeImageUrl(candidate?.imageUrl);
+    if (!imageUrl) return null;
+    return {
+      imageUrl,
+      sourceUrl: safeImageUrl(candidate?.sourceUrl),
+      title: String(candidate?.title || "Imagem institucional").trim(),
+      provider: String(candidate?.provider || "Wikimedia").trim()
+    };
+  }
+
+  function renderOrganizationPreview(message = "") {
+    if (!el.organizationPreview) return;
+    const selected = currentOrganizationImage();
+    const organization = el.newProjectOrganization?.value.trim() || "";
+    el.organizationPreview.classList.toggle("is-empty", !selected);
+    el.organizationPreview.classList.toggle("is-loading", message === "loading");
+    el.nextOrganizationImageBtn?.classList.toggle("hidden", organizationImageCandidates.length < 2);
+
+    if (selected) {
+      el.organizationPreviewImage.style.backgroundImage = `url(${JSON.stringify(selected.imageUrl)})`;
+      el.organizationPreviewTitle.textContent = organization || selected.title;
+      el.organizationPreviewStatus.textContent = `${selected.provider} • imagem ${selectedOrganizationImageIndex + 1} de ${organizationImageCandidates.length}`;
+      return;
+    }
+
+    el.organizationPreviewImage.style.backgroundImage = "";
+    el.organizationPreviewTitle.textContent = organization || "A identidade visual aparecerá aqui";
+    el.organizationPreviewStatus.textContent = message === "loading"
+      ? "Buscando uma imagem pública do órgão..."
+      : message || "Digite o nome do órgão para iniciar a busca.";
+  }
+
+  async function searchCommonsImages(organization) {
+    const params = new URLSearchParams({
+      origin: "*",
+      action: "query",
+      generator: "search",
+      gsrsearch: `${organization} logo`,
+      gsrnamespace: "6",
+      gsrlimit: "8",
+      prop: "imageinfo",
+      iiprop: "url|mime",
+      iiurlwidth: "1400",
+      format: "json",
+      formatversion: "2"
+    });
+    const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`);
+    if (!response.ok) throw new Error(`Wikimedia Commons respondeu HTTP ${response.status}.`);
+    const payload = await response.json();
+    return (payload?.query?.pages || []).map(page => {
+      const info = page?.imageinfo?.[0] || {};
+      const mime = String(info.mime || "");
+      if (!/^image\/(png|jpeg|svg\+xml|webp)$/i.test(mime)) return null;
+      return normalizeOrganizationCandidate({
+        imageUrl: info.thumburl || info.url,
+        sourceUrl: info.descriptionurl,
+        title: String(page.title || "").replace(/^File:/i, ""),
+        provider: "Wikimedia Commons"
+      });
+    }).filter(Boolean);
+  }
+
+  async function searchWikipediaImages(organization) {
+    const params = new URLSearchParams({
+      origin: "*",
+      action: "query",
+      generator: "search",
+      gsrsearch: organization,
+      gsrnamespace: "0",
+      gsrlimit: "5",
+      prop: "pageimages|info",
+      piprop: "thumbnail|original",
+      pithumbsize: "1400",
+      inprop: "url",
+      format: "json",
+      formatversion: "2"
+    });
+    const response = await fetch(`https://pt.wikipedia.org/w/api.php?${params}`);
+    if (!response.ok) throw new Error(`Wikipédia respondeu HTTP ${response.status}.`);
+    const payload = await response.json();
+    return (payload?.query?.pages || []).map(page => normalizeOrganizationCandidate({
+      imageUrl: page?.original?.source || page?.thumbnail?.source,
+      sourceUrl: page?.fullurl,
+      title: page?.title,
+      provider: "Wikipédia"
+    })).filter(Boolean);
+  }
+
+  async function searchOrganizationVisual({ silent = false } = {}) {
+    const organization = el.newProjectOrganization?.value.trim() || "";
+    if (organization.length < 3) {
+      organizationImageCandidates = [];
+      selectedOrganizationImageIndex = -1;
+      renderOrganizationPreview("Informe pelo menos 3 caracteres no campo Órgão.");
+      return null;
+    }
+
+    organizationSearchQuery = organization;
+    organizationImageCandidates = [];
+    selectedOrganizationImageIndex = -1;
+    renderOrganizationPreview("loading");
+    if (el.searchOrganizationImageBtn) el.searchOrganizationImageBtn.disabled = true;
+
+    try {
+      const results = await Promise.allSettled([
+        searchCommonsImages(organization),
+        searchWikipediaImages(organization)
+      ]);
+      const combined = results.flatMap(result => result.status === "fulfilled" ? result.value : []);
+      const seen = new Set();
+      organizationImageCandidates = combined.filter(candidate => {
+        if (!candidate?.imageUrl || seen.has(candidate.imageUrl)) return false;
+        seen.add(candidate.imageUrl);
+        return true;
+      }).slice(0, 10);
+      selectedOrganizationImageIndex = organizationImageCandidates.length ? 0 : -1;
+      renderOrganizationPreview(organizationImageCandidates.length ? "" : "Nenhuma imagem pública foi localizada. O card usará o fundo visual padrão.");
+      if (!silent && organizationImageCandidates.length) showToast("Identidade visual localizada.");
+      return currentOrganizationImage();
+    } catch (error) {
+      organizationImageCandidates = [];
+      selectedOrganizationImageIndex = -1;
+      renderOrganizationPreview("Não foi possível consultar imagens agora. O projeto ainda pode ser criado com o fundo padrão.");
+      if (!silent) showToast(error.message || "Falha ao buscar imagem do órgão.");
+      return null;
+    } finally {
+      if (el.searchOrganizationImageBtn) el.searchOrganizationImageBtn.disabled = false;
+    }
+  }
+
+  function nextOrganizationImage() {
+    if (organizationImageCandidates.length < 2) return;
+    selectedOrganizationImageIndex = (selectedOrganizationImageIndex + 1) % organizationImageCandidates.length;
+    renderOrganizationPreview();
   }
 
   function showToast(message) {
@@ -298,7 +446,7 @@
     el.projectsEmptyTitle.textContent = closed ? "Nenhum projeto concluído" : "Você ainda não possui projetos ativos";
     el.projectsEmptyText.textContent = closed
       ? "Os projetos aparecerão aqui após serem encerrados."
-      : "Crie um projeto ou consulte os projetos concluídos pelo menu lateral.";
+      : "Crie um projeto ou consulte os projetos concluídos pelo menu inferior.";
     el.navActiveProjectsBtn.classList.toggle("active", !closed);
     el.navClosedProjectsBtn.classList.toggle("active", closed);
     $("newProjectBtn").classList.toggle("hidden", closed);
@@ -344,22 +492,31 @@
     const poAvatar = projectAvatarHtml(project.po_name, project.po_email, project.po_avatar_url, "PO");
     const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
     const description = String(project.card_description || "Abrir diretórios do projeto").trim();
+    const organization = String(project.organization_name || "").trim();
+    const backgroundImage = safeImageUrl(project.background_image_url);
     btn.classList.toggle("closed-project", closed);
+    btn.classList.toggle("has-project-background", Boolean(backgroundImage));
     btn.innerHTML = `
-      <div class="project-card-topline">
-        <span class="folder" aria-hidden="true">▰</span>
-        <div class="project-card-badges">
-          <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
-          <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
+      <span class="project-card-visual" aria-hidden="true"></span>
+      <span class="project-card-shade" aria-hidden="true"></span>
+      <div class="project-card-layer">
+        <div class="project-card-topline">
+          <span class="folder" aria-hidden="true">▰</span>
+          <div class="project-card-badges">
+            <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
+            <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
+          </div>
         </div>
-      </div>
-      <div class="project-card-content">
-        <div class="project-card-copy">
-          <h3>${escapeHtml(project.name)}</h3>
-          <p>${escapeHtml(legacy ? "Projeto legado • será vinculado ao abrir" : description)}</p>
+        <div class="project-card-content">
+          <div class="project-card-copy">
+            ${organization ? `<span class="project-organization-chip">${escapeHtml(organization)}</span>` : ""}
+            <h3>${escapeHtml(project.name)}</h3>
+            <p>${escapeHtml(legacy ? "Projeto legado • será vinculado ao abrir" : description)}</p>
+          </div>
+          <div class="project-team-preview project-team-preview--side" aria-label="PO e Coordenador do projeto">${poAvatar}${coordinatorAvatar}</div>
         </div>
-        <div class="project-team-preview project-team-preview--side" aria-label="PO e Coordenador do projeto">${poAvatar}${coordinatorAvatar}</div>
       </div>`;
+    if (backgroundImage) btn.querySelector(".project-card-visual").style.backgroundImage = `url(${JSON.stringify(backgroundImage)})`;
     btn.addEventListener("click", () => openProject(project));
     return btn;
   }
@@ -391,7 +548,16 @@
   }
 
   function resetProjectModal() {
-    el.newProjectName.value = ""; el.newProjectDate.value = ""; el.newProjectDescription.value = "Abrir diretórios do projeto"; el.projectModalValidation.textContent = ""; el.directoryRowList.innerHTML = "";
+    el.newProjectName.value = "";
+    el.newProjectDate.value = "";
+    el.newProjectDescription.value = "Abrir diretórios do projeto";
+    el.newProjectOrganization.value = "";
+    organizationImageCandidates = [];
+    selectedOrganizationImageIndex = -1;
+    organizationSearchQuery = "";
+    renderOrganizationPreview();
+    el.projectModalValidation.textContent = "";
+    el.directoryRowList.innerHTML = "";
     addDirectoryRow("", "manha"); addDirectoryRow("", "tarde");
   }
 
@@ -406,15 +572,22 @@
     const name = el.newProjectName.value.trim();
     const projectDate = el.newProjectDate.value;
     const cardDescription = el.newProjectDescription.value.trim();
+    const organizationName = el.newProjectOrganization.value.trim();
     const rows = [...el.directoryRowList.querySelectorAll(".directory-create-row")].map(row => ({ name: row.querySelector(".dir-row-name").value.trim(), period: row.querySelector(".dir-row-period").value }));
     if (name.length < 2) return void (el.projectModalValidation.textContent = "Informe o nome do projeto.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) return void (el.projectModalValidation.textContent = "Informe a data de realização do projeto.");
     if (cardDescription.length < 2 || cardDescription.length > 180) return void (el.projectModalValidation.textContent = "Informe um texto do card entre 2 e 180 caracteres.");
+    if (organizationName.length < 3 || organizationName.length > 180) return void (el.projectModalValidation.textContent = "Informe o órgão do concurso.");
     if (!rows.length || rows.some(row => !row.name)) return void (el.projectModalValidation.textContent = "Preencha o nome de todos os diretórios.");
     const normalizedNames = rows.map(row => row.name.toLocaleLowerCase("pt-BR"));
     if (new Set(normalizedNames).size !== normalizedNames.length) return void (el.projectModalValidation.textContent = "Use nomes diferentes nos diretórios.");
-    el.projectModalValidation.textContent = "Criando projeto...";
+    el.projectModalValidation.textContent = "Preparando identidade visual...";
     try {
+      if (organizationSearchQuery !== organizationName || selectedOrganizationImageIndex < 0) {
+        await searchOrganizationVisual({ silent: true });
+      }
+      const selectedVisual = currentOrganizationImage();
+      el.projectModalValidation.textContent = "Criando projeto...";
       // A criação é feita por uma RPC autenticada no Supabase. Além de evitar
       // o problema de INSERT/RETURNING com RLS, projeto + diretórios são criados
       // na mesma transação e o proprietário é sempre auth.uid() no servidor.
@@ -425,6 +598,9 @@
           p_slug: slugify(name),
           p_project_date: projectDate,
           p_card_description: cardDescription,
+          p_organization_name: organizationName,
+          p_background_image_url: selectedVisual?.imageUrl || null,
+          p_background_source_url: selectedVisual?.sourceUrl || null,
           p_directories: rows.map((row, index) => ({
             name: row.name,
             period: row.period,
@@ -437,6 +613,9 @@
       project.status = project.status || "ativo";
       project.project_date = project.project_date || projectDate;
       project.card_description = project.card_description || cardDescription;
+      project.organization_name = project.organization_name || organizationName;
+      project.background_image_url = project.background_image_url || selectedVisual?.imageUrl || null;
+      project.background_source_url = project.background_source_url || selectedVisual?.sourceUrl || null;
       currentProjectFilter = "ativo";
       closeModal(el.projectModal); showToast("Projeto criado."); await loadProjects(); await openProject(project);
       await openParticipantsModal(true);
@@ -820,6 +999,18 @@
     $("quickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome); $("quickBackBtn").addEventListener("click",goQuickHome);
 
     $("newProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("emptyNewProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("projectModalClose").addEventListener("click",()=>closeModal(el.projectModal)); $("addDirectoryRowBtn").addEventListener("click",()=>addDirectoryRow()); $("createProjectConfirmBtn").addEventListener("click",createProjectWithDirectories);
+    el.searchOrganizationImageBtn?.addEventListener("click",()=>searchOrganizationVisual());
+    el.nextOrganizationImageBtn?.addEventListener("click",nextOrganizationImage);
+    el.newProjectOrganization?.addEventListener("input",()=>{
+      clearTimeout(organizationSearchTimer);
+      const value = el.newProjectOrganization.value.trim();
+      if (value !== organizationSearchQuery) {
+        organizationImageCandidates = [];
+        selectedOrganizationImageIndex = -1;
+        renderOrganizationPreview(value.length >= 3 ? "A busca automática começa após uma breve pausa." : "Digite o nome do órgão para iniciar a busca.");
+      }
+      if (value.length >= 3) organizationSearchTimer = setTimeout(()=>searchOrganizationVisual({silent:true}), 850);
+    });
     $("backProjectsBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo")); $("projectBackBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo"));
     el.closeProjectBtn.addEventListener("click",()=>openProjectAction("close")); el.deleteProjectBtn.addEventListener("click",()=>openProjectAction("delete")); $("projectActionClose").addEventListener("click",()=>closeModal(el.projectActionModal)); $("projectActionCancel").addEventListener("click",()=>closeModal(el.projectActionModal)); el.projectActionConfirm.addEventListener("click",confirmProjectAction);
     $("manageParticipantsBtn").addEventListener("click",()=>openParticipantsModal(false)); $("participantsModalClose").addEventListener("click",()=>closeModal(el.participantsModal)); $("participantsLaterBtn").addEventListener("click",()=>closeModal(el.participantsModal)); $("saveParticipantsBtn").addEventListener("click",saveParticipants);
