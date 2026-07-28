@@ -283,13 +283,19 @@
       const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
       btn.classList.toggle("closed-project", closed);
       btn.innerHTML = `
-        <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
-        <span class="folder">▰</span>
-        <h3>${escapeHtml(project.name)}</h3>
-        <p>${closed ? "Projeto concluído • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>
-        <div class="project-card-footer">
-          <div class="project-team-preview" aria-label="Equipe principal">${poAvatar}${coordinatorAvatar}</div>
-          <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
+        <div class="project-card-topline">
+          <span class="folder" aria-hidden="true">▰</span>
+          <div class="project-card-badges">
+            <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
+            <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
+          </div>
+        </div>
+        <div class="project-card-content">
+          <div class="project-card-copy">
+            <h3>${escapeHtml(project.name)}</h3>
+            <p>${closed ? "Projeto concluído • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>
+          </div>
+          <div class="project-team-preview project-team-preview--side" aria-label="PO e Coordenador do projeto">${poAvatar}${coordinatorAvatar}</div>
         </div>`;
       btn.addEventListener("click", () => openProject(project)); el.projectGrid.appendChild(btn);
     });
@@ -716,11 +722,11 @@
     el.navClosedProjectsBtn.addEventListener("click",()=>{closeNav();goProjects("encerrado")});
     $("navQuickCalcBtn").addEventListener("click",()=>{closeNav();showView("quickCalculatorView")});
     $("navCreateProjectBtn").addEventListener("click",()=>{closeNav();resetProjectModal();openModal(el.projectModal)});
-    $("menuHomeBtn").addEventListener("click",()=>{closeMenu();goProjects("ativo")}); $("menuQuickCalcBtn").addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
+    $("menuHomeBtn").addEventListener("click",()=>{closeMenu();goProjects("ativo")}); $("menuQuickCalcBtn")?.addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
     el.menuProjectBtn.addEventListener("click",()=>{if(!currentProject)return;closeMenu();showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])});
     el.menuCalculatorBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"calculator")}); el.menuRoomsBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"rooms")}); el.menuChecklistBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"checklist")});
 
-    $("quickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn").addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome); $("quickBackBtn").addEventListener("click",goQuickHome);
+    $("quickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome); $("quickBackBtn").addEventListener("click",goQuickHome);
 
     $("newProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("emptyNewProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("projectModalClose").addEventListener("click",()=>closeModal(el.projectModal)); $("addDirectoryRowBtn").addEventListener("click",()=>addDirectoryRow()); $("createProjectConfirmBtn").addEventListener("click",createProjectWithDirectories);
     $("backProjectsBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo")); $("projectBackBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo"));

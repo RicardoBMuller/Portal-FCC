@@ -160,3 +160,161 @@ body.guest-mode .nav-toggle{display:none!important}
   .nav-toggle{width:42px;height:42px;flex-basis:42px}.header-frame{padding:7px 8px}.header-frame .brand-card{min-width:0}.brand-copy h1{font-size:.84rem}.brand-copy p{font-size:.59rem}
   .project-card-footer{gap:8px}.project-team-avatar{width:35px;height:35px}.project-date-chip{padding:0 8px;font-size:.68rem}.page-back-btn{width:100%}
 }
+
+
+/* =========================================================
+   V15.5 — CARDS REORGANIZADOS E AÇÕES CENTRALIZADAS
+   ========================================================= */
+
+/* Na área autenticada, a calculadora rápida permanece somente no menu lateral esquerdo. */
+.projects-heading-actions{
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:100%;
+}
+.projects-heading-actions .btn{
+  width:min(100%,360px)!important;
+  min-width:0!important;
+}
+.empty-actions{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.empty-actions .btn{
+  width:min(100%,360px);
+}
+
+/* Cabeçalho do card: data e status na mesma linha. */
+.kanban-project-card{
+  min-height:210px;
+  padding:18px 20px 20px;
+}
+.project-card-topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+.kanban-project-card .project-card-topline .folder{
+  display:block;
+  flex:0 0 auto;
+  margin:0;
+  font-size:2rem;
+  line-height:1;
+}
+.project-card-badges{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+  flex-wrap:nowrap;
+}
+.project-card-status{
+  position:static!important;
+  flex:0 0 auto;
+  padding:5px 9px;
+}
+.project-date-chip{
+  min-height:30px;
+  padding:0 9px;
+  flex:0 1 auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.project-card-content{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:16px;
+  min-height:105px;
+  margin-top:19px;
+  padding-top:17px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.project-card-copy{
+  min-width:0;
+  align-self:center;
+}
+.kanban-project-card .project-card-copy h3{
+  margin:0 0 8px;
+}
+.kanban-project-card .project-card-copy p{
+  margin:0;
+  padding:0;
+}
+.project-team-preview--side{
+  align-self:end;
+  justify-self:end;
+  min-width:auto;
+  padding-left:7px;
+  padding-bottom:1px;
+}
+
+/* Ações dentro do projeto: mesma largura e alinhamento central. */
+.project-heading{
+  align-items:center!important;
+  flex-direction:column;
+  text-align:center;
+}
+.project-heading>div:first-child{
+  max-width:720px;
+}
+.project-heading-date{
+  justify-content:center;
+}
+.project-heading-actions{
+  width:100%;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(180px,220px))!important;
+  justify-content:center!important;
+  align-items:stretch!important;
+  gap:10px!important;
+}
+.project-heading-actions .project-status-badge{
+  grid-column:1/-1!important;
+  justify-self:center!important;
+}
+.project-heading-actions .btn,
+.project-heading-actions #addDirectoryBtn{
+  grid-column:auto!important;
+  width:100%!important;
+  min-width:0;
+}
+.participants-head{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.participants-head .btn{
+  width:min(100%,320px);
+}
+
+@media(max-width:760px){
+  .kanban-project-card{min-height:196px;padding:16px 17px 18px}
+  .project-card-badges{gap:6px}
+  .project-date-chip{font-size:.68rem;padding:0 7px}
+  .project-card-status{font-size:.65rem;padding:5px 8px}
+  .project-card-content{grid-template-columns:minmax(0,1fr) auto;gap:10px;min-height:92px;margin-top:15px;padding-top:15px}
+  .project-team-avatar{width:36px;height:36px}
+  .project-heading-actions{
+    grid-template-columns:minmax(0,360px)!important;
+  }
+  .project-heading-actions .project-status-badge,
+  .project-heading-actions .btn,
+  .project-heading-actions #addDirectoryBtn{
+    grid-column:1!important;
+  }
+}
+
+@media(max-width:390px){
+  .project-card-topline{align-items:flex-start}
+  .project-card-badges{max-width:78%;flex-wrap:wrap}
+  .project-card-content{grid-template-columns:1fr auto}
+  .project-team-avatar{width:33px;height:33px}
+}

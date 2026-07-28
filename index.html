@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15.4">
+  <link rel="stylesheet" href="styles.css?v=15.5">
 </head>
 <body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -91,7 +91,6 @@
       </div>
       <nav class="menu-nav">
         <button class="menu-item" id="menuHomeBtn" type="button"><b>⌂</b><span><strong>Início / Projetos</strong><small>Projetos aos quais você tem acesso</small></span><i>›</i></button>
-        <button class="menu-item" id="menuQuickCalcBtn" type="button"><b>⌁</b><span><strong>Calculadora rápida</strong><small>Calcular sem entrar em projeto</small></span><i>›</i></button>
         <button class="menu-item" id="menuProjectBtn" type="button"><b>▰</b><span><strong>Projeto atual</strong><small>Diretórios e participantes</small></span><i>›</i></button>
         <button class="menu-item" id="menuCalculatorBtn" type="button"><b>✦</b><span><strong>OCR do diretório</strong><small>Capturar novo cartão</small></span><i>›</i></button>
         <button class="menu-item" id="menuRoomsBtn" type="button"><b>📁</b><span><strong>Salas</strong><small>Navegar pelas salas</small></span><i>›</i></button>
@@ -125,7 +124,6 @@
         <div class="page-heading framed-heading projects-heading">
           <div class="projects-heading-copy"><span class="eyebrow" id="projectsEyebrow">INÍCIO</span><h2 id="projectsTitle">Projetos Ativos</h2><p id="projectsDescription">Projetos em andamento, organizados pela data de realização.</p></div>
           <div class="heading-actions projects-heading-actions">
-            <button class="btn btn-soft" id="quickCalcBtn" type="button">⌁ Calculadora rápida</button>
             <button class="btn btn-primary" id="newProjectBtn" type="button">＋ Criar projeto</button>
           </div>
         </div>
@@ -133,7 +131,7 @@
         <div class="project-grid" id="projectGrid"></div>
         <div class="empty-state hidden" id="projectsEmpty">
           <div class="empty-icon">▰</div><h3 id="projectsEmptyTitle">Você ainda não possui projetos ativos</h3><p id="projectsEmptyText">Crie um projeto ou consulte os projetos concluídos pelo menu lateral.</p>
-          <div class="empty-actions"><button class="btn btn-soft" id="emptyQuickCalcBtn" type="button">⌁ Usar calculadora</button><button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar projeto</button></div>
+          <div class="empty-actions"><button class="btn btn-primary" id="emptyNewProjectBtn" type="button">＋ Criar projeto</button></div>
         </div>
       </section>
 
@@ -351,7 +349,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15.4"></script>
-  <script src="app.js?v=15.4"></script>
+  <script src="config.js?v=15.5"></script>
+  <script src="app.js?v=15.5"></script>
 </body>
 </html>

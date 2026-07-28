@@ -1,19 +1,20 @@
-# Portal FCC V15.4
+# Portal FCC V15.5
 
-Portal mobile-first para organização de projetos de aplicação de provas, com Google Login, participantes por cargo, diretórios, OCR de cartões, salas, checklist e calculadora pública.
+Atualização visual e de navegação sobre a V15.4.
 
-## Destaques da V15.4
+## Alterações
 
-- Navegação principal em menu lateral esquerdo.
-- Listas independentes de **Projetos Ativos** e **Projetos Concluídos**.
-- Projetos ordenados pela data de realização.
-- Data obrigatória na criação e exibida nos cards.
-- Avatares do PO e do Coordenador nos cards, em estilo Kanban.
-- Botões de voltar nas páginas internas.
-- Interface responsiva para celular e desktop.
+- A calculadora rápida foi removida da tela de projetos quando o usuário está autenticado.
+- A calculadora continua disponível no menu lateral esquerdo e, sem login, na tela pública.
+- Data e status agora aparecem juntos na mesma linha superior dos cards.
+- Avatares do PO e do Coordenador foram movidos para a lateral direita do card.
+- Botões internos do projeto foram padronizados, centralizados e receberam a mesma largura.
+- Layout responsivo revisado para celular e desktop.
 
-## Implantação
+## Supabase
 
-Quem já usa a V15.3 deve executar `SUPABASE_HOTFIX_V15_4.sql`, configurar `config.js` e substituir os arquivos do GitHub Pages.
+Não é necessário executar SQL novo. Mantenha as tabelas e funções da V15.4/V15.3.
 
-Consulte `PASSO_A_PASSO_V15_4.txt`.
+## Publicação
+
+Copie suas credenciais atuais para `config.js` e substitua os arquivos no GitHub Pages.
