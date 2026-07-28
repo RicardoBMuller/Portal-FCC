@@ -1,17 +1,17 @@
-# Portal FCC V15.6
+# Portal FCC V15.7
 
-Portal responsivo para controle de projetos de aplicação de provas, com autenticação Google, participantes por função, diretórios, OCR de cartões, salas, checklist e calculadora rápida.
+Portal mobile-first para gestão de projetos, diretórios, salas, cartões de prova, OCR e checklist.
 
-## Novidades da V15.6
+## Novidades desta versão
 
-- BIO profissional vinculada à conta Google;
-- tela com todos os projetos do profissional;
-- descrição personalizada no card do projeto;
-- botões internos perfeitamente centralizados;
-- campos profissionais armazenados no Supabase.
+- painel administrativo do projeto reorganizado e perfeitamente centralizado;
+- edição de nome, data de realização e texto do card;
+- administração exclusiva do **PO do Projeto**;
+- novos projetos incluem automaticamente o criador como PO;
+- proteção aplicada também no Supabase, não apenas na interface.
 
-## Publicação
+## Atualização
 
-O frontend é estático e pode ser publicado no GitHub Pages. Antes de publicar, configure `config.js` e execute `SUPABASE_HOTFIX_V15_6.sql` no projeto Supabase já existente.
+Quem já utiliza a V15.6 deve executar apenas `SUPABASE_HOTFIX_V15_7.sql` e depois substituir os arquivos do GitHub Pages.
 
-Consulte `PASSO_A_PASSO_V15_6.txt`.
+Leia `PASSO_A_PASSO_V15_7.txt` antes de publicar.

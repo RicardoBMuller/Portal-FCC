@@ -26,12 +26,13 @@
     profileProjectGrid: $("profileProjectGrid"), profileProjectsStatus: $("profileProjectsStatus"), profileProjectsEmpty: $("profileProjectsEmpty"),
     projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), projectDescription: $("projectDescription"), projectDateLabel: $("projectDateLabel"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
     projectParticipantsGrid: $("projectParticipantsGrid"), manageParticipantsBtn: $("manageParticipantsBtn"),
-    projectStatusBadge: $("projectStatusBadge"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
+    projectStatusBadge: $("projectStatusBadge"), projectAdminPanel: $("projectAdminPanel"), editProjectBtn: $("editProjectBtn"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
     projectActionModal: $("projectActionModal"), projectActionChip: $("projectActionChip"), projectActionTitle: $("projectActionTitle"), projectActionText: $("projectActionText"), projectActionValidation: $("projectActionValidation"), projectActionConfirm: $("projectActionConfirm"), deleteProjectConfirmField: $("deleteProjectConfirmField"), deleteProjectConfirmInput: $("deleteProjectConfirmInput"),
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
     menuDrawer: $("menuDrawer"), bioSector: $("bioSector"), bioJobTitle: $("bioJobTitle"), bioPhone: $("bioPhone"), bioExtension: $("bioExtension"),
     profileModal: $("profileModal"), profileValidation: $("profileValidation"), profileSectorInput: $("profileSectorInput"), profileJobTitleInput: $("profileJobTitleInput"), profilePhoneInput: $("profilePhoneInput"), profileExtensionInput: $("profileExtensionInput"),
     projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), newProjectDescription: $("newProjectDescription"), directoryRowList: $("directoryRowList"),
+    editProjectModal: $("editProjectModal"), editProjectName: $("editProjectName"), editProjectDate: $("editProjectDate"), editProjectDescription: $("editProjectDescription"), editProjectDescriptionCount: $("editProjectDescriptionCount"), editProjectValidation: $("editProjectValidation"), saveProjectEditsBtn: $("saveProjectEditsBtn"),
     participantsModal: $("participantsModal"), participantsValidation: $("participantsValidation"), participantInputs: qa(".participant-search-input"),
     directoryModal: $("directoryModal"), singleDirectoryName: $("singleDirectoryName"), singleDirectoryPeriod: $("singleDirectoryPeriod"), directoryModalValidation: $("directoryModalValidation"),
     sections: qa(".directory-section"), sectionTabs: qa(".section-tab"),
@@ -443,6 +444,65 @@
     } catch (error) { el.projectModalValidation.textContent = `Erro: ${error.message}`; }
   }
 
+  function updateEditDescriptionCount() {
+    const length = el.editProjectDescription.value.length;
+    el.editProjectDescriptionCount.textContent = `${length}/180`;
+  }
+
+  function openEditProjectModal() {
+    if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return showToast("Somente o PO pode editar o projeto.");
+    if (isCurrentProjectClosed()) return showToast("Projetos encerrados ficam disponíveis somente para consulta.");
+    el.editProjectName.value = currentProject.name || "";
+    el.editProjectDate.value = String(currentProject.project_date || "").slice(0, 10);
+    el.editProjectDescription.value = currentProject.card_description || "Abrir diretórios do projeto";
+    el.editProjectValidation.textContent = "";
+    updateEditDescriptionCount();
+    openModal(el.editProjectModal);
+  }
+
+  async function saveProjectEdits() {
+    if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return void (el.editProjectValidation.textContent = "Somente o PO pode editar o projeto.");
+    if (isCurrentProjectClosed()) return void (el.editProjectValidation.textContent = "Projetos encerrados não podem ser editados.");
+
+    const name = el.editProjectName.value.trim();
+    const projectDate = el.editProjectDate.value;
+    const cardDescription = el.editProjectDescription.value.trim();
+    if (name.length < 2 || name.length > 120) return void (el.editProjectValidation.textContent = "Informe um nome entre 2 e 120 caracteres.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) return void (el.editProjectValidation.textContent = "Informe a data de realização.");
+    if (cardDescription.length < 2 || cardDescription.length > 180) return void (el.editProjectValidation.textContent = "Informe um texto do card entre 2 e 180 caracteres.");
+
+    el.editProjectValidation.textContent = "Salvando alterações...";
+    el.saveProjectEditsBtn.disabled = true;
+    try {
+      const data = await supabaseRequest("rpc/fcc_update_project", {
+        method: "POST",
+        body: {
+          p_project_id: currentProject.id,
+          p_name: name,
+          p_project_date: projectDate,
+          p_card_description: cardDescription
+        }
+      });
+      const updated = Array.isArray(data) ? data[0] : data;
+      if (!updated?.id) throw new Error("O Supabase não retornou o projeto atualizado.");
+      currentProject = { ...currentProject, ...updated };
+      el.projectTitle.textContent = currentProject.name;
+      el.projectCrumb.textContent = currentProject.name;
+      el.projectDescription.textContent = currentProject.card_description;
+      el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`;
+      closeModal(el.editProjectModal);
+      showToast("Projeto atualizado.");
+      await loadProjects();
+      renderProjectState();
+    } catch (error) {
+      el.editProjectValidation.textContent = `Erro: ${error.message}`;
+    } finally {
+      el.saveProjectEditsBtn.disabled = false;
+    }
+  }
+
   async function claimLegacyProject(project) {
     if (project.created_by) return project;
     const result = await supabaseRequest("rpc/fcc_claim_project", { method: "POST", body: { p_project_id: project.id } });
@@ -479,6 +539,7 @@
   async function createSingleDirectory() {
     const name = el.singleDirectoryName.value.trim(); const period = el.singleDirectoryPeriod.value;
     if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return void (el.directoryModalValidation.textContent = "Somente o PO pode criar diretórios.");
     if (isCurrentProjectClosed()) return void (el.directoryModalValidation.textContent = "Este projeto está encerrado e não aceita novos diretórios.");
     if (!name) return void (el.directoryModalValidation.textContent = "Informe o nome do diretório.");
     try {
@@ -508,22 +569,34 @@
     return `<article class="participant-role-card"><span class="role-label">${escapeHtml(label)}</span><div class="participant-mini">${avatarHtml}<div><strong>${escapeHtml(name)}</strong><small>${escapeHtml(member.email || "")}</small></div></div></article>`;
   }
 
-  function canManageParticipants() {
-    return Boolean(currentProject && currentUser && (currentProject.created_by === currentUser.id || projectMembersCache.some(m => m.user_id === currentUser.id && m.role === "po")));
+  function isCurrentUserProjectPO() {
+    if (!currentProject || !currentUser) return false;
+    // Quando a equipe já foi carregada, ela é a fonte mais atual (inclusive
+    // após uma transferência do cargo de PO). O campo do card é fallback.
+    if (projectMembersCache.length) {
+      return projectMembersCache.some(member => member.user_id === currentUser.id && member.role === "po");
+    }
+    return currentProject.po_user_id === currentUser.id;
   }
 
-  function isProjectOwner() { return Boolean(currentProject && currentUser && currentProject.created_by === currentUser.id); }
+  function canManageParticipants() { return isCurrentUserProjectPO(); }
   function isCurrentProjectClosed() { return currentProject?.status === "encerrado"; }
   function renderProjectState() {
     if (!currentProject) return;
-    const closed = isCurrentProjectClosed(); const canManage = canManageParticipants(); const owner = isProjectOwner();
+    const closed = isCurrentProjectClosed();
+    const isPO = isCurrentUserProjectPO();
     el.projectStatusBadge.textContent = closed ? "Encerrado" : "Ativo";
     el.projectStatusBadge.className = `project-status-badge ${closed ? "closed" : "active"}`;
-    el.addDirectoryBtn.disabled = closed;
-    el.addDirectoryBtn.classList.toggle("hidden", closed);
-    el.closeProjectBtn.classList.toggle("hidden", closed || !canManage);
-    el.deleteProjectBtn.classList.toggle("hidden", !owner);
-    el.manageParticipantsBtn.classList.toggle("hidden", closed || !canManage);
+
+    // A administração estrutural do projeto é exclusiva do PO.
+    el.projectAdminPanel.classList.toggle("hidden", !isPO);
+    el.editProjectBtn.classList.toggle("hidden", closed || !isPO);
+    el.addDirectoryBtn.disabled = closed || !isPO;
+    el.addDirectoryBtn.classList.toggle("hidden", closed || !isPO);
+    el.closeProjectBtn.classList.toggle("hidden", closed || !isPO);
+    el.deleteProjectBtn.classList.toggle("hidden", !isPO);
+    el.manageParticipantsBtn.classList.toggle("hidden", closed || !isPO);
+
     [$("takePhotoBtn"), $("roomsCaptureBtn"), $("saveChecklistBtn")].forEach(btn => { if (btn) btn.disabled = closed; });
     [el.check1, el.check2, el.check3, el.check4, el.checkComments].forEach(field => { if (field) field.disabled = closed; });
     el.projectView.classList.toggle("project-is-closed", closed);
@@ -537,8 +610,8 @@
     el.projectActionChip.textContent = deleting ? "EXCLUIR PROJETO" : "ENCERRAR PROJETO";
     el.projectActionTitle.textContent = deleting ? `Excluir ${currentProject.name}?` : `Encerrar ${currentProject.name}?`;
     el.projectActionText.textContent = deleting
-      ? "Esta ação exclui definitivamente o projeto, diretórios, salas, cartões, checklist e participantes. Não poderá ser desfeita."
-      : "O projeto ficará disponível para consulta, mas novos diretórios, cartões, alterações de equipe e checklist ficarão bloqueados.";
+      ? "Esta ação, exclusiva do PO, exclui definitivamente o projeto, diretórios, salas, cartões, checklist e participantes. Não poderá ser desfeita."
+      : "O projeto ficará disponível para consulta, mas novas alterações ficarão bloqueadas. Esta ação é exclusiva do PO.";
     el.deleteProjectConfirmField.classList.toggle("hidden", !deleting);
     el.projectActionConfirm.textContent = deleting ? "⌫ Excluir definitivamente" : "⏹ Encerrar projeto";
     el.projectActionConfirm.classList.toggle("btn-danger", deleting);
@@ -551,7 +624,7 @@
     el.projectActionValidation.textContent = "";
     try {
       if (projectActionMode === "delete") {
-        if (!isProjectOwner()) throw new Error("Somente o criador pode excluir definitivamente o projeto.");
+        if (!isCurrentUserProjectPO()) throw new Error("Somente o PO pode excluir definitivamente o projeto.");
         if (el.deleteProjectConfirmInput.value.trim() !== currentProject.name) {
           el.projectActionValidation.textContent = "Digite exatamente o nome do projeto para confirmar a exclusão."; return;
         }
@@ -559,7 +632,7 @@
         await supabaseRequest("rpc/fcc_delete_project", { method: "POST", body: { p_project_id: currentProject.id } });
         closeModal(el.projectActionModal); showToast("Projeto excluído."); currentProject = null; currentDirectory = null; projectMembersCache = []; updateMenuContext(); await goProjects(currentProjectFilter);
       } else {
-        if (!canManageParticipants()) throw new Error("Somente o criador ou o PO pode encerrar o projeto.");
+        if (!isCurrentUserProjectPO()) throw new Error("Somente o PO pode encerrar o projeto.");
         el.projectActionValidation.textContent = "Encerrando projeto...";
         const data = await supabaseRequest("rpc/fcc_close_project", { method: "POST", body: { p_project_id: currentProject.id } });
         const updated = Array.isArray(data) ? data[0] : data; currentProject = { ...currentProject, ...(updated || {}), status: "encerrado" };
@@ -607,6 +680,7 @@
 
   async function openParticipantsModal(prefillCreator = false) {
     if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return showToast("Somente o PO pode gerenciar participantes.");
     if (isCurrentProjectClosed()) return showToast("Projeto encerrado: participantes disponíveis somente para consulta.");
     resetParticipantPicker();
     if (!prefillCreator && !projectMembersCache.length) await loadProjectMembers();
@@ -646,12 +720,17 @@
 
   async function saveParticipants() {
     if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return void (el.participantsValidation.textContent = "Somente o PO pode alterar participantes.");
     if (isCurrentProjectClosed()) return void (el.participantsValidation.textContent = "Projeto encerrado: não é possível alterar participantes.");
     const chosen = ROLE_ORDER.filter(role => selectedParticipants[role]?.user_id || selectedParticipants[role]?.id);
     if (!chosen.length) return void (el.participantsValidation.textContent = "Selecione pelo menos um participante ou use ‘Agora não’." );
     el.participantsValidation.textContent = "Salvando participantes...";
     try {
-      for (const role of ROLE_ORDER) {
+      // O cargo de PO é processado por último. Assim, ao transferir o papel
+      // para outra pessoa, o PO atual ainda consegue salvar os demais cargos
+      // na mesma operação antes de perder a permissão administrativa.
+      const saveOrder = ["coordenador", "auxiliar_coordenacao", "fiscal_controle", "po"];
+      for (const role of saveOrder) {
         const person = selectedParticipants[role]; const userId = person?.user_id || person?.id || null;
         if (userId) await supabaseRequest("rpc/fcc_set_project_member", { method: "POST", body: { p_project_id: currentProject.id, p_user_id: userId, p_role: role } });
         else if (originalRoleUsers[role]) await supabaseRequest("rpc/fcc_clear_project_role", { method: "POST", body: { p_project_id: currentProject.id, p_role: role } });
@@ -821,6 +900,7 @@
 
     $("newProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("emptyNewProjectBtn").addEventListener("click",()=>{resetProjectModal();openModal(el.projectModal)}); $("projectModalClose").addEventListener("click",()=>closeModal(el.projectModal)); $("addDirectoryRowBtn").addEventListener("click",()=>addDirectoryRow()); $("createProjectConfirmBtn").addEventListener("click",createProjectWithDirectories);
     $("backProjectsBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo")); $("projectBackBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo"));
+    el.editProjectBtn.addEventListener("click",openEditProjectModal); $("editProjectModalClose").addEventListener("click",()=>closeModal(el.editProjectModal)); $("editProjectCancelBtn").addEventListener("click",()=>closeModal(el.editProjectModal)); el.saveProjectEditsBtn.addEventListener("click",saveProjectEdits); el.editProjectDescription.addEventListener("input",updateEditDescriptionCount);
     el.closeProjectBtn.addEventListener("click",()=>openProjectAction("close")); el.deleteProjectBtn.addEventListener("click",()=>openProjectAction("delete")); $("projectActionClose").addEventListener("click",()=>closeModal(el.projectActionModal)); $("projectActionCancel").addEventListener("click",()=>closeModal(el.projectActionModal)); el.projectActionConfirm.addEventListener("click",confirmProjectAction);
     $("manageParticipantsBtn").addEventListener("click",()=>openParticipantsModal(false)); $("participantsModalClose").addEventListener("click",()=>closeModal(el.participantsModal)); $("participantsLaterBtn").addEventListener("click",()=>closeModal(el.participantsModal)); $("saveParticipantsBtn").addEventListener("click",saveParticipants);
     el.participantInputs.forEach(input=>input.addEventListener("input",()=>handleParticipantSearch(input)));

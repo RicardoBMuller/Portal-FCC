@@ -416,3 +416,173 @@ body.guest-mode .nav-toggle{display:none!important}
   .profile-bio-list>div{grid-template-columns:78px minmax(0,1fr);gap:9px}
   .profile-bio-card{padding:15px}
 }
+
+/* =========================================================
+   V15.7 — ADMINISTRAÇÃO PROFISSIONAL E EDIÇÃO EXCLUSIVA DO PO
+   ========================================================= */
+
+/* O cabeçalho interno do projeto passa a ter uma única coluna real.
+   Isto evita o desalinhamento visto em telas mobile estreitas. */
+.project-heading{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  align-items:stretch!important;
+  justify-items:center!important;
+  gap:22px!important;
+  width:100%!important;
+  text-align:center!important;
+}
+.project-heading-main{
+  width:min(100%,780px);
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.project-heading-main h2{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.project-heading-main>p{
+  max-width:680px;
+}
+.project-meta-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+.project-meta-row .project-heading-date{
+  margin-top:0!important;
+}
+
+/* Painel administrativo separado do conteúdo informativo. */
+.project-admin-panel{
+  width:min(100%,760px);
+  min-width:0;
+  padding:18px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.project-admin-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+  text-align:left;
+}
+.project-admin-heading>span{
+  color:#efb1cc;
+  font-size:.69rem;
+  font-weight:850;
+  letter-spacing:.13em;
+}
+.project-admin-heading>small{
+  color:var(--muted);
+  font-size:.75rem;
+}
+
+.project-admin-panel .project-heading-actions{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  gap:11px!important;
+}
+.project-admin-panel .project-heading-actions .btn,
+.project-admin-panel .project-heading-actions #addDirectoryBtn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:0 16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  line-height:1.2;
+  border-radius:16px;
+}
+.project-edit-btn{
+  color:#f7e8ef;
+  border-color:rgba(196,59,115,.23);
+  background:linear-gradient(145deg,rgba(196,59,115,.13),rgba(255,255,255,.065));
+}
+.project-edit-btn:hover{
+  border-color:rgba(196,59,115,.44);
+  background:linear-gradient(145deg,rgba(196,59,115,.21),rgba(255,255,255,.085));
+}
+
+/* Formulário de edição. */
+.edit-project-form{
+  display:grid;
+  gap:13px;
+  margin-top:18px;
+}
+.edit-project-form textarea{
+  width:100%;
+  min-height:112px;
+  padding:13px 14px;
+  resize:vertical;
+  border-radius:14px;
+  color:#fff;
+  background:rgba(11,11,18,.48);
+  border:1px solid var(--line);
+  outline:none;
+}
+.edit-project-form textarea:focus,
+.edit-project-form input:focus{
+  border-color:rgba(196,59,115,.55);
+  box-shadow:0 0 0 3px rgba(196,59,115,.10);
+}
+.edit-project-form .modal-field small{
+  justify-self:end;
+  color:var(--muted);
+  font-size:.72rem;
+}
+
+/* O botão de gestão da equipe mantém o mesmo eixo visual do projeto. */
+.participants-head{
+  width:100%;
+}
+.participants-head .btn{
+  width:min(100%,420px)!important;
+  min-height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-inline:auto;
+}
+
+@media(max-width:640px){
+  .project-heading{
+    padding:19px 14px!important;
+    gap:18px!important;
+  }
+  .project-admin-panel{
+    padding:14px;
+    border-radius:18px;
+  }
+  .project-admin-heading{
+    display:grid;
+    justify-items:center;
+    gap:5px;
+    text-align:center;
+  }
+  .project-admin-panel .project-heading-actions{
+    grid-template-columns:1fr!important;
+  }
+  .project-admin-panel .project-heading-actions .btn,
+  .project-admin-panel .project-heading-actions #addDirectoryBtn{
+    min-height:56px!important;
+  }
+}
