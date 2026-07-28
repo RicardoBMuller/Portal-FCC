@@ -20,17 +20,18 @@
     intro: $("introScreen"), authGate: $("authGate"), authError: $("authError"), appShell: $("appShell"),
     headerAvatarImg: $("headerAvatarImg"), headerAvatarFallback: $("headerAvatarFallback"),
     drawerAvatarImg: $("drawerAvatarImg"), drawerAvatarFallback: $("drawerAvatarFallback"), drawerUserName: $("drawerUserName"), drawerUserEmail: $("drawerUserEmail"),
-    views: qa(".view"), projectsView: $("projectsView"), quickCalculatorView: $("quickCalculatorView"), projectView: $("projectView"), directoryView: $("directoryView"),
+    views: qa(".view"), projectsView: $("projectsView"), profileProjectsView: $("profileProjectsView"), quickCalculatorView: $("quickCalculatorView"), projectView: $("projectView"), directoryView: $("directoryView"),
     navDrawer: $("navDrawer"), navActiveProjectsBtn: $("navActiveProjectsBtn"), navClosedProjectsBtn: $("navClosedProjectsBtn"),
     projectGrid: $("projectGrid"), projectsStatus: $("projectsStatus"), projectsEmpty: $("projectsEmpty"), projectsEyebrow: $("projectsEyebrow"), projectsTitle: $("projectsTitle"), projectsDescription: $("projectsDescription"), projectsEmptyTitle: $("projectsEmptyTitle"), projectsEmptyText: $("projectsEmptyText"),
-    projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), projectDateLabel: $("projectDateLabel"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
+    profileProjectGrid: $("profileProjectGrid"), profileProjectsStatus: $("profileProjectsStatus"), profileProjectsEmpty: $("profileProjectsEmpty"),
+    projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), projectDescription: $("projectDescription"), projectDateLabel: $("projectDateLabel"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
     projectParticipantsGrid: $("projectParticipantsGrid"), manageParticipantsBtn: $("manageParticipantsBtn"),
     projectStatusBadge: $("projectStatusBadge"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
     projectActionModal: $("projectActionModal"), projectActionChip: $("projectActionChip"), projectActionTitle: $("projectActionTitle"), projectActionText: $("projectActionText"), projectActionValidation: $("projectActionValidation"), projectActionConfirm: $("projectActionConfirm"), deleteProjectConfirmField: $("deleteProjectConfirmField"), deleteProjectConfirmInput: $("deleteProjectConfirmInput"),
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
-    menuDrawer: $("menuDrawer"), menuProjectLabel: $("menuProjectLabel"), menuDirectoryLabel: $("menuDirectoryLabel"),
-    menuProjectBtn: $("menuProjectBtn"), menuCalculatorBtn: $("menuCalculatorBtn"), menuRoomsBtn: $("menuRoomsBtn"), menuChecklistBtn: $("menuChecklistBtn"),
-    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), directoryRowList: $("directoryRowList"),
+    menuDrawer: $("menuDrawer"), bioSector: $("bioSector"), bioJobTitle: $("bioJobTitle"), bioPhone: $("bioPhone"), bioExtension: $("bioExtension"),
+    profileModal: $("profileModal"), profileValidation: $("profileValidation"), profileSectorInput: $("profileSectorInput"), profileJobTitleInput: $("profileJobTitleInput"), profilePhoneInput: $("profilePhoneInput"), profileExtensionInput: $("profileExtensionInput"),
+    projectModal: $("projectModal"), projectModalValidation: $("projectModalValidation"), newProjectName: $("newProjectName"), newProjectDate: $("newProjectDate"), newProjectDescription: $("newProjectDescription"), directoryRowList: $("directoryRowList"),
     participantsModal: $("participantsModal"), participantsValidation: $("participantsValidation"), participantInputs: qa(".participant-search-input"),
     directoryModal: $("directoryModal"), singleDirectoryName: $("singleDirectoryName"), singleDirectoryPeriod: $("singleDirectoryPeriod"), directoryModalValidation: $("directoryModalValidation"),
     sections: qa(".directory-section"), sectionTabs: qa(".section-tab"),
@@ -47,6 +48,7 @@
   let authClient = null;
   let session = null;
   let currentUser = null;
+  let currentProfile = null;
   let currentProject = null;
   let currentDirectory = null;
   let currentSection = "calculator";
@@ -150,6 +152,68 @@
     await supabaseRequest(`fcc_profiles?${params}`, { method: "POST", body, prefer: "resolution=merge-duplicates,return=minimal" });
   }
 
+  function profileValue(value) {
+    const text = String(value || "").trim();
+    return text || "Não informado";
+  }
+
+  function renderProfileBio() {
+    if (!el.bioSector) return;
+    el.bioSector.textContent = profileValue(currentProfile?.sector);
+    el.bioJobTitle.textContent = profileValue(currentProfile?.job_title);
+    el.bioPhone.textContent = profileValue(currentProfile?.phone);
+    el.bioExtension.textContent = profileValue(currentProfile?.extension);
+  }
+
+  async function loadMyProfile() {
+    if (!currentUser) return;
+    const params = new URLSearchParams({
+      select: "id,full_name,email,avatar_url,sector,job_title,phone,extension,last_seen_at",
+      id: `eq.${currentUser.id}`,
+      limit: "1"
+    });
+    const data = await supabaseRequest(`fcc_profiles?${params}`);
+    currentProfile = Array.isArray(data) && data[0] ? data[0] : {
+      id: currentUser.id,
+      full_name: displayNameFromUser(currentUser),
+      email: currentUser.email || "",
+      avatar_url: avatarFromUser(currentUser),
+      sector: "", job_title: "", phone: "", extension: ""
+    };
+    renderProfileBio();
+  }
+
+  function openProfileModal() {
+    closeMenu();
+    el.profileSectorInput.value = currentProfile?.sector || "";
+    el.profileJobTitleInput.value = currentProfile?.job_title || "";
+    el.profilePhoneInput.value = currentProfile?.phone || "";
+    el.profileExtensionInput.value = currentProfile?.extension || "";
+    el.profileValidation.textContent = "";
+    openModal(el.profileModal);
+  }
+
+  async function saveProfileBio() {
+    if (!currentUser) return;
+    const body = {
+      sector: el.profileSectorInput.value.trim(),
+      job_title: el.profileJobTitleInput.value.trim(),
+      phone: el.profilePhoneInput.value.trim(),
+      extension: el.profileExtensionInput.value.trim()
+    };
+    el.profileValidation.textContent = "Salvando BIO...";
+    try {
+      const params = new URLSearchParams({ id: `eq.${currentUser.id}` });
+      await supabaseRequest(`fcc_profiles?${params}`, { method: "PATCH", body, prefer: "return=minimal" });
+      currentProfile = { ...(currentProfile || {}), ...body };
+      renderProfileBio();
+      closeModal(el.profileModal);
+      showToast("BIO atualizada.");
+    } catch (error) {
+      el.profileValidation.textContent = `Erro: ${error.message}`;
+    }
+  }
+
   function renderSignedUser() {
     const name = displayNameFromUser(currentUser); const email = currentUser?.email || ""; const avatar = avatarFromUser(currentUser); const fallback = initials(name, email);
     el.drawerUserName.textContent = name; el.drawerUserEmail.textContent = email;
@@ -161,7 +225,7 @@
   }
 
   function showLogin(errorMessage = "") {
-    session = null; currentUser = null; currentProject = null; currentDirectory = null;
+    session = null; currentUser = null; currentProfile = null; currentProject = null; currentDirectory = null;
     document.body.classList.remove("guest-mode");
     el.appShell.classList.add("hidden"); el.authGate.classList.remove("hidden"); document.body.classList.remove("auth-pending");
     el.authError.textContent = errorMessage;
@@ -186,7 +250,7 @@
     if (!currentUser) return showLogin();
     document.body.classList.remove("guest-mode");
     renderSignedUser();
-    try { await syncMyProfile(); } catch (error) { console.warn("Perfil não sincronizado:", error); }
+    try { await syncMyProfile(); await loadMyProfile(); } catch (error) { console.warn("Perfil não sincronizado:", error); currentProfile = null; renderProfileBio(); }
     el.authGate.classList.add("hidden"); el.appShell.classList.remove("hidden"); document.body.classList.remove("auth-pending");
     const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.add("hidden");
     updateMenuContext();
@@ -270,39 +334,64 @@
     return `<span class="project-team-avatar fallback" title="${escapeHtml(title)}">${escapeHtml(initials(name || label, email))}</span>`;
   }
 
+  function projectCardElement(project) {
+    const btn = document.createElement("button");
+    btn.className = "project-card kanban-project-card";
+    btn.type = "button";
+    const legacy = !project.created_by;
+    const closed = project.status === "encerrado";
+    const dateText = formatProjectDate(project.project_date, project.created_at);
+    const poAvatar = projectAvatarHtml(project.po_name, project.po_email, project.po_avatar_url, "PO");
+    const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
+    const description = String(project.card_description || "Abrir diretórios do projeto").trim();
+    btn.classList.toggle("closed-project", closed);
+    btn.innerHTML = `
+      <div class="project-card-topline">
+        <span class="folder" aria-hidden="true">▰</span>
+        <div class="project-card-badges">
+          <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
+          <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
+        </div>
+      </div>
+      <div class="project-card-content">
+        <div class="project-card-copy">
+          <h3>${escapeHtml(project.name)}</h3>
+          <p>${escapeHtml(legacy ? "Projeto legado • será vinculado ao abrir" : description)}</p>
+        </div>
+        <div class="project-team-preview project-team-preview--side" aria-label="PO e Coordenador do projeto">${poAvatar}${coordinatorAvatar}</div>
+      </div>`;
+    btn.addEventListener("click", () => openProject(project));
+    return btn;
+  }
+
   function renderProjects(projects) {
     const filtered = projects
       .filter(project => (project.status || "ativo") === currentProjectFilter)
       .sort((a, b) => projectDateSortValue(b) - projectDateSortValue(a));
-    el.projectGrid.innerHTML = ""; el.projectsEmpty.classList.toggle("hidden", filtered.length > 0);
-    filtered.forEach(project => {
-      const btn = document.createElement("button"); btn.className = "project-card kanban-project-card"; btn.type = "button";
-      const legacy = !project.created_by; const closed = project.status === "encerrado";
-      const dateText = formatProjectDate(project.project_date, project.created_at);
-      const poAvatar = projectAvatarHtml(project.po_name, project.po_email, project.po_avatar_url, "PO");
-      const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
-      btn.classList.toggle("closed-project", closed);
-      btn.innerHTML = `
-        <div class="project-card-topline">
-          <span class="folder" aria-hidden="true">▰</span>
-          <div class="project-card-badges">
-            <span class="project-date-chip">📅 ${escapeHtml(dateText)}</span>
-            <span class="project-card-status ${closed ? "closed" : "active"}">${closed ? "Concluído" : "Ativo"}</span>
-          </div>
-        </div>
-        <div class="project-card-content">
-          <div class="project-card-copy">
-            <h3>${escapeHtml(project.name)}</h3>
-            <p>${closed ? "Projeto concluído • disponível para consulta" : legacy ? "Projeto legado • será vinculado ao abrir" : "Abrir diretórios do projeto"}</p>
-          </div>
-          <div class="project-team-preview project-team-preview--side" aria-label="PO e Coordenador do projeto">${poAvatar}${coordinatorAvatar}</div>
-        </div>`;
-      btn.addEventListener("click", () => openProject(project)); el.projectGrid.appendChild(btn);
-    });
+    el.projectGrid.innerHTML = "";
+    el.projectsEmpty.classList.toggle("hidden", filtered.length > 0);
+    filtered.forEach(project => el.projectGrid.appendChild(projectCardElement(project)));
+  }
+
+  async function openProfileProjects() {
+    closeMenu();
+    showView("profileProjectsView");
+    el.profileProjectsStatus.innerHTML = "<span></span> Carregando todos os seus projetos...";
+    el.profileProjectGrid.innerHTML = "";
+    el.profileProjectsEmpty.classList.add("hidden");
+    try {
+      const projects = await supabaseRequest("rpc/fcc_list_my_projects", { method: "POST", body: {} });
+      const all = (Array.isArray(projects) ? projects : []).sort((a, b) => projectDateSortValue(b) - projectDateSortValue(a));
+      el.profileProjectsEmpty.classList.toggle("hidden", all.length > 0);
+      all.forEach(project => el.profileProjectGrid.appendChild(projectCardElement(project)));
+      el.profileProjectsStatus.innerHTML = `<span></span> ${all.length} ${all.length === 1 ? "projeto encontrado" : "projetos encontrados"}`;
+    } catch (error) {
+      el.profileProjectsStatus.textContent = `Supabase: ${error.message}`;
+    }
   }
 
   function resetProjectModal() {
-    el.newProjectName.value = ""; el.newProjectDate.value = ""; el.projectModalValidation.textContent = ""; el.directoryRowList.innerHTML = "";
+    el.newProjectName.value = ""; el.newProjectDate.value = ""; el.newProjectDescription.value = "Abrir diretórios do projeto"; el.projectModalValidation.textContent = ""; el.directoryRowList.innerHTML = "";
     addDirectoryRow("", "manha"); addDirectoryRow("", "tarde");
   }
 
@@ -316,9 +405,11 @@
   async function createProjectWithDirectories() {
     const name = el.newProjectName.value.trim();
     const projectDate = el.newProjectDate.value;
+    const cardDescription = el.newProjectDescription.value.trim();
     const rows = [...el.directoryRowList.querySelectorAll(".directory-create-row")].map(row => ({ name: row.querySelector(".dir-row-name").value.trim(), period: row.querySelector(".dir-row-period").value }));
     if (name.length < 2) return void (el.projectModalValidation.textContent = "Informe o nome do projeto.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) return void (el.projectModalValidation.textContent = "Informe a data de realização do projeto.");
+    if (cardDescription.length < 2 || cardDescription.length > 180) return void (el.projectModalValidation.textContent = "Informe um texto do card entre 2 e 180 caracteres.");
     if (!rows.length || rows.some(row => !row.name)) return void (el.projectModalValidation.textContent = "Preencha o nome de todos os diretórios.");
     const normalizedNames = rows.map(row => row.name.toLocaleLowerCase("pt-BR"));
     if (new Set(normalizedNames).size !== normalizedNames.length) return void (el.projectModalValidation.textContent = "Use nomes diferentes nos diretórios.");
@@ -333,6 +424,7 @@
           p_name: name,
           p_slug: slugify(name),
           p_project_date: projectDate,
+          p_card_description: cardDescription,
           p_directories: rows.map((row, index) => ({
             name: row.name,
             period: row.period,
@@ -344,6 +436,7 @@
       if (!project?.id) throw new Error("O Supabase não retornou o projeto criado.");
       project.status = project.status || "ativo";
       project.project_date = project.project_date || projectDate;
+      project.card_description = project.card_description || cardDescription;
       currentProjectFilter = "ativo";
       closeModal(el.projectModal); showToast("Projeto criado."); await loadProjects(); await openProject(project);
       await openParticipantsModal(true);
@@ -361,7 +454,7 @@
     try { project = await claimLegacyProject(project); }
     catch (error) { showToast(error.message); await loadProjects(); return; }
     currentProject = { ...project, status: project.status || "ativo" }; currentDirectory = null; projectMembersCache = []; updateMenuContext();
-    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`; showView("projectView");
+    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; el.projectDescription.textContent = currentProject.card_description || "Abrir diretórios do projeto"; el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`; showView("projectView");
     renderProjectState();
     await Promise.all([loadDirectories(), loadProjectMembers()]);
   }
@@ -568,11 +661,7 @@
   }
 
   // -------------------- MENU --------------------
-  function updateMenuContext() {
-    el.menuProjectLabel.textContent = currentProject?.name || "Nenhum selecionado";
-    el.menuDirectoryLabel.textContent = currentDirectory ? `${currentDirectory.name} • ${periodLabel(currentDirectory.period)}` : "Nenhum selecionado";
-    el.menuProjectBtn.disabled = !currentProject; [el.menuCalculatorBtn, el.menuRoomsBtn, el.menuChecklistBtn].forEach(btn => btn.disabled = !currentDirectory);
-  }
+  function updateMenuContext() { renderProfileBio(); }
   function openMenu() { el.menuDrawer.classList.add("open"); el.menuDrawer.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); }
   function closeMenu() { el.menuDrawer.classList.remove("open"); el.menuDrawer.setAttribute("aria-hidden", "true"); if (!qa(".modal.open").length && !el.navDrawer.classList.contains("open")) document.body.classList.remove("modal-open"); }
   function openNav() { if (!currentUser) return; el.navDrawer.classList.add("open"); el.navDrawer.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); }
@@ -722,9 +811,11 @@
     el.navClosedProjectsBtn.addEventListener("click",()=>{closeNav();goProjects("encerrado")});
     $("navQuickCalcBtn").addEventListener("click",()=>{closeNav();showView("quickCalculatorView")});
     $("navCreateProjectBtn").addEventListener("click",()=>{closeNav();resetProjectModal();openModal(el.projectModal)});
-    $("menuHomeBtn").addEventListener("click",()=>{closeMenu();goProjects("ativo")}); $("menuQuickCalcBtn")?.addEventListener("click",()=>{closeMenu();showView("quickCalculatorView")});
-    el.menuProjectBtn.addEventListener("click",()=>{if(!currentProject)return;closeMenu();showView("projectView");Promise.all([loadDirectories(),loadProjectMembers()])});
-    el.menuCalculatorBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"calculator")}); el.menuRoomsBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"rooms")}); el.menuChecklistBtn.addEventListener("click",()=>{if(!currentDirectory)return;closeMenu();openDirectory(currentDirectory,"checklist")});
+    $("editProfileBtn").addEventListener("click", openProfileModal);
+    $("profileProjectsBtn").addEventListener("click", openProfileProjects);
+    $("profileProjectsBackBtn").addEventListener("click",()=>goProjects("ativo"));
+    $("profileModalClose").addEventListener("click",()=>closeModal(el.profileModal));
+    $("saveProfileBtn").addEventListener("click", saveProfileBio);
 
     $("quickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("emptyQuickCalcBtn")?.addEventListener("click",()=>showView("quickCalculatorView")); $("quickHomeBtn").addEventListener("click",goQuickHome); $("quickBackBtn").addEventListener("click",goQuickHome);
 

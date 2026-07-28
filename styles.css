@@ -318,3 +318,101 @@ body.guest-mode .nav-toggle{display:none!important}
   .project-card-content{grid-template-columns:1fr auto}
   .project-team-avatar{width:33px;height:33px}
 }
+
+/* =========================================================
+   V15.6 — BIO PROFISSIONAL, DESCRIÇÃO DO CARD E AÇÕES ALINHADAS
+   ========================================================= */
+
+/* Os três botões do projeto têm exatamente a mesma largura e ficam centralizados. */
+.project-heading-actions{
+  width:min(100%,430px)!important;
+  max-width:430px!important;
+  margin-inline:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  gap:11px!important;
+}
+.project-heading-actions .project-status-badge{
+  align-self:center!important;
+  width:auto!important;
+  min-width:92px;
+  grid-column:auto!important;
+}
+.project-heading-actions .btn,
+.project-heading-actions #addDirectoryBtn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:56px!important;
+  grid-column:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+
+.project-description-field{margin-top:13px}
+.project-description-field input{min-height:52px}
+
+/* BIO acionada pelo avatar Google. */
+.profile-bio-panel{overflow-y:auto}
+.profile-bio-card{
+  margin-top:20px;
+  padding:17px;
+  border-radius:19px;
+  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+  border:1px solid var(--line);
+}
+.profile-bio-list{display:grid;gap:0;margin:13px 0 0}
+.profile-bio-list>div{
+  display:grid;
+  grid-template-columns:90px minmax(0,1fr);
+  align-items:start;
+  gap:12px;
+  padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.profile-bio-list>div:last-child{border-bottom:0}
+.profile-bio-list dt{
+  color:#efb5ce;
+  font-size:.7rem;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.profile-bio-list dd{
+  min-width:0;
+  margin:0;
+  color:#fff;
+  font-size:.88rem;
+  overflow-wrap:anywhere;
+}
+.profile-bio-actions{display:grid;gap:9px;margin-top:15px}
+.profile-action{width:100%}
+.profile-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Tela de todos os projetos do profissional. */
+#profileProjectsView .project-grid{margin-top:4px}
+#profileProjectsView .projects-heading{margin-bottom:18px}
+
+/* O texto criado pelo usuário pode ocupar mais de uma linha sem quebrar o card. */
+.kanban-project-card .project-card-copy p{
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  line-height:1.42;
+}
+
+@media(max-width:760px){
+  .project-heading-actions{width:min(100%,390px)!important}
+  .project-heading-actions .btn,
+  .project-heading-actions #addDirectoryBtn{min-height:56px!important}
+  .profile-form-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:470px){
+  .profile-bio-list>div{grid-template-columns:78px minmax(0,1fr);gap:9px}
+  .profile-bio-card{padding:15px}
+}

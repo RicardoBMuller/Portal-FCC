@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=15.5">
+  <link rel="stylesheet" href="styles.css?v=15.6">
 </head>
 <body class="intro-playing auth-pending">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -71,10 +71,10 @@
     </aside>
   </div>
 
-  <!-- Menu do usuário: aberto ao tocar no avatar Google -->
+  <!-- BIO do usuário: aberta ao tocar no avatar Google -->
   <div class="menu-drawer" id="menuDrawer" aria-hidden="true">
     <div class="menu-backdrop" id="menuBackdrop"></div>
-    <aside class="menu-panel" role="dialog" aria-modal="true" aria-label="Menu do usuário">
+    <aside class="menu-panel profile-bio-panel" role="dialog" aria-modal="true" aria-label="Perfil do usuário">
       <div class="user-drawer-head">
         <div class="user-drawer-profile">
           <div class="profile-avatar small">
@@ -83,19 +83,21 @@
           </div>
           <div><strong id="drawerUserName">Usuário</strong><small id="drawerUserEmail">—</small></div>
         </div>
-        <button class="icon-btn" id="menuCloseBtn" type="button" aria-label="Fechar menu">×</button>
+        <button class="icon-btn" id="menuCloseBtn" type="button" aria-label="Fechar perfil">×</button>
       </div>
-      <div class="menu-context">
-        <span>Projeto</span><strong id="menuProjectLabel">Nenhum selecionado</strong>
-        <span>Diretório</span><strong id="menuDirectoryLabel">Nenhum selecionado</strong>
+      <div class="profile-bio-card">
+        <span class="modal-chip">BIO PROFISSIONAL</span>
+        <dl class="profile-bio-list">
+          <div><dt>Setor</dt><dd id="bioSector">Não informado</dd></div>
+          <div><dt>Cargo</dt><dd id="bioJobTitle">Não informado</dd></div>
+          <div><dt>Telefone</dt><dd id="bioPhone">Não informado</dd></div>
+          <div><dt>Ramal</dt><dd id="bioExtension">Não informado</dd></div>
+        </dl>
       </div>
-      <nav class="menu-nav">
-        <button class="menu-item" id="menuHomeBtn" type="button"><b>⌂</b><span><strong>Início / Projetos</strong><small>Projetos aos quais você tem acesso</small></span><i>›</i></button>
-        <button class="menu-item" id="menuProjectBtn" type="button"><b>▰</b><span><strong>Projeto atual</strong><small>Diretórios e participantes</small></span><i>›</i></button>
-        <button class="menu-item" id="menuCalculatorBtn" type="button"><b>✦</b><span><strong>OCR do diretório</strong><small>Capturar novo cartão</small></span><i>›</i></button>
-        <button class="menu-item" id="menuRoomsBtn" type="button"><b>📁</b><span><strong>Salas</strong><small>Navegar pelas salas</small></span><i>›</i></button>
-        <button class="menu-item" id="menuChecklistBtn" type="button"><b>✓</b><span><strong>Checklist</strong><small>Acompanhamento do diretório</small></span><i>›</i></button>
-      </nav>
+      <div class="profile-bio-actions">
+        <button class="menu-item profile-action" id="editProfileBtn" type="button"><b>✎</b><span><strong>Editar BIO</strong><small>Atualizar informações profissionais</small></span><i>›</i></button>
+        <button class="menu-item profile-action" id="profileProjectsBtn" type="button"><b>▰</b><span><strong>Projetos</strong><small>Todos os projetos em que você participou</small></span><i>›</i></button>
+      </div>
       <button class="signout-btn" id="signOutBtn" type="button">Sair da conta</button>
     </aside>
   </div>
@@ -135,6 +137,17 @@
         </div>
       </section>
 
+      <!-- TODOS OS PROJETOS DO PERFIL -->
+      <section class="view" id="profileProjectsView">
+        <button class="page-back-btn" id="profileProjectsBackBtn" type="button">← Voltar aos projetos ativos</button>
+        <div class="page-heading framed-heading projects-heading">
+          <div class="projects-heading-copy"><span class="eyebrow">MINHA TRAJETÓRIA</span><h2>Meus Projetos</h2><p>Todos os projetos ativos e concluídos em que você participou.</p></div>
+        </div>
+        <div class="status-line" id="profileProjectsStatus"><span></span> Carregando projetos...</div>
+        <div class="project-grid" id="profileProjectGrid"></div>
+        <div class="empty-state hidden" id="profileProjectsEmpty"><div class="empty-icon">▰</div><h3>Nenhum projeto encontrado</h3><p>Quando você participar de um projeto, ele aparecerá aqui.</p></div>
+      </section>
+
       <!-- CALCULADORA RÁPIDA SEM PROJETO -->
       <section class="view" id="quickCalculatorView">
         <button class="page-back-btn" id="quickBackBtn" type="button">← Voltar</button>
@@ -166,7 +179,7 @@
         <button class="page-back-btn" id="projectBackBtn" type="button">← Voltar aos projetos</button>
         <div class="breadcrumbs"><button id="backProjectsBtn" type="button">Início</button><span>›</span><strong id="projectCrumb">Projeto</strong></div>
         <div class="page-heading framed-heading project-heading">
-          <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p>Abra um diretório para acessar OCR, salas e checklist.</p><div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div></div>
+          <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p id="projectDescription">Abra um diretório para acessar OCR, salas e checklist.</p><div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div></div>
           <div class="project-heading-actions">
             <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
             <button class="btn btn-soft project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
@@ -245,6 +258,24 @@
     </main>
   </div>
 
+  <!-- EDIÇÃO DA BIO PROFISSIONAL -->
+  <div class="modal" id="profileModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="profileModal"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+      <button class="modal-close" id="profileModalClose" type="button">×</button>
+      <span class="modal-chip">BIO PROFISSIONAL</span><h2 id="profileModalTitle">Editar perfil</h2>
+      <p class="modal-intro">Essas informações ficam vinculadas à sua conta Google no Portal FCC.</p>
+      <div class="profile-form-grid">
+        <label class="modal-field"><span>Setor</span><input id="profileSectorInput" type="text" maxlength="100" placeholder="Ex.: Operações"></label>
+        <label class="modal-field"><span>Cargo</span><input id="profileJobTitleInput" type="text" maxlength="100" placeholder="Ex.: Coordenador"></label>
+        <label class="modal-field"><span>Telefone</span><input id="profilePhoneInput" type="tel" maxlength="30" placeholder="Ex.: (11) 99999-9999"></label>
+        <label class="modal-field"><span>Ramal</span><input id="profileExtensionInput" type="text" maxlength="20" placeholder="Ex.: 1234"></label>
+      </div>
+      <p class="validation" id="profileValidation"></p>
+      <button class="btn btn-primary full" id="saveProfileBtn" type="button">✓ Salvar BIO</button>
+    </section>
+  </div>
+
   <!-- CRIAÇÃO DE PROJETO + DIRETÓRIOS -->
   <div class="modal" id="projectModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="projectModal"></div>
@@ -255,6 +286,7 @@
         <label class="modal-field"><span>Nome do projeto</span><input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Planejamento 2026"></label>
         <label class="modal-field"><span>Data de realização</span><input id="newProjectDate" type="date" required></label>
       </div>
+      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" value="Abrir diretórios do projeto" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
       <div class="subdir-head"><div><strong>Diretórios iniciais</strong><small>Defina o nome e o período de cada diretório.</small></div><button class="small-add-btn" id="addDirectoryRowBtn" type="button">＋ Adicionar</button></div>
       <div class="directory-row-list" id="directoryRowList"></div>
       <p class="validation" id="projectModalValidation"></p>
@@ -349,7 +381,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=15.5"></script>
-  <script src="app.js?v=15.5"></script>
+  <script src="config.js?v=15.6"></script>
+  <script src="app.js?v=15.6"></script>
 </body>
 </html>
