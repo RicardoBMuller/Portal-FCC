@@ -1232,6 +1232,32 @@
     initAuth().catch(error => showLogin(error.message));
     setTimeout(()=>{document.body.classList.remove("intro-playing"); if(el.intro) el.intro.style.display="none";},4100);
   }
+
+  // Ponte segura para módulos internos do Portal FCC. Não expõe chaves nem
+  // permite ignorar o RLS: toda chamada continua usando o JWT do usuário.
+  window.FCCPortalBridge = Object.freeze({
+    request: supabaseRequest,
+    getClient: () => authClient,
+    getSession: () => session,
+    getCurrentUser: () => currentUser,
+    getCurrentProfile: () => currentProfile,
+    getCurrentProject: () => currentProject,
+    getProjectsCache: () => [...projectsCache],
+    refreshProjects: async () => {
+      const projects = await supabaseRequest("rpc/fcc_list_my_projects", { method: "POST", body: {} });
+      projectsCache = Array.isArray(projects) ? projects : [];
+      return [...projectsCache];
+    },
+    showView,
+    showToast,
+    openProject,
+    formatProjectDate,
+    projectDateSortValue,
+    escapeHtml,
+    initials,
+    safeAvatarUrl
+  });
+
   init();
 })();
 
@@ -1246,7 +1272,7 @@
   const dockButtons = {
     home: byId("dockHomeBtn"),
     calc: byId("dockCalcBtn"),
-    create: byId("dockCreateBtn"),
+    kanban: byId("dockKanbanBtn"),
     closed: byId("dockClosedBtn"),
     profile: byId("dockProfileBtn")
   };
@@ -1258,13 +1284,12 @@
 
   dockButtons.home?.addEventListener("click", () => proxyClick("navActiveProjectsBtn"));
   dockButtons.calc?.addEventListener("click", () => proxyClick("navQuickCalcBtn"));
-  dockButtons.create?.addEventListener("click", () => proxyClick("navCreateProjectBtn"));
   dockButtons.closed?.addEventListener("click", () => proxyClick("navClosedProjectsBtn"));
   dockButtons.profile?.addEventListener("click", () => proxyClick("menuOpenBtn"));
 
   function setDockActive(key) {
     Object.entries(dockButtons).forEach(([name, button]) => {
-      if (!button || name === "create") return;
+      if (!button) return;
       button.classList.toggle("active", name === key);
     });
   }
@@ -1274,6 +1299,7 @@
     const projectsTitle = byId("projectsTitle")?.textContent?.toLowerCase() || "";
 
     if (activeView === "quickCalculatorView") setDockActive("calc");
+    else if (activeView === "kanbanView") setDockActive("kanban");
     else if (activeView === "projectsView" && projectsTitle.includes("conclu")) setDockActive("closed");
     else if (activeView === "profileProjectsView") setDockActive("profile");
     else setDockActive("home");

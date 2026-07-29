@@ -1,38 +1,34 @@
-# Portal FCC — V16.2 Experimental
+# Portal FCC V17 — Kanban integrado
 
-Versão experimental do Portal de Provas, construída sobre a linha visual V16 e mantendo a V15.6 como ponto de restauração estável.
+Versão experimental derivada da **V16.4**, mantida como ponto de restauração.
 
-## Correções desta versão
+## Navegação inferior
 
-- o criador do projeto é cadastrado automaticamente como **PO do Projeto**;
-- corrigido o erro `PROJECT_TEAM_DENIED` ao salvar participantes logo após criar um projeto;
-- projetos existentes sem PO são reparados pelo SQL de atualização;
-- adicionada a opção **Editar projeto**;
-- somente o PO pode editar nome, data, texto do card, órgão e imagem de fundo;
-- a troca do PO é processada por último para que os outros cargos sejam salvos antes da transferência de permissão;
-- introdução e animação de atualização da V16.1 foram preservadas.
+`Projetos | Calcular | Kanban | Concluídos | Perfil`
 
-## Atualização de um ambiente existente
+O botão central não cria mais projetos. A criação permanece no botão **+ Criar projeto** da tela inicial.
 
-Execute no Supabase:
+## Kanban por projeto
 
-```text
-SUPABASE_HOTFIX_V16_2.sql
-```
+Cada projeto do Portal FCC possui um quadro independente com as colunas:
 
-Depois copie suas chaves atuais para `config.js` e publique todos os arquivos no GitHub Pages.
+- A Fazer
+- Em Progresso
+- Concluído
 
-## Instalação nova
+O quadro oferece cards, drag and drop, prioridade, prazo, tags, participantes, checklist, comentários, anexos, conclusão, reabertura e Realtime.
 
-Use:
+## Arquivos principais
 
-```text
-SUPABASE_SETUP_V16_2_COMPLETO.sql
-```
+- `index.html` — Portal e interface do Kanban
+- `styles.css` — identidade visual do Portal V16.4
+- `kanban.css` — camada visual isolada do Kanban
+- `app.js` — regras existentes do Portal
+- `kanban-module.js` — regras do Kanban integrado
+- `SUPABASE_HOTFIX_V17_KANBAN.sql` — atualização para quem já usa a V16.4
+- `SUPABASE_SETUP_V17_COMPLETO.sql` — instalação completa
+- `PASSO_A_PASSO_V17.txt` — instruções de instalação
 
-Leia `PASSO_A_PASSO_V16_2.txt` antes de publicar.
+## Segurança
 
-
-## V16.3
-
-Ajustes de texto, ícones e abertura padrão dos diretórios na aba **Salas**. Não exige alteração no banco.
+O frontend utiliza apenas a Publishable Key do Supabase. As permissões são controladas por RLS e pelo login Google.

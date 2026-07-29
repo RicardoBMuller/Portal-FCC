@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
-  <title>FCC • Portal de Provas — V16.4 Experimental</title>
+  <title>FCC • Portal de Provas — V17 Kanban Integrado</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=16.4">
+  <link rel="stylesheet" href="styles.css?v=17.0">
+  <link rel="stylesheet" href="kanban.css?v=17.0">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -152,6 +153,57 @@
       </section>
 
       <!-- CALCULADORA RÁPIDA SEM PROJETO -->
+      <section class="view" id="kanbanView">
+        <button class="page-back-btn" id="kanbanBackBtn" type="button">← Voltar aos projetos</button>
+        <div class="breadcrumbs"><button id="kanbanHomeBtn" type="button">Início</button><span>›</span><strong>Kanban</strong></div>
+
+        <section class="kanban-portal-head">
+          <div>
+            <span class="eyebrow">ORGANIZAÇÃO DO PROJETO</span>
+            <h2>Kanban</h2>
+            <p>Escolha um projeto do Portal FCC e acompanhe tarefas, responsáveis, prazos e progresso.</p>
+          </div>
+          <button class="btn btn-primary kanban-new-card-head hidden" id="kanbanNewCardBtn" type="button">＋ Novo card</button>
+        </section>
+
+        <section class="kanban-project-picker" id="kanbanProjectPicker">
+          <div class="kanban-picker-title"><span>Projetos disponíveis</span><small>O quadro é exclusivo para cada projeto.</small></div>
+          <div class="kanban-project-list" id="kanbanProjectList"></div>
+          <div class="empty-state hidden" id="kanbanProjectsEmpty"><div class="empty-icon">▥</div><h3>Nenhum projeto disponível</h3><p>Crie um projeto pelo botão “+ Criar projeto” na tela Projetos.</p></div>
+        </section>
+
+        <section class="kanban-workspace hidden" id="kanbanWorkspace">
+          <div class="kanban-board-toolbar">
+            <button class="kanban-project-switch" id="kanbanChangeProjectBtn" type="button">← Trocar projeto</button>
+            <div class="kanban-current-project">
+              <span class="kanban-project-status" id="kanbanProjectStatus">ATIVO</span>
+              <strong id="kanbanProjectTitle">Projeto</strong>
+              <small id="kanbanProjectMeta">Kanban do projeto</small>
+            </div>
+            <div class="kanban-progress-card">
+              <span>Progresso</span>
+              <strong id="kanbanProgressText">0%</strong>
+              <div class="kanban-progress-track"><i id="kanbanProgressBar"></i></div>
+            </div>
+          </div>
+
+          <div class="kanban-board" id="kanbanBoard">
+            <article class="kanban-column" data-column="todo">
+              <header><span class="kanban-column-dot todo"></span><div><strong>A Fazer</strong><small id="kanbanTodoCount">0 cards</small></div><button class="kanban-column-add" data-add-column="todo" type="button" aria-label="Novo card em A Fazer">＋</button></header>
+              <div class="kanban-card-list" id="kanbanTodoList" data-column="todo"></div>
+            </article>
+            <article class="kanban-column" data-column="doing">
+              <header><span class="kanban-column-dot doing"></span><div><strong>Em Progresso</strong><small id="kanbanDoingCount">0 cards</small></div><button class="kanban-column-add" data-add-column="doing" type="button" aria-label="Novo card em Em Progresso">＋</button></header>
+              <div class="kanban-card-list" id="kanbanDoingList" data-column="doing"></div>
+            </article>
+            <article class="kanban-column" data-column="done">
+              <header><span class="kanban-column-dot done"></span><div><strong>Concluído</strong><small id="kanbanDoneCount">0 cards</small></div><button class="kanban-column-add" data-add-column="done" type="button" aria-label="Novo card em Concluído">＋</button></header>
+              <div class="kanban-card-list" id="kanbanDoneList" data-column="done"></div>
+            </article>
+          </div>
+        </section>
+      </section>
+
       <section class="view" id="quickCalculatorView">
         <button class="page-back-btn" id="quickBackBtn" type="button">← Voltar</button>
         <div class="breadcrumbs"><button id="quickHomeBtn" type="button">Início</button><span>›</span><strong>Calculadora rápida</strong></div>
@@ -268,8 +320,9 @@
       <button class="neo-dock-item" id="dockCalcBtn" type="button" aria-label="Calculadora rápida">
         <svg class="neo-dock-icon ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg><small>Calcular</small>
       </button>
-      <button class="neo-dock-create" id="dockCreateBtn" type="button" aria-label="Criar novo projeto">
-        <span>＋</span>
+      <button class="neo-dock-create neo-dock-kanban" id="dockKanbanBtn" type="button" aria-label="Abrir Kanban">
+        <span class="kanban-dock-symbol" aria-hidden="true"><i></i><i></i><i></i></span>
+        <small>Kanban</small>
       </button>
       <button class="neo-dock-item" id="dockClosedBtn" type="button" aria-label="Projetos concluídos">
         <svg class="neo-dock-icon ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.3 12.2 2.4 2.4 5-5.2"></path></svg><small>Concluídos</small>
@@ -426,6 +479,60 @@
     </section>
   </div>
 
+  <!-- KANBAN: criação, edição e visualização de cards -->
+  <div class="modal" id="kanbanCardModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="kanbanCardModal"></div>
+    <section class="modal-card modal-card-wide kanban-card-modal" role="dialog" aria-modal="true" aria-labelledby="kanbanCardModalTitle">
+      <button class="modal-close" id="kanbanCardModalClose" type="button">×</button>
+      <span class="modal-chip" id="kanbanCardModalChip">NOVO CARD</span>
+      <h2 id="kanbanCardModalTitle">Criar card</h2>
+      <p class="modal-intro" id="kanbanCardModalIntro">Organize a atividade e vincule participantes do Portal FCC.</p>
+
+      <div class="kanban-form-grid">
+        <label class="modal-field kanban-field-wide"><span>Título</span><input id="kanbanCardTitleInput" type="text" maxlength="240" placeholder="Ex.: Conferir envelopes da sala 0017"></label>
+        <label class="modal-field"><span>Responsável</span><input id="kanbanCardOwnerInput" type="text" maxlength="120" placeholder="Nome do responsável"></label>
+        <label class="modal-field"><span>Prazo</span><input id="kanbanCardDueDateInput" type="date"></label>
+        <label class="modal-field"><span>Prioridade</span><select id="kanbanCardPriorityInput"><option value="baixa">Baixa</option><option value="media" selected>Média</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></label>
+        <label class="modal-field"><span>Coluna</span><select id="kanbanCardColumnInput"><option value="todo">A Fazer</option><option value="doing">Em Progresso</option><option value="done">Concluído</option></select></label>
+        <label class="modal-field kanban-field-wide"><span>Tags</span><input id="kanbanCardLabelsInput" type="text" maxlength="300" placeholder="Ex.: urgente, sala, material"></label>
+        <label class="modal-field kanban-field-wide"><span>Descrição</span><textarea id="kanbanCardDescriptionInput" rows="5" maxlength="5000" placeholder="Descreva a atividade..."></textarea></label>
+      </div>
+
+      <section class="kanban-modal-section">
+        <div class="kanban-section-head"><div><strong>Participantes</strong><small>Pesquise profissionais que já entraram no Portal FCC.</small></div></div>
+        <div class="kanban-inline-add"><input id="kanbanParticipantSearchInput" type="search" placeholder="Digite nome ou e-mail"><button class="btn btn-soft" id="kanbanParticipantSearchBtn" type="button">Buscar</button></div>
+        <div class="kanban-search-results" id="kanbanParticipantSearchResults"></div>
+        <div class="kanban-selected-participants" id="kanbanSelectedParticipants"></div>
+      </section>
+
+      <section class="kanban-modal-section">
+        <div class="kanban-section-head"><div><strong>Checklist</strong><small>Itens de acompanhamento do card.</small></div><span id="kanbanChecklistCounter">0/0</span></div>
+        <div class="kanban-inline-add"><input id="kanbanChecklistNewInput" type="text" maxlength="300" placeholder="Novo item"><button class="btn btn-soft" id="kanbanChecklistAddBtn" type="button">Adicionar</button></div>
+        <div class="kanban-edit-list" id="kanbanChecklistList"></div>
+      </section>
+
+      <section class="kanban-modal-section">
+        <div class="kanban-section-head"><div><strong>Comentários</strong><small>Histórico da equipe.</small></div><span id="kanbanCommentsCounter">0</span></div>
+        <div class="kanban-inline-add"><textarea id="kanbanCommentNewInput" rows="2" maxlength="3000" placeholder="Escreva um comentário..."></textarea><button class="btn btn-soft" id="kanbanCommentAddBtn" type="button">Adicionar</button></div>
+        <div class="kanban-edit-list" id="kanbanCommentsList"></div>
+      </section>
+
+      <section class="kanban-modal-section">
+        <div class="kanban-section-head"><div><strong>Anexos</strong><small>PDF, Office, imagens, TXT, CSV ou ZIP. Máximo de 15 MB.</small></div><span id="kanbanAttachmentsCounter">0</span></div>
+        <input id="kanbanAttachmentInput" type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.webp,.zip,application/pdf,image/*">
+        <button class="btn btn-soft kanban-attachment-select" id="kanbanAttachmentSelectBtn" type="button">📎 Selecionar arquivos</button>
+        <div class="kanban-edit-list" id="kanbanAttachmentsList"></div>
+      </section>
+
+      <p class="validation" id="kanbanCardValidation"></p>
+      <div class="kanban-modal-actions">
+        <button class="btn btn-danger hidden" id="kanbanDeleteCardBtn" type="button">⌫ Excluir card</button>
+        <button class="btn btn-soft hidden" id="kanbanReopenCardBtn" type="button">↺ Reabrir card</button>
+        <div class="kanban-modal-actions-right"><button class="btn btn-soft" id="kanbanCancelCardBtn" type="button">Cancelar</button><button class="btn btn-primary" id="kanbanSaveCardBtn" type="button">✓ Salvar card</button></div>
+      </div>
+    </section>
+  </div>
+
   <!-- OCR compartilhado entre diretório e calculadora rápida -->
   <div class="modal" id="ocrModal" aria-hidden="true">
     <div class="modal-backdrop"></div>
@@ -468,7 +575,8 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=16.4"></script>
-  <script src="app.js?v=16.4"></script>
+  <script src="config.js?v=17.0"></script>
+  <script src="app.js?v=17.0"></script>
+  <script src="kanban-module.js?v=17.0"></script>
 </body>
 </html>
