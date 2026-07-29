@@ -13,3 +13,8 @@ O Kanban usa os mesmos projetos, profissionais e login do Portal FCC. Cada proje
 3. Publique todos os arquivos na raiz do GitHub Pages.
 
 Consulte `PASSO_A_PASSO_V17_2.txt`.
+
+
+## V17.3
+
+O seletor do Kanban exibe somente projetos ativos. Projetos encerrados permanecem acessíveis nas áreas próprias do Portal, mas não podem ser selecionados para o Kanban. Não requer SQL novo.

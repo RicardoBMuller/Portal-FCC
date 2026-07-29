@@ -140,7 +140,10 @@
   function goProjects() { unsubscribeCards(); $("navActiveProjectsBtn")?.click(); }
   async function loadProjects() {
     try {
-      state.projects = (await bridge().refreshProjects()).sort((a,b) => new Date(b.project_date || b.created_at || 0) - new Date(a.project_date || a.created_at || 0));
+      const projects = await bridge().refreshProjects();
+      state.projects = (Array.isArray(projects) ? projects : [])
+        .filter(project => String(project?.status || "ativo").toLowerCase() !== "encerrado")
+        .sort((a,b) => new Date(b.project_date || b.created_at || 0) - new Date(a.project_date || a.created_at || 0));
       renderProjectPicker();
     } catch (error) { state.projects = []; renderProjectPicker(); showToast(`Kanban: ${error.message}`); }
   }
@@ -150,7 +153,7 @@
     state.projects.forEach(project => {
       const button = document.createElement("button"); button.type = "button"; button.className = "kanban-project-option";
       const background = safeUrl(project.background_image_url); if (background) button.style.setProperty("--kanban-project-bg", `url(${JSON.stringify(background)})`);
-      button.innerHTML = `<span class="kpo-top"><span>${project.status === "encerrado" ? "CONCLUÍDO" : "PROJETO ATIVO"}</span><i>▥</i></span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.organization_name || project.card_description || "Kanban do projeto")}</small>`;
+      button.innerHTML = `<span class="kpo-top"><span>PROJETO ATIVO</span><i>▥</i></span><strong>${escapeHtml(project.name)}</strong><small>${escapeHtml(project.organization_name || project.card_description || "Kanban do projeto")}</small>`;
       button.addEventListener("click", () => selectProject(project)); el.projectList.appendChild(button);
     });
   }
