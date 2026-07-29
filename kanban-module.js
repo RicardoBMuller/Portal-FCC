@@ -156,28 +156,63 @@
 
   function cardElement(card) {
     const button = document.createElement("article");
-    button.className = `kanban-task-card${card.column_key === "done" ? " completed" : ""}${card.is_reopened ? " reopened" : ""}`;
+    const isDone = card.column_key === "done";
+    const isReopened = Boolean(card.is_reopened) && !isDone;
+    button.className = `kanban-task-card${isDone ? " completed" : ""}${isReopened ? " reopened" : ""}`;
     button.draggable = canWrite();
     button.dataset.cardId = card.id;
-    const labels = normalizeArray(card.labels).slice(0,4);
-    const participants = normalizeArray(card.participants).slice(0,4);
+
+    const labels = normalizeArray(card.labels).slice(0, 5);
+    const participants = normalizeArray(card.participants).slice(0, 5);
     const checklist = normalizeArray(card.checklist);
     const done = checklist.filter(item => item.done).length;
     const progress = checklist.length ? Math.round(done / checklist.length * 100) : 0;
     const comments = normalizeArray(card.comments).length;
     const attachments = normalizeArray(card.attachments).length;
     const dueText = formatDate(card.due_date);
+    const includedText = formatDate(card.created_at);
+    const ownerText = String(card.owner_name || "").trim();
+    const statusBadge = isDone
+      ? '<span class="kanban-card-status completed">Concluído</span>'
+      : isReopened
+        ? '<span class="kanban-card-status reopened">Reaberto</span>'
+        : '';
+
+    const checklistPreview = checklist.length ? `
+      <section class="kanban-card-checklist-preview">
+        <div class="kanban-card-checklist-head"><strong>Checklist</strong><span>${done}/${checklist.length}</span></div>
+        <div class="kanban-card-checklist-items">
+          ${checklist.slice(0, 3).map(item => `
+            <div class="kanban-card-check-item${item.done ? " done" : ""}">
+              <i></i><span>${escapeHtml(item.text || "Item")}</span>
+            </div>`).join("")}
+        </div>
+        <div class="kanban-card-progress"><div class="kanban-card-progress-track"><i style="width:${progress}%"></i></div><small>${progress}%</small></div>
+      </section>` : '';
+
     button.innerHTML = `
-      <span class="kanban-card-priority ${escapeHtml(card.priority || "media")}">${escapeHtml(PRIORITY_LABELS[card.priority] || "Média")}</span>
-      <h4>${escapeHtml(card.title)}</h4>
-      ${card.description ? `<p class="kanban-task-description">${escapeHtml(card.description)}</p>` : ""}
+      ${isReopened ? '<span class="kanban-reopened-watermark" aria-hidden="true">REABERTO</span>' : ''}
+      <div class="kanban-card-topline">
+        <span class="kanban-card-priority ${escapeHtml(card.priority || "media")}">${escapeHtml(PRIORITY_LABELS[card.priority] || "Média")}</span>
+        ${statusBadge}
+      </div>
+      <h4>${escapeHtml(card.title || "Sem título")}</h4>
+      <p class="kanban-task-description">${escapeHtml(card.description || "Sem descrição.")}</p>
       ${labels.length ? `<div class="kanban-card-labels">${labels.map(label => `<span>${escapeHtml(label)}</span>`).join("")}</div>` : ""}
-      ${checklist.length ? `<div class="kanban-card-progress"><div class="kanban-card-progress-track"><i style="width:${progress}%"></i></div><small>${done}/${checklist.length}</small></div>` : ""}
-      <div class="kanban-card-meta">
-        <span class="kanban-card-due${isOverdue(card.due_date, card.column_key) ? " overdue" : ""}">${dueText ? `◷ ${escapeHtml(dueText)}` : "Sem prazo"}</span>
-        <span>${comments ? `◌ ${comments}` : ""}${attachments ? `　📎 ${attachments}` : ""}</span>
+      <div class="kanban-card-info-chips">
+        ${ownerText ? `<span>👤 ${escapeHtml(ownerText)}</span>` : ""}
+        ${dueText ? `<span class="${isOverdue(card.due_date, card.column_key) ? "overdue" : ""}">Prazo: ${escapeHtml(dueText)}</span>` : ""}
+        ${includedText ? `<span>Incluído: ${escapeHtml(includedText)}</span>` : ""}
+      </div>
+      ${checklistPreview}
+      <footer class="kanban-card-footer">
+        <div class="kanban-card-activity">
+          <span>💬 ${comments}</span>
+          ${attachments ? `<span>📎 ${attachments}</span>` : ""}
+        </div>
         <span class="kanban-card-people">${participants.map(person => participantAvatar(person)).join("")}</span>
-      </div>`;
+      </footer>`;
+
     button.addEventListener("click", event => {
       if (state.dragCardId) return;
       if (event.target.closest("a,button,input")) return;
