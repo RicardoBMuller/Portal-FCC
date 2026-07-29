@@ -308,15 +308,15 @@
         <label class="modal-field"><span>Nome do projeto</span><input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Planejamento 2026"></label>
         <label class="modal-field"><span>Data de realização</span><input id="newProjectDate" type="date" required></label>
       </div>
-      <label class="modal-field project-description-field"><span>Título do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" value= placeholder="Ex.: Aplicação TJUS — São Paulo"></label>
+      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" value="Abrir diretórios do projeto" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
       <section class="organization-picker" aria-labelledby="organizationPickerTitle">
         <div class="organization-picker-copy">
-          <span class="modal-chip">Imagem de Fundo</span>
+          <span class="modal-chip">IDENTIDADE VISUAL</span>
           <h3 id="organizationPickerTitle">Órgão do concurso</h3>
-          <p>O portal buscará uma imagem pública para compor o fundo do card.</p>
+          <p>Digite o órgão. O portal buscará uma imagem pública para compor o fundo do card.</p>
         </div>
         <div class="organization-search-row">
-          <label class="modal-field organization-field"><span></span><input id="newProjectOrganization" type="text" maxlength="180" placeholder="Ex.: Tribunal de Justiça do Estado de São Paulo" autocomplete="off"></label>
+          <label class="modal-field organization-field"><span>Órgão</span><input id="newProjectOrganization" type="text" maxlength="180" placeholder="Ex.: Tribunal de Justiça do Estado de São Paulo" autocomplete="off"></label>
           <button class="btn btn-soft organization-search-btn" id="searchOrganizationImageBtn" type="button"><span>⌕</span> Buscar imagem</button>
         </div>
         <div class="organization-preview is-empty" id="organizationPreview">
@@ -324,7 +324,7 @@
           <div class="organization-preview-overlay"></div>
           <div class="organization-preview-copy">
             <strong id="organizationPreviewTitle">A identidade visual aparecerá aqui</strong>
-            <small id="organizationPreviewStatus"></small>
+            <small id="organizationPreviewStatus">Digite o nome do órgão para iniciar a busca.</small>
           </div>
           <button class="organization-next-btn hidden" id="nextOrganizationImageBtn" type="button">Próxima imagem →</button>
         </div>
