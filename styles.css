@@ -1192,3 +1192,57 @@ body.design-v16 .kanban-project-card{overflow:hidden}
 .project-card-shade{z-index:1}
 .project-card-layer{z-index:2}
 body.design-v16 .kanban-project-card::before{z-index:4}
+
+/* =====================================================================
+   V16.2 — CORREÇÃO DE EQUIPE E EDIÇÃO DO PROJETO
+   Mantém integralmente as animações da intro e do refresh da V16.1.
+   ===================================================================== */
+.project-heading-actions{
+  width:min(100%,760px)!important;
+  margin-inline:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  justify-content:center!important;
+  align-items:stretch!important;
+}
+.project-heading-actions .project-status-badge{
+  grid-column:1/-1!important;
+  justify-self:center!important;
+}
+.project-heading-actions .btn,
+.project-heading-actions #addDirectoryBtn,
+.project-heading-actions #editProjectBtn{
+  grid-column:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.project-edit-btn{
+  color:#fff;
+  border-color:rgba(143,86,255,.28)!important;
+  background:linear-gradient(135deg,rgba(143,86,255,.16),rgba(196,59,115,.09))!important;
+}
+.project-edit-btn:hover{
+  border-color:rgba(143,86,255,.48)!important;
+  background:linear-gradient(135deg,rgba(143,86,255,.24),rgba(196,59,115,.14))!important;
+}
+#editProjectModal .organization-picker{margin-top:16px}
+#editProjectModal .modal-actions{margin-top:18px}
+
+@media(max-width:760px){
+  .project-heading-actions{
+    width:min(100%,420px)!important;
+    grid-template-columns:1fr!important;
+  }
+  .project-heading-actions .project-status-badge,
+  .project-heading-actions .btn,
+  .project-heading-actions #addDirectoryBtn,
+  .project-heading-actions #editProjectBtn{
+    grid-column:1!important;
+  }
+}

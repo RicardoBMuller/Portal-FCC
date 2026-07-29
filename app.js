@@ -26,7 +26,8 @@
     profileProjectGrid: $("profileProjectGrid"), profileProjectsStatus: $("profileProjectsStatus"), profileProjectsEmpty: $("profileProjectsEmpty"),
     projectTitle: $("projectTitle"), projectCrumb: $("projectCrumb"), projectDescription: $("projectDescription"), projectDateLabel: $("projectDateLabel"), directoryGrid: $("directoryGrid"), directoriesEmpty: $("directoriesEmpty"),
     projectParticipantsGrid: $("projectParticipantsGrid"), manageParticipantsBtn: $("manageParticipantsBtn"),
-    projectStatusBadge: $("projectStatusBadge"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
+    projectStatusBadge: $("projectStatusBadge"), editProjectBtn: $("editProjectBtn"), closeProjectBtn: $("closeProjectBtn"), deleteProjectBtn: $("deleteProjectBtn"), addDirectoryBtn: $("addDirectoryBtn"),
+    editProjectModal: $("editProjectModal"), editProjectName: $("editProjectName"), editProjectDate: $("editProjectDate"), editProjectDescription: $("editProjectDescription"), editProjectOrganization: $("editProjectOrganization"), editSearchOrganizationImageBtn: $("editSearchOrganizationImageBtn"), editNextOrganizationImageBtn: $("editNextOrganizationImageBtn"), editOrganizationPreview: $("editOrganizationPreview"), editOrganizationPreviewImage: $("editOrganizationPreviewImage"), editOrganizationPreviewTitle: $("editOrganizationPreviewTitle"), editOrganizationPreviewStatus: $("editOrganizationPreviewStatus"), editProjectValidation: $("editProjectValidation"), saveProjectEditsBtn: $("saveProjectEditsBtn"),
     projectActionModal: $("projectActionModal"), projectActionChip: $("projectActionChip"), projectActionTitle: $("projectActionTitle"), projectActionText: $("projectActionText"), projectActionValidation: $("projectActionValidation"), projectActionConfirm: $("projectActionConfirm"), deleteProjectConfirmField: $("deleteProjectConfirmField"), deleteProjectConfirmInput: $("deleteProjectConfirmInput"),
     directoryTitle: $("directoryTitle"), directoryCrumb: $("directoryCrumb"), directoryProjectLabel: $("directoryProjectLabel"), directoryPeriodBadge: $("directoryPeriodBadge"),
     menuDrawer: $("menuDrawer"), bioSector: $("bioSector"), bioJobTitle: $("bioJobTitle"), bioPhone: $("bioPhone"), bioExtension: $("bioExtension"),
@@ -66,6 +67,10 @@
   let selectedOrganizationImageIndex = -1;
   let organizationSearchTimer = null;
   let organizationSearchQuery = "";
+  let editOrganizationImageCandidates = [];
+  let editSelectedOrganizationImageIndex = -1;
+  let editOrganizationSearchTimer = null;
+  let editOrganizationSearchQuery = "";
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -238,6 +243,83 @@
     if (organizationImageCandidates.length < 2) return;
     selectedOrganizationImageIndex = (selectedOrganizationImageIndex + 1) % organizationImageCandidates.length;
     renderOrganizationPreview();
+  }
+
+  function currentEditOrganizationImage() {
+    return editSelectedOrganizationImageIndex >= 0
+      ? editOrganizationImageCandidates[editSelectedOrganizationImageIndex] || null
+      : null;
+  }
+
+  function renderEditOrganizationPreview(message = "") {
+    if (!el.editOrganizationPreview) return;
+    const selected = currentEditOrganizationImage();
+    const organization = el.editProjectOrganization?.value.trim() || "";
+    el.editOrganizationPreview.classList.toggle("is-empty", !selected);
+    el.editOrganizationPreview.classList.toggle("is-loading", message === "loading");
+    el.editNextOrganizationImageBtn?.classList.toggle("hidden", editOrganizationImageCandidates.length < 2);
+
+    if (selected) {
+      el.editOrganizationPreviewImage.style.backgroundImage = `url(${JSON.stringify(selected.imageUrl)})`;
+      el.editOrganizationPreviewTitle.textContent = organization || selected.title;
+      const currentLabel = selected.provider === "Imagem atual" ? "Imagem atual preservada" : `${selected.provider} • imagem ${editSelectedOrganizationImageIndex + 1} de ${editOrganizationImageCandidates.length}`;
+      el.editOrganizationPreviewStatus.textContent = currentLabel;
+      return;
+    }
+
+    el.editOrganizationPreviewImage.style.backgroundImage = "";
+    el.editOrganizationPreviewTitle.textContent = organization || "Identidade visual do projeto";
+    el.editOrganizationPreviewStatus.textContent = message === "loading"
+      ? "Buscando uma nova imagem pública do órgão..."
+      : message || "O projeto usará o fundo visual padrão.";
+  }
+
+  async function searchEditOrganizationVisual({ silent = false } = {}) {
+    const organization = el.editProjectOrganization?.value.trim() || "";
+    if (organization.length < 3) {
+      editOrganizationImageCandidates = [];
+      editSelectedOrganizationImageIndex = -1;
+      renderEditOrganizationPreview("Informe pelo menos 3 caracteres no campo Órgão.");
+      return null;
+    }
+
+    editOrganizationSearchQuery = organization;
+    editOrganizationImageCandidates = [];
+    editSelectedOrganizationImageIndex = -1;
+    renderEditOrganizationPreview("loading");
+    if (el.editSearchOrganizationImageBtn) el.editSearchOrganizationImageBtn.disabled = true;
+
+    try {
+      const results = await Promise.allSettled([
+        searchCommonsImages(organization),
+        searchWikipediaImages(organization)
+      ]);
+      const combined = results.flatMap(result => result.status === "fulfilled" ? result.value : []);
+      const seen = new Set();
+      editOrganizationImageCandidates = combined.filter(candidate => {
+        if (!candidate?.imageUrl || seen.has(candidate.imageUrl)) return false;
+        seen.add(candidate.imageUrl);
+        return true;
+      }).slice(0, 10);
+      editSelectedOrganizationImageIndex = editOrganizationImageCandidates.length ? 0 : -1;
+      renderEditOrganizationPreview(editOrganizationImageCandidates.length ? "" : "Nenhuma imagem pública foi localizada. O fundo padrão será utilizado.");
+      if (!silent && editOrganizationImageCandidates.length) showToast("Nova identidade visual localizada.");
+      return currentEditOrganizationImage();
+    } catch (error) {
+      editOrganizationImageCandidates = [];
+      editSelectedOrganizationImageIndex = -1;
+      renderEditOrganizationPreview("Não foi possível consultar imagens agora. Você ainda pode salvar os demais dados.");
+      if (!silent) showToast(error.message || "Falha ao buscar imagem do órgão.");
+      return null;
+    } finally {
+      if (el.editSearchOrganizationImageBtn) el.editSearchOrganizationImageBtn.disabled = false;
+    }
+  }
+
+  function nextEditOrganizationImage() {
+    if (editOrganizationImageCandidates.length < 2) return;
+    editSelectedOrganizationImageIndex = (editSelectedOrganizationImageIndex + 1) % editOrganizationImageCandidates.length;
+    renderEditOrganizationPreview();
   }
 
   function showToast(message) {
@@ -687,9 +769,15 @@
     return `<article class="participant-role-card"><span class="role-label">${escapeHtml(label)}</span><div class="participant-mini">${avatarHtml}<div><strong>${escapeHtml(name)}</strong><small>${escapeHtml(member.email || "")}</small></div></div></article>`;
   }
 
-  function canManageParticipants() {
-    return Boolean(currentProject && currentUser && (currentProject.created_by === currentUser.id || projectMembersCache.some(m => m.user_id === currentUser.id && m.role === "po")));
+  function isCurrentUserProjectPO() {
+    if (!currentProject || !currentUser) return false;
+    const assignedPo = projectMembersCache.find(member => member.role === "po");
+    if (assignedPo) return assignedPo.user_id === currentUser.id;
+    // Compatibilidade com projetos criados antes do hotfix V16.2.
+    return currentProject.created_by === currentUser.id;
   }
+
+  function canManageParticipants() { return isCurrentUserProjectPO(); }
 
   function isProjectOwner() { return Boolean(currentProject && currentUser && currentProject.created_by === currentUser.id); }
   function isCurrentProjectClosed() { return currentProject?.status === "encerrado"; }
@@ -698,15 +786,92 @@
     const closed = isCurrentProjectClosed(); const canManage = canManageParticipants(); const owner = isProjectOwner();
     el.projectStatusBadge.textContent = closed ? "Encerrado" : "Ativo";
     el.projectStatusBadge.className = `project-status-badge ${closed ? "closed" : "active"}`;
-    el.addDirectoryBtn.disabled = closed;
-    el.addDirectoryBtn.classList.toggle("hidden", closed);
+    el.editProjectBtn?.classList.toggle("hidden", closed || !canManage);
+    el.addDirectoryBtn.disabled = closed || !canManage;
+    el.addDirectoryBtn.classList.toggle("hidden", closed || !canManage);
     el.closeProjectBtn.classList.toggle("hidden", closed || !canManage);
-    el.deleteProjectBtn.classList.toggle("hidden", !owner);
+    el.deleteProjectBtn.classList.toggle("hidden", !owner && !canManage);
     el.manageParticipantsBtn.classList.toggle("hidden", closed || !canManage);
     [$("takePhotoBtn"), $("roomsCaptureBtn"), $("saveChecklistBtn")].forEach(btn => { if (btn) btn.disabled = closed; });
     [el.check1, el.check2, el.check3, el.check4, el.checkComments].forEach(field => { if (field) field.disabled = closed; });
     el.projectView.classList.toggle("project-is-closed", closed);
     el.directoryView.classList.toggle("project-is-closed", closed);
+  }
+
+  function openEditProjectModal() {
+    if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return showToast("Somente o PO pode editar o projeto.");
+    if (isCurrentProjectClosed()) return showToast("Projetos encerrados não podem ser editados.");
+
+    el.editProjectName.value = currentProject.name || "";
+    el.editProjectDate.value = String(currentProject.project_date || "").slice(0, 10);
+    el.editProjectDescription.value = currentProject.card_description || "Abrir diretórios do projeto";
+    el.editProjectOrganization.value = currentProject.organization_name || "";
+    el.editProjectValidation.textContent = "";
+    editOrganizationSearchQuery = el.editProjectOrganization.value.trim();
+    editOrganizationImageCandidates = [];
+    editSelectedOrganizationImageIndex = -1;
+
+    const currentImage = safeImageUrl(currentProject.background_image_url);
+    if (currentImage) {
+      editOrganizationImageCandidates = [{
+        imageUrl: currentImage,
+        sourceUrl: safeImageUrl(currentProject.background_source_url),
+        title: currentProject.organization_name || "Imagem atual",
+        provider: "Imagem atual"
+      }];
+      editSelectedOrganizationImageIndex = 0;
+    }
+    renderEditOrganizationPreview(currentImage ? "" : "O projeto ainda não possui uma imagem de fundo.");
+    openModal(el.editProjectModal);
+  }
+
+  async function saveProjectEdits() {
+    if (!currentProject) return;
+    if (!isCurrentUserProjectPO()) return void (el.editProjectValidation.textContent = "Somente o PO pode editar o projeto.");
+    if (isCurrentProjectClosed()) return void (el.editProjectValidation.textContent = "Projetos encerrados não podem ser editados.");
+
+    const name = el.editProjectName.value.trim();
+    const projectDate = el.editProjectDate.value;
+    const cardDescription = el.editProjectDescription.value.trim();
+    const organizationName = el.editProjectOrganization.value.trim();
+    if (name.length < 2 || name.length > 120) return void (el.editProjectValidation.textContent = "Informe um nome entre 2 e 120 caracteres.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(projectDate)) return void (el.editProjectValidation.textContent = "Informe a data de realização.");
+    if (cardDescription.length < 2 || cardDescription.length > 180) return void (el.editProjectValidation.textContent = "Informe um texto do card entre 2 e 180 caracteres.");
+    if (organizationName.length < 3 || organizationName.length > 180) return void (el.editProjectValidation.textContent = "Informe o órgão do concurso.");
+
+    el.editProjectValidation.textContent = "Salvando alterações...";
+    try {
+      // Se o órgão mudou e nenhuma imagem foi escolhida, tentamos localizar uma nova.
+      if (editOrganizationSearchQuery !== organizationName && editSelectedOrganizationImageIndex < 0) {
+        await searchEditOrganizationVisual({ silent: true });
+      }
+      const selectedVisual = currentEditOrganizationImage();
+      const data = await supabaseRequest("rpc/fcc_update_project", {
+        method: "POST",
+        body: {
+          p_project_id: currentProject.id,
+          p_name: name,
+          p_project_date: projectDate,
+          p_card_description: cardDescription,
+          p_organization_name: organizationName,
+          p_background_image_url: selectedVisual?.imageUrl || null,
+          p_background_source_url: selectedVisual?.sourceUrl || null
+        }
+      });
+      const updated = Array.isArray(data) ? data[0] : data;
+      if (!updated?.id) throw new Error("O Supabase não retornou o projeto atualizado.");
+      currentProject = { ...currentProject, ...updated };
+      el.projectTitle.textContent = currentProject.name;
+      el.projectCrumb.textContent = currentProject.name;
+      el.projectDescription.textContent = currentProject.card_description || "Abrir diretórios do projeto";
+      el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`;
+      closeModal(el.editProjectModal);
+      showToast("Projeto atualizado.");
+      await loadProjects();
+    } catch (error) {
+      el.editProjectValidation.textContent = `Erro: ${error.message}`;
+    }
   }
 
   function openProjectAction(mode) {
@@ -830,7 +995,11 @@
     if (!chosen.length) return void (el.participantsValidation.textContent = "Selecione pelo menos um participante ou use ‘Agora não’." );
     el.participantsValidation.textContent = "Salvando participantes...";
     try {
-      for (const role of ROLE_ORDER) {
+      // O PO é salvo por último. Assim, caso o cargo seja transferido para
+      // outra pessoa, o PO atual ainda consegue concluir os demais cargos
+      // antes de perder a permissão administrativa.
+      const rolesToSave = [...ROLE_ORDER.filter(role => role !== "po"), "po"];
+      for (const role of rolesToSave) {
         const person = selectedParticipants[role]; const userId = person?.user_id || person?.id || null;
         if (userId) await supabaseRequest("rpc/fcc_set_project_member", { method: "POST", body: { p_project_id: currentProject.id, p_user_id: userId, p_role: role } });
         else if (originalRoleUsers[role]) await supabaseRequest("rpc/fcc_clear_project_role", { method: "POST", body: { p_project_id: currentProject.id, p_role: role } });
@@ -1012,6 +1181,19 @@
       if (value.length >= 3) organizationSearchTimer = setTimeout(()=>searchOrganizationVisual({silent:true}), 850);
     });
     $("backProjectsBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo")); $("projectBackBtn").addEventListener("click",()=>goProjects(currentProject?.status === "encerrado" ? "encerrado" : "ativo"));
+    el.editProjectBtn?.addEventListener("click",openEditProjectModal); $("editProjectModalClose").addEventListener("click",()=>closeModal(el.editProjectModal)); $("editProjectCancelBtn").addEventListener("click",()=>closeModal(el.editProjectModal)); el.saveProjectEditsBtn.addEventListener("click",saveProjectEdits);
+    el.editSearchOrganizationImageBtn?.addEventListener("click",()=>searchEditOrganizationVisual());
+    el.editNextOrganizationImageBtn?.addEventListener("click",nextEditOrganizationImage);
+    el.editProjectOrganization?.addEventListener("input",()=>{
+      clearTimeout(editOrganizationSearchTimer);
+      const value = el.editProjectOrganization.value.trim();
+      if (value !== editOrganizationSearchQuery) {
+        editOrganizationImageCandidates = [];
+        editSelectedOrganizationImageIndex = -1;
+        renderEditOrganizationPreview(value.length >= 3 ? "A busca automática começa após uma breve pausa." : "Digite o nome do órgão para iniciar a busca.");
+      }
+      if (value.length >= 3) editOrganizationSearchTimer = setTimeout(()=>searchEditOrganizationVisual({silent:true}), 850);
+    });
     el.closeProjectBtn.addEventListener("click",()=>openProjectAction("close")); el.deleteProjectBtn.addEventListener("click",()=>openProjectAction("delete")); $("projectActionClose").addEventListener("click",()=>closeModal(el.projectActionModal)); $("projectActionCancel").addEventListener("click",()=>closeModal(el.projectActionModal)); el.projectActionConfirm.addEventListener("click",confirmProjectAction);
     $("manageParticipantsBtn").addEventListener("click",()=>openParticipantsModal(false)); $("participantsModalClose").addEventListener("click",()=>closeModal(el.participantsModal)); $("participantsLaterBtn").addEventListener("click",()=>closeModal(el.participantsModal)); $("saveParticipantsBtn").addEventListener("click",saveParticipants);
     el.participantInputs.forEach(input=>input.addEventListener("input",()=>handleParticipantSearch(input)));

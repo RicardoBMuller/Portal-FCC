@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas — V16.1 Experimental</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=16.1">
+  <link rel="stylesheet" href="styles.css?v=16.2">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -181,9 +181,10 @@
           <div><span class="eyebrow">PROJETO</span><h2 id="projectTitle">—</h2><p id="projectDescription">Abra um diretório para acessar OCR, salas e checklist.</p><div class="project-heading-date" id="projectDateLabel">📅 Data não informada</div></div>
           <div class="project-heading-actions">
             <span class="project-status-badge active" id="projectStatusBadge">Ativo</span>
+            <button class="btn btn-soft project-edit-btn" id="editProjectBtn" type="button">✎ Editar projeto</button>
+            <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
             <button class="btn btn-soft project-close-btn" id="closeProjectBtn" type="button">⏹ Encerrar projeto</button>
             <button class="btn btn-danger" id="deleteProjectBtn" type="button">⌫ Excluir projeto</button>
-            <button class="btn btn-primary" id="addDirectoryBtn" type="button">＋ Novo diretório</button>
           </div>
         </div>
 
@@ -335,6 +336,47 @@
     </section>
   </div>
 
+  <!-- EDIÇÃO DO PROJETO: disponível somente ao PO -->
+  <div class="modal" id="editProjectModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="editProjectModal"></div>
+    <section class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="editProjectModalTitle">
+      <button class="modal-close" id="editProjectModalClose" type="button">×</button>
+      <span class="modal-chip">ADMINISTRAÇÃO DO PROJETO</span>
+      <h2 id="editProjectModalTitle">Editar projeto</h2>
+      <p class="modal-intro">Altere os dados principais e a identidade visual. Somente o PO do projeto possui esta permissão.</p>
+      <div class="project-basic-grid">
+        <label class="modal-field"><span>Nome do projeto</span><input id="editProjectName" type="text" maxlength="120"></label>
+        <label class="modal-field"><span>Data de realização</span><input id="editProjectDate" type="date" required></label>
+      </div>
+      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="editProjectDescription" type="text" maxlength="180" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
+      <section class="organization-picker" aria-labelledby="editOrganizationPickerTitle">
+        <div class="organization-picker-copy">
+          <span class="modal-chip">IDENTIDADE VISUAL</span>
+          <h3 id="editOrganizationPickerTitle">Órgão do concurso</h3>
+          <p>Você pode manter a imagem atual ou buscar outra imagem pública para o fundo do card.</p>
+        </div>
+        <div class="organization-search-row">
+          <label class="modal-field organization-field"><span>Órgão</span><input id="editProjectOrganization" type="text" maxlength="180" autocomplete="off"></label>
+          <button class="btn btn-soft organization-search-btn" id="editSearchOrganizationImageBtn" type="button"><span>⌕</span> Buscar imagem</button>
+        </div>
+        <div class="organization-preview is-empty" id="editOrganizationPreview">
+          <div class="organization-preview-image" id="editOrganizationPreviewImage" aria-hidden="true"></div>
+          <div class="organization-preview-overlay"></div>
+          <div class="organization-preview-copy">
+            <strong id="editOrganizationPreviewTitle">Imagem atual do projeto</strong>
+            <small id="editOrganizationPreviewStatus">A imagem salva será preservada.</small>
+          </div>
+          <button class="organization-next-btn hidden" id="editNextOrganizationImageBtn" type="button">Próxima imagem →</button>
+        </div>
+      </section>
+      <p class="validation" id="editProjectValidation"></p>
+      <div class="modal-actions">
+        <button class="btn btn-soft" id="editProjectCancelBtn" type="button">Cancelar</button>
+        <button class="btn btn-primary" id="saveProjectEditsBtn" type="button">✓ Salvar alterações</button>
+      </div>
+    </section>
+  </div>
+
   <!-- PARTICIPANTES: aparece automaticamente após criar projeto -->
   <div class="modal" id="participantsModal" aria-hidden="true">
     <div class="modal-backdrop"></div>
@@ -422,7 +464,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=16.1"></script>
-  <script src="app.js?v=16.1"></script>
+  <script src="config.js?v=16.2"></script>
+  <script src="app.js?v=16.2"></script>
 </body>
 </html>
