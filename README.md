@@ -31,3 +31,8 @@ SUPABASE_SETUP_V16_2_COMPLETO.sql
 ```
 
 Leia `PASSO_A_PASSO_V16_2.txt` antes de publicar.
+
+
+## V16.3
+
+Ajustes de texto, ícones e abertura padrão dos diretórios na aba **Salas**. Não exige alteração no banco.

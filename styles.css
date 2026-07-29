@@ -1246,3 +1246,45 @@ body.design-v16 .kanban-project-card::before{z-index:4}
     grid-column:1!important;
   }
 }
+
+
+/* =====================================================================
+   V16.3 — ícones lineares e discretos no dock/menu
+   ===================================================================== */
+.ui-line-icon{
+  width:22px;
+  height:22px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.75;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.neo-dock-icon.ui-line-icon{
+  width:23px;
+  height:23px;
+  margin-inline:auto;
+}
+.nav-icon-line{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  color:inherit;
+}
+.nav-icon-line .ui-line-icon{width:21px;height:21px}
+.guest-line-icon{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:rgba(196,59,115,.10);
+  color:var(--accent);
+}
+.guest-line-icon .ui-line-icon{width:19px;height:19px}
+body.design-v16 .neo-dock-item.active .ui-line-icon{
+  filter:drop-shadow(0 5px 10px rgba(196,59,115,.22));
+}

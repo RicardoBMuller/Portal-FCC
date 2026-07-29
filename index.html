@@ -7,7 +7,7 @@
   <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
   <title>FCC • Portal de Provas — V16.1 Experimental</title>
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=16.2">
+  <link rel="stylesheet" href="styles.css?v=16.3">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -46,7 +46,7 @@
       </button>
       <div class="auth-divider"><span>ou</span></div>
       <button class="guest-calc-btn" id="guestCalculatorBtn" type="button">
-        <span aria-hidden="true">⌁</span><strong>Calcular tempo de prova</strong>
+        <span class="guest-line-icon" aria-hidden="true"><svg class="ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></span><strong>Calcular tempo de prova</strong>
       </button>
       <p class="auth-error" id="authError" role="alert"></p>
     </div>
@@ -65,8 +65,8 @@
       </div>
       <nav class="nav-main-links">
         <button class="nav-main-item active" id="navActiveProjectsBtn" type="button"><b>▰</b><span><strong>Projetos Ativos</strong><small>Do mais atual para o mais antigo</small></span><i>›</i></button>
-        <button class="nav-main-item" id="navClosedProjectsBtn" type="button"><b>✓</b><span><strong>Projetos Concluídos</strong><small>Projetos encerrados para consulta</small></span><i>›</i></button>
-        <button class="nav-main-item" id="navQuickCalcBtn" type="button"><b>⌁</b><span><strong>Calculadora rápida</strong><small>Calcular sem vincular a projeto</small></span><i>›</i></button>
+        <button class="nav-main-item" id="navClosedProjectsBtn" type="button"><b class="nav-icon-line"><svg class="ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.3 12.2 2.4 2.4 5-5.2"></path></svg></b><span><strong>Projetos Concluídos</strong><small>Projetos encerrados para consulta</small></span><i>›</i></button>
+        <button class="nav-main-item" id="navQuickCalcBtn" type="button"><b class="nav-icon-line"><svg class="ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></b><span><strong>Calculadora rápida</strong><small>Calcular sem vincular a projeto</small></span><i>›</i></button>
         <button class="nav-main-item" id="navCreateProjectBtn" type="button"><b>＋</b><span><strong>Criar projeto</strong><small>Novo projeto e diretórios</small></span><i>›</i></button>
       </nav>
     </aside>
@@ -206,12 +206,12 @@
           <div><span class="eyebrow">DIRETÓRIO</span><h2 id="directoryTitle">—</h2><p><span id="directoryProjectLabel">—</span> • <b id="directoryPeriodBadge">—</b></p></div>
         </div>
         <nav class="section-tabs" aria-label="Seções do diretório">
-          <button class="section-tab active" data-section="calculator" type="button">✦ Calculadora</button>
-          <button class="section-tab" data-section="rooms" type="button">📁 Salas</button>
+          <button class="section-tab" data-section="calculator" type="button">✦ Calculadora</button>
+          <button class="section-tab active" data-section="rooms" type="button">📁 Salas</button>
           <button class="section-tab" data-section="checklist" type="button">✓ Checklist</button>
         </nav>
 
-        <section class="directory-section active" id="calculatorSection">
+        <section class="directory-section" id="calculatorSection">
           <article class="camera-card">
             <input id="examPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
             <button class="capture-button" id="takePhotoBtn" type="button"><span>📷</span><strong>Capturar informações do cartão</strong></button>
@@ -230,7 +230,7 @@
           </article>
         </section>
 
-        <section class="directory-section" id="roomsSection">
+        <section class="directory-section active" id="roomsSection">
           <div class="rooms-toolbar"><div><span class="eyebrow">SALAS</span><h3>Diretório de salas</h3></div><div><button class="btn btn-soft" id="refreshRoomsBtn" type="button">↻ Atualizar</button><button class="btn btn-primary" id="roomsCaptureBtn" type="button">📷 Novo cartão</button></div></div>
           <div class="rooms-status" id="roomsStatus">Carregando...</div>
           <div id="roomsRoot"><div class="rooms-grid" id="roomsGrid"></div><div class="empty-state hidden" id="roomsEmpty"><div class="empty-icon">📁</div><h3>Nenhuma sala criada</h3><p>As pastas surgem automaticamente após a validação do OCR.</p></div></div>
@@ -262,13 +262,13 @@
         <span class="neo-dock-icon dock-menu-lines" aria-hidden="true"><i></i><i></i><i></i></span><small>Projetos</small>
       </button>
       <button class="neo-dock-item" id="dockCalcBtn" type="button" aria-label="Calculadora rápida">
-        <span class="neo-dock-icon">⌁</span><small>Calcular</small>
+        <svg class="neo-dock-icon ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg><small>Calcular</small>
       </button>
       <button class="neo-dock-create" id="dockCreateBtn" type="button" aria-label="Criar novo projeto">
         <span>＋</span>
       </button>
       <button class="neo-dock-item" id="dockClosedBtn" type="button" aria-label="Projetos concluídos">
-        <span class="neo-dock-icon">✓</span><small>Concluídos</small>
+        <svg class="neo-dock-icon ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m8.3 12.2 2.4 2.4 5-5.2"></path></svg><small>Concluídos</small>
       </button>
       <button class="neo-dock-item neo-dock-profile" id="dockProfileBtn" type="button" aria-label="Abrir perfil">
         <span class="dock-profile-avatar" aria-hidden="true">
@@ -308,7 +308,7 @@
         <label class="modal-field"><span>Nome do projeto</span><input id="newProjectName" type="text" maxlength="120" placeholder="Ex.: Planejamento 2026"></label>
         <label class="modal-field"><span>Data de realização</span><input id="newProjectDate" type="date" required></label>
       </div>
-      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" value="Abrir diretórios do projeto" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
+      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="newProjectDescription" type="text" maxlength="180" placeholder="Ex: Prefeitura de Juazeiro do Norte - Concurso Dançarino de Balé"></label>
       <section class="organization-picker" aria-labelledby="organizationPickerTitle">
         <div class="organization-picker-copy">
           <span class="modal-chip">IDENTIDADE VISUAL</span>
@@ -348,7 +348,7 @@
         <label class="modal-field"><span>Nome do projeto</span><input id="editProjectName" type="text" maxlength="120"></label>
         <label class="modal-field"><span>Data de realização</span><input id="editProjectDate" type="date" required></label>
       </div>
-      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="editProjectDescription" type="text" maxlength="180" placeholder="Ex.: Aplicação CFP — Equipe São Paulo"></label>
+      <label class="modal-field project-description-field"><span>Texto do card do projeto</span><input id="editProjectDescription" type="text" maxlength="180" placeholder="Ex: Prefeitura de Juazeiro do Norte - Concurso Dançarino de Balé"></label>
       <section class="organization-picker" aria-labelledby="editOrganizationPickerTitle">
         <div class="organization-picker-copy">
           <span class="modal-chip">IDENTIDADE VISUAL</span>
@@ -464,7 +464,7 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=16.2"></script>
-  <script src="app.js?v=16.2"></script>
+  <script src="config.js?v=16.3"></script>
+  <script src="app.js?v=16.3"></script>
 </body>
 </html>

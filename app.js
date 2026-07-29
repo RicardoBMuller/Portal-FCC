@@ -52,7 +52,7 @@
   let currentProfile = null;
   let currentProject = null;
   let currentDirectory = null;
-  let currentSection = "calculator";
+  let currentSection = "rooms";
   let roomsCache = [];
   let projectMembersCache = [];
   let selectedParticipants = Object.fromEntries(ROLE_ORDER.map(role => [role, null]));
@@ -564,6 +564,21 @@
     return `<span class="project-team-avatar fallback" title="${escapeHtml(title)}">${escapeHtml(initials(name || label, email))}</span>`;
   }
 
+  const LEGACY_PROJECT_DESCRIPTION = "Abrir diretórios do projeto";
+
+  function displayProjectDescription(value) {
+    const text = String(value || "").trim();
+    if (!text || text.toLocaleLowerCase("pt-BR") === LEGACY_PROJECT_DESCRIPTION.toLocaleLowerCase("pt-BR")) {
+      return "Projeto de aplicação";
+    }
+    return text;
+  }
+
+  function editableProjectDescription(value) {
+    const text = String(value || "").trim();
+    return text.toLocaleLowerCase("pt-BR") === LEGACY_PROJECT_DESCRIPTION.toLocaleLowerCase("pt-BR") ? "" : text;
+  }
+
   function projectCardElement(project) {
     const btn = document.createElement("button");
     btn.className = "project-card kanban-project-card";
@@ -573,7 +588,7 @@
     const dateText = formatProjectDate(project.project_date, project.created_at);
     const poAvatar = projectAvatarHtml(project.po_name, project.po_email, project.po_avatar_url, "PO");
     const coordinatorAvatar = projectAvatarHtml(project.coordinator_name, project.coordinator_email, project.coordinator_avatar_url, "Coordenador");
-    const description = String(project.card_description || "Abrir diretórios do projeto").trim();
+    const description = displayProjectDescription(project.card_description);
     const organization = String(project.organization_name || "").trim();
     const backgroundImage = safeImageUrl(project.background_image_url);
     btn.classList.toggle("closed-project", closed);
@@ -632,7 +647,7 @@
   function resetProjectModal() {
     el.newProjectName.value = "";
     el.newProjectDate.value = "";
-    el.newProjectDescription.value = "Abrir diretórios do projeto";
+    el.newProjectDescription.value = "";
     el.newProjectOrganization.value = "";
     organizationImageCandidates = [];
     selectedOrganizationImageIndex = -1;
@@ -715,7 +730,7 @@
     try { project = await claimLegacyProject(project); }
     catch (error) { showToast(error.message); await loadProjects(); return; }
     currentProject = { ...project, status: project.status || "ativo" }; currentDirectory = null; projectMembersCache = []; updateMenuContext();
-    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; el.projectDescription.textContent = currentProject.card_description || "Abrir diretórios do projeto"; el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`; showView("projectView");
+    el.projectTitle.textContent = currentProject.name; el.projectCrumb.textContent = currentProject.name; el.projectDescription.textContent = displayProjectDescription(currentProject.card_description); el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`; showView("projectView");
     renderProjectState();
     await Promise.all([loadDirectories(), loadProjectMembers()]);
   }
@@ -748,7 +763,7 @@
     } catch (error) { el.directoryModalValidation.textContent = `Erro: ${error.message}`; }
   }
 
-  async function openDirectory(dir, section = "calculator") {
+  async function openDirectory(dir, section = "rooms") {
     currentDirectory = dir; currentSection = section;
     el.directoryTitle.textContent = dir.name; el.directoryCrumb.textContent = dir.name; el.directoryProjectLabel.textContent = currentProject?.name || "—"; el.directoryPeriodBadge.textContent = periodLabel(dir.period);
     updateMenuContext(); showView("directoryView"); switchSection(section);
@@ -805,7 +820,7 @@
 
     el.editProjectName.value = currentProject.name || "";
     el.editProjectDate.value = String(currentProject.project_date || "").slice(0, 10);
-    el.editProjectDescription.value = currentProject.card_description || "Abrir diretórios do projeto";
+    el.editProjectDescription.value = editableProjectDescription(currentProject.card_description);
     el.editProjectOrganization.value = currentProject.organization_name || "";
     el.editProjectValidation.textContent = "";
     editOrganizationSearchQuery = el.editProjectOrganization.value.trim();
@@ -864,7 +879,7 @@
       currentProject = { ...currentProject, ...updated };
       el.projectTitle.textContent = currentProject.name;
       el.projectCrumb.textContent = currentProject.name;
-      el.projectDescription.textContent = currentProject.card_description || "Abrir diretórios do projeto";
+      el.projectDescription.textContent = displayProjectDescription(currentProject.card_description);
       el.projectDateLabel.textContent = `📅 ${formatProjectDate(currentProject.project_date, currentProject.created_at)}`;
       closeModal(el.editProjectModal);
       showToast("Projeto atualizado.");
