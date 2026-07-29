@@ -1,24 +1,15 @@
-# Portal FCC V17.1 — Kanban corrigido
+# Portal FCC V17.2
 
-Versão derivada da V17, mantendo a **V16.4 como ponto de restauração**.
+Portal de aplicação de provas com projetos, diretórios, OCR, salas, checklist, calculadora, autenticação Google e Kanban colaborativo.
 
-## Correções principais
+## Kanban integrado
 
-- botão Kanban nivelado quando inativo;
-- destaque elevado somente no item selecionado;
-- nome Kanban visível quando inativo;
-- colunas empilhadas no mobile e tablet;
-- cards reorganizados no padrão visual do Kanban original;
-- metadados, checklist, progresso, comentários, anexos e avatares compactos.
+O Kanban usa os mesmos projetos, profissionais e login do Portal FCC. Cada projeto possui quadro próprio com cards, rich text, participantes, checklist, comentários, anexos, prazos, notificações, Realtime e chat.
 
-## Navegação inferior
+## Instalação
 
-`Projetos | Calcular | Kanban | Concluídos | Perfil`
+1. Execute `SUPABASE_HOTFIX_V17_2_KANBAN_COMPLETO.sql` no SQL Editor do Supabase.
+2. Preencha `config.js` com OCR.Space e Supabase.
+3. Publique todos os arquivos na raiz do GitHub Pages.
 
-A criação de projetos continua exclusivamente no botão **+ Criar projeto**.
-
-## Atualização
-
-Quem já usa a V17 não precisa executar SQL novo. Copie as credenciais do `config.js` atual e substitua os arquivos no GitHub Pages.
-
-Consulte `PASSO_A_PASSO_V17_1.txt`.
+Consulte `PASSO_A_PASSO_V17_2.txt`.

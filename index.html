@@ -121,6 +121,10 @@
           </div>
           <div class="brand-copy"><h1>Portal de Provas</h1><p>FCC • controle de aplicação</p></div>
         </div>
+        <button class="kanban-global-notif hidden" id="kanbanGlobalNotifBtn" type="button" aria-label="Notificações" title="Notificações">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+          <span id="kanbanGlobalNotifBadge" class="hidden">0</span>
+        </button>
       </div>
     </header>
 
@@ -173,6 +177,15 @@
         </section>
 
         <section class="kanban-workspace hidden" id="kanbanWorkspace">
+          <section class="kq-original-toolbar" aria-label="Ferramentas do Kanban">
+            <label class="kq-search-box"><span aria-hidden="true">⌕</span><input id="kanbanSearchInput" type="search" placeholder="Buscar cards, tags, participantes, comentários ou anexos..."></label>
+            <div class="kq-dashboard-mini">
+              <article><span>Cards</span><strong id="kanbanDashTotal">0</strong></article>
+              <article><span>Concluídos</span><strong id="kanbanDashDone">0</strong></article>
+              <article><span>Atrasados</span><strong id="kanbanDashOverdue">0</strong></article>
+              <article><span>Checklist</span><strong id="kanbanDashChecklist">0%</strong></article>
+            </div>
+          </section>
           <div class="kanban-board-toolbar">
             <button class="kanban-project-switch" id="kanbanChangeProjectBtn" type="button">← Trocar projeto</button>
             <div class="kanban-current-project">
@@ -320,7 +333,7 @@
       <button class="neo-dock-item" id="dockCalcBtn" type="button" aria-label="Calculadora rápida">
         <svg class="neo-dock-icon ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg><small>Calcular</small>
       </button>
-      <button class="neo-dock-item neo-dock-kanban" id="dockKanbanBtn" type="button" aria-label="Abrir Kanban">
+      <button class="neo-dock-item" id="dockKanbanBtn" type="button" aria-label="Abrir Kanban">
         <span class="kanban-dock-symbol" aria-hidden="true"><i></i><i></i><i></i></span>
         <small>Kanban</small>
       </button>
@@ -495,7 +508,14 @@
         <label class="modal-field"><span>Prioridade</span><select id="kanbanCardPriorityInput"><option value="baixa">Baixa</option><option value="media" selected>Média</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></label>
         <label class="modal-field"><span>Coluna</span><select id="kanbanCardColumnInput"><option value="todo">A Fazer</option><option value="doing">Em Progresso</option><option value="done">Concluído</option></select></label>
         <label class="modal-field kanban-field-wide"><span>Tags</span><input id="kanbanCardLabelsInput" type="text" maxlength="300" placeholder="Ex.: urgente, sala, material"></label>
-        <label class="modal-field kanban-field-wide"><span>Descrição</span><textarea id="kanbanCardDescriptionInput" rows="5" maxlength="5000" placeholder="Descreva a atividade..."></textarea></label>
+        <div class="modal-field kanban-field-wide"><span>Descrição</span>
+          <div class="kq-rich-toolbar" data-editor="kanbanCardDescriptionInput">
+            <button type="button" data-cmd="bold" title="Negrito"><b>B</b></button><button type="button" data-cmd="italic" title="Itálico"><i>I</i></button><button type="button" data-cmd="underline" title="Sublinhado"><u>U</u></button>
+            <button type="button" data-cmd="insertUnorderedList" title="Lista">• Lista</button><button type="button" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button><button type="button" data-cmd="createLink" title="Link">🔗</button><button type="button" data-cmd="removeFormat" title="Limpar formatação">Tx</button>
+          </div>
+          <div id="kanbanCardDescriptionInput" class="kq-rich-editor" contenteditable="true" data-placeholder="Descreva a atividade..."></div>
+          <small class="kq-rich-help">Use a barra para formatar textos, listas e links. Digite @nome ou @e-mail para mencionar alguém.</small>
+        </div>
       </div>
 
       <section class="kanban-modal-section">
@@ -513,7 +533,11 @@
 
       <section class="kanban-modal-section">
         <div class="kanban-section-head"><div><strong>Comentários</strong><small>Histórico da equipe.</small></div><span id="kanbanCommentsCounter">0</span></div>
-        <div class="kanban-inline-add"><textarea id="kanbanCommentNewInput" rows="2" maxlength="3000" placeholder="Escreva um comentário..."></textarea><button class="btn btn-soft" id="kanbanCommentAddBtn" type="button">Adicionar</button></div>
+        <div class="kq-comment-compose">
+          <div class="kq-rich-toolbar compact" data-editor="kanbanCommentNewInput"><button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="insertUnorderedList">• Lista</button><button type="button" data-cmd="createLink">🔗</button></div>
+          <div id="kanbanCommentNewInput" class="kq-rich-editor comment" contenteditable="true" data-placeholder="Escreva um comentário... Use @nome para mencionar."></div>
+          <button class="btn btn-soft" id="kanbanCommentAddBtn" type="button">Adicionar comentário</button>
+        </div>
         <div class="kanban-edit-list" id="kanbanCommentsList"></div>
       </section>
 
@@ -531,6 +555,48 @@
         <div class="kanban-modal-actions-right"><button class="btn btn-soft" id="kanbanCancelCardBtn" type="button">Cancelar</button><button class="btn btn-primary" id="kanbanSaveCardBtn" type="button">✓ Salvar card</button></div>
       </div>
     </section>
+  </div>
+
+
+  <!-- KANBAN: visualização completa do card, igual ao fluxo do Kanban original -->
+  <div class="modal" id="kanbanViewCardModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="kanbanViewCardModal"></div>
+    <section class="modal-card modal-card-wide kq-view-card-modal" role="dialog" aria-modal="true" aria-labelledby="kanbanViewCardTitle">
+      <button class="modal-close" id="kanbanViewCardClose" type="button">×</button>
+      <div class="kq-view-title-row"><div><span class="modal-chip" id="kanbanViewCardChip">DETALHES DO CARD</span><h2 id="kanbanViewCardTitle">Card</h2></div><div id="kanbanViewCardStatus"></div></div>
+      <div class="kq-view-meta" id="kanbanViewCardMeta"></div>
+      <section class="kq-view-section"><h3>Descrição</h3><div class="kq-rich-content" id="kanbanViewCardDescription"></div></section>
+      <section class="kq-view-section"><div class="kanban-section-head"><div><strong>Participantes</strong><small>Profissionais vinculados ao card.</small></div><span id="kanbanViewParticipantsCounter">0</span></div><div class="kq-view-participants" id="kanbanViewParticipants"></div></section>
+      <section class="kq-view-section"><div class="kanban-section-head"><div><strong>Checklist</strong><small>O progresso pode ser atualizado por participantes do projeto.</small></div><span id="kanbanViewChecklistCounter">0/0</span></div><div class="kq-view-progress"><i id="kanbanViewChecklistProgress"></i></div><div class="kanban-edit-list" id="kanbanViewChecklistList"></div></section>
+      <section class="kq-view-section"><div class="kanban-section-head"><div><strong>Comentários</strong><small>Histórico colaborativo do card.</small></div><span id="kanbanViewCommentsCounter">0</span></div>
+        <div class="kq-comment-compose view-compose"><div class="kq-rich-toolbar compact" data-editor="kanbanViewCommentInput"><button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="insertUnorderedList">• Lista</button><button type="button" data-cmd="createLink">🔗</button></div><div id="kanbanViewCommentInput" class="kq-rich-editor comment" contenteditable="true" data-placeholder="Adicionar comentário..."></div><button class="btn btn-soft" id="kanbanViewCommentAddBtn" type="button">Adicionar comentário</button></div>
+        <div class="kanban-edit-list" id="kanbanViewCommentsList"></div>
+      </section>
+      <section class="kq-view-section"><div class="kanban-section-head"><div><strong>Anexos</strong><small>Documentos armazenados com acesso privado.</small></div><span id="kanbanViewAttachmentsCounter">0</span></div><input id="kanbanViewAttachmentInput" type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.webp,.zip,application/pdf,image/*"><button class="btn btn-soft" id="kanbanViewAttachmentSelectBtn" type="button">📎 Anexar documentos</button><div class="kanban-edit-list" id="kanbanViewAttachmentsList"></div></section>
+      <div class="kanban-modal-actions"><button class="btn btn-soft" id="kanbanViewEditBtn" type="button">✎ Editar</button><button class="btn btn-soft hidden" id="kanbanViewReopenBtn" type="button">↺ Reabrir card</button><div class="kanban-modal-actions-right"><button class="btn btn-primary" id="kanbanViewCloseFooterBtn" type="button">Fechar</button></div></div>
+    </section>
+  </div>
+
+  <div class="modal" id="kanbanStatusConfirmModal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <section class="modal-card kq-status-confirm" role="dialog" aria-modal="true"><button class="modal-close" id="kanbanStatusConfirmClose" type="button">×</button><span class="kq-status-icon" id="kanbanStatusConfirmIcon">✓</span><span class="modal-chip">CONFIRMAÇÃO</span><h2 id="kanbanStatusConfirmTitle">Confirmar ação</h2><p id="kanbanStatusConfirmMessage"></p><div class="kq-status-warning" id="kanbanStatusConfirmWarning"></div><div class="modal-actions"><button class="btn btn-soft" id="kanbanStatusConfirmCancel" type="button">Cancelar</button><button class="btn btn-primary" id="kanbanStatusConfirmAccept" type="button">Confirmar</button></div></section>
+  </div>
+
+  <!-- Central persistente de notificações do Kanban -->
+  <div class="modal" id="kanbanNotificationsModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="kanbanNotificationsModal"></div>
+    <section class="modal-card modal-card-wide kq-notifications-modal" role="dialog" aria-modal="true"><button class="modal-close" id="kanbanNotificationsClose" type="button">×</button><div class="kq-notif-head"><div><span class="modal-chip">CENTRAL DE ALERTAS</span><h2>Notificações</h2><p>Prazos, menções, atribuições e movimentações dos seus projetos.</p></div><button class="btn btn-soft" id="kanbanMarkAllReadBtn" type="button">Marcar todas como lidas</button></div><div class="kq-notif-filter"><button class="active" data-notif-filter="all" type="button">Todas</button><button data-notif-filter="unread" type="button">Não lidas</button><button data-notif-filter="dates" type="button">Prazos</button></div><div class="kq-notif-list" id="kanbanNotificationsList"></div></section>
+  </div>
+
+  <!-- Chat direto entre profissionais, preservando a função do Kanban original -->
+  <div class="kq-chat-widget hidden" id="kanbanChatWidget">
+    <section class="kq-chat-panel" id="kanbanChatPanel" aria-hidden="true">
+      <header><div><strong>Mensagens</strong><small id="kanbanChatSubtitle">Converse com a equipe</small></div><button id="kanbanChatCloseBtn" type="button">×</button></header>
+      <div class="kq-chat-search"><input id="kanbanChatSearchInput" type="search" placeholder="Buscar profissional..."><div id="kanbanChatSearchResults"></div></div>
+      <div class="kq-chat-conversations" id="kanbanChatConversations"></div>
+      <div class="kq-chat-thread hidden" id="kanbanChatThread"><button id="kanbanChatThreadBack" type="button">← Conversas</button><div class="kq-chat-person" id="kanbanChatPerson"></div><div class="kq-chat-messages" id="kanbanChatMessages"></div><div class="kq-chat-compose"><textarea id="kanbanChatMessageInput" rows="1" placeholder="Digite uma mensagem..."></textarea><button id="kanbanChatSendBtn" type="button">➤</button></div></div>
+    </section>
+    <button class="kq-chat-toggle" id="kanbanChatToggleBtn" type="button" aria-label="Mensagens">💬<span id="kanbanChatBadge" class="hidden">0</span></button>
   </div>
 
   <!-- OCR compartilhado entre diretório e calculadora rápida -->
@@ -575,8 +641,8 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=17.1"></script>
-  <script src="app.js?v=17.1"></script>
-  <script src="kanban-module.js?v=17.1"></script>
+  <script src="config.js?v=17.2"></script>
+  <script src="app.js?v=17.2"></script>
+  <script src="kanban-module.js?v=17.2"></script>
 </body>
 </html>
