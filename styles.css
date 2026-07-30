@@ -1481,3 +1481,35 @@ body.guest-mode #guestLoginReturnBtn{
 @media(max-width:640px){.ocr-identification-row{grid-template-columns:1fr}.record-reported-end{grid-template-columns:1fr auto}}
 
 .detected-model select{width:100%;min-height:38px;padding:0 10px;border-radius:10px;color:#fff;background:rgba(11,11,18,.48);border:1px solid rgba(255,255,255,.12);font-weight:750}.detected-model small{color:var(--muted);font-size:.68rem;line-height:1.35}
+
+/* =========================================================
+   V19.1 — BOTÃO VOLTAR ÚNICO NA CALCULADORA PÚBLICA
+   ========================================================= */
+#quickCalculatorView .quick-single-back-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:min(100%,240px);
+  min-height:52px;
+  margin:0 auto 20px;
+  padding:0 22px;
+  border-radius:16px;
+  font-weight:800;
+  letter-spacing:.01em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 12px 26px rgba(0,0,0,.14);
+}
+#quickCalculatorView .quick-single-back-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(196,59,115,.38);
+  background:rgba(196,59,115,.10);
+}
+#quickCalculatorView .compact-heading{
+  display:block;
+}
+@media(max-width:760px){
+  #quickCalculatorView .quick-single-back-btn{
+    width:min(100%,320px);
+    min-height:54px;
+    margin-bottom:18px;
+  }
+}

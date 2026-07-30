@@ -1,4 +1,4 @@
-const CACHE_VERSION = "fcc-portal-v19.0.0";
+const CACHE_VERSION = "fcc-portal-v19.1.0";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [

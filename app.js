@@ -1293,7 +1293,7 @@
 
   // -------------------- EVENTOS --------------------
   function bindEvents() {
-    $("googleLoginBtn").addEventListener("click", signInWithGoogle); $("guestCalculatorBtn").addEventListener("click", showPublicCalculator); $("guestLoginReturnBtn").addEventListener("click", showLogin); $("signOutBtn").addEventListener("click", signOut);
+    $("googleLoginBtn").addEventListener("click", signInWithGoogle); $("guestCalculatorBtn").addEventListener("click", showPublicCalculator); $("guestLoginReturnBtn")?.addEventListener("click", showLogin); $("signOutBtn").addEventListener("click", signOut);
     $("menuOpenBtn").addEventListener("click", openMenu); $("menuCloseBtn").addEventListener("click", closeMenu); $("menuBackdrop").addEventListener("click", closeMenu);
     $("navOpenBtn").addEventListener("click", openNav); $("navCloseBtn").addEventListener("click", closeNav); $("navBackdrop").addEventListener("click", closeNav);
     el.navActiveProjectsBtn.addEventListener("click",()=>{closeNav();goProjects("ativo")});
