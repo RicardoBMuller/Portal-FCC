@@ -35,3 +35,7 @@ Leia `PASSO_A_PASSO_V19.txt` e execute apenas:
 `SUPABASE_HOTFIX_V19_NOVO_CARTAZ.sql`
 
 Não é necessário gerar novas chaves VAPID, recriar a Edge Function, o webhook ou o login Google.
+
+
+## V19.2
+A captura OCR é automática e aceita documentos horizontais ou verticais, sem seleção manual de modelo.

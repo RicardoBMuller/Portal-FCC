@@ -41,7 +41,7 @@
     quickManualForm: $("quickManualForm"), quickStart: $("quickStart"), quickDurationHours: $("quickDurationHours"), quickDurationMinutes: $("quickDurationMinutes"), quickMinimumHours: $("quickMinimumHours"), quickMinimumMinutes: $("quickMinimumMinutes"), quickValidation: $("quickValidation"),
     roomsStatus: $("roomsStatus"), roomsGrid: $("roomsGrid"), roomsEmpty: $("roomsEmpty"), roomsRoot: $("roomsRoot"), roomDetail: $("roomDetail"), roomCrumb: $("roomCrumb"), roomTitle: $("roomTitle"), roomMeta: $("roomMeta"), roomRecords: $("roomRecords"),
     check1: $("check1"), check2: $("check2"), check3: $("check3"), check4: $("check4"), checkComments: $("checkComments"), checklistStatus: $("checklistStatus"),
-    ocrModal: $("ocrModal"), ocrLoading: $("ocrLoading"), ocrConfirm: $("ocrConfirm"), ocrError: $("ocrError"), ocrPreview: $("ocrPreview"), ocrRoom: $("ocrRoom"), ocrModules: $("ocrModules"), ocrModulesField: $("ocrModulesField"), ocrStart: $("ocrStart"), ocrDuration: $("ocrDuration"), ocrMinimum: $("ocrMinimum"), ocrEnd: $("ocrEnd"), ocrEndCheck: $("ocrEndCheck"), ocrCardType: $("ocrCardType"), ocrQuality: $("ocrQuality"), ocrRawText: $("ocrRawText"), ocrValidation: $("ocrValidation"), ocrErrorText: $("ocrErrorText"),
+    ocrModal: $("ocrModal"), ocrLoading: $("ocrLoading"), ocrConfirm: $("ocrConfirm"), ocrError: $("ocrError"), ocrPreview: $("ocrPreview"), ocrRoom: $("ocrRoom"), ocrModules: $("ocrModules"), ocrModulesField: $("ocrModulesField"), ocrStart: $("ocrStart"), ocrDuration: $("ocrDuration"), ocrMinimum: $("ocrMinimum"), ocrEnd: $("ocrEnd"), ocrEndCheck: $("ocrEndCheck"), ocrAutoReading: $("ocrAutoReading"), ocrQuality: $("ocrQuality"), ocrRawText: $("ocrRawText"), ocrValidation: $("ocrValidation"), ocrErrorText: $("ocrErrorText"),
     resultModal: $("resultModal"), resultEnd: $("resultEnd"), resultStart: $("resultStart"), resultDuration: $("resultDuration"), resultMinimum: $("resultMinimum"), resultMinimumExit: $("resultMinimumExit"), resultReportedEndBox: $("resultReportedEndBox"), resultReportedEnd: $("resultReportedEnd"), resultEndValidationText: $("resultEndValidationText"), savedMeta: $("savedMeta"), savedRoom: $("savedRoom"), savedModules: $("savedModules"),
     toast: $("toast"), toastText: $("toastText")
   };
@@ -1242,8 +1242,7 @@
     const room=findTextAfterLabel(lines,/\bsala\b/,"room");
     const modules=findTextAfterLabel(lines,/modulo(?:\(s\))?s?/,"modules");
     const inicio=normalizeAiClock(start.value),reportedEnd=normalizeAiClock(end.value),duration=durationStringToMinutes(dur.value),minimum=durationStringToMinutes(min.value);
-    const timePosterSignals=/tempo\s+de\s+prova/.test(normalizedText)||(!modules.value&&/permanencia\s+minima/.test(normalizedText));
-    const cardType=modules.value?"module_card":(timePosterSignals?"time_poster":"module_card");
+    const cardType=modules.value?"module_card":"time_poster";
     const requiredFound=[inicio,duration!==null,minimum!==null].filter(Boolean).length;
     const projectRequired=ocrMode==="quick"?true:Boolean(room.value&&(cardType==="time_poster"||modules.value));
     const anchors=[start.anchored,dur.anchored,min.anchored,room.anchored].filter(Boolean).length;
@@ -1262,10 +1261,10 @@
     el.ocrEndCheck.innerHTML=matches?`<span>VALIDAÇÃO DO TÉRMINO</span><strong>✓ ${reportedEnd} confere com o cálculo</strong><small>Início ${start} + ${formatDurationClock(duration)} = ${result.end}</small>`:`<span>DIVERGÊNCIA NO TÉRMINO</span><strong>Informado ${reportedEnd} • Calculado ${result.end}</strong><small>O Portal salvará ${result.end} como término correto e manterá ${reportedEnd} para conferência.</small>`;
   }
   function applyOcrData(data){
-    ocrDetectedCardType=data.cardType||"module_card";
+    ocrDetectedCardType=data.modules?"module_card":"time_poster";
     el.ocrModal.dataset.cardType=ocrDetectedCardType;
-    el.ocrCardType.value=ocrDetectedCardType;
-    el.ocrModulesField.classList.toggle("hidden",ocrDetectedCardType==="time_poster");
+    el.ocrModulesField.classList.remove("hidden");
+    if(el.ocrAutoReading) el.ocrAutoReading.textContent=data.modules?"Campos e módulo reconhecidos":"Campos de horário reconhecidos";
     el.ocrRoom.value=data.room;el.ocrModules.value=data.modules;el.ocrStart.value=data.start;el.ocrDuration.value=data.duration;el.ocrMinimum.value=data.minimum;el.ocrEnd.value=data.reportedEnd;el.ocrQuality.textContent=data.quality;el.ocrRawText.textContent=data.raw;el.ocrValidation.textContent="";updateOcrEndValidation();
   }
   async function analyzePhoto(file, mode){
@@ -1278,9 +1277,8 @@
   }
   async function confirmOcr(){
     if(ocrMode==="directory"&&isCurrentProjectClosed())return void(el.ocrValidation.textContent="Projeto encerrado: novos cartões estão bloqueados.");
-    const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value),reportedEnd=normalizeAiClock(el.ocrEnd.value),cardType=el.ocrCardType.value||ocrDetectedCardType||"module_card";
+    const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value),reportedEnd=normalizeAiClock(el.ocrEnd.value),cardType=modules?"module_card":"time_poster";
     if(ocrMode==="directory"&&!room)return void(el.ocrValidation.textContent="Informe a sala.");
-    if(ocrMode==="directory"&&cardType==="module_card"&&!modules)return void(el.ocrValidation.textContent="Informe o(s) módulo(s) para este modelo de cartão.");
     if(!start)return void(el.ocrValidation.textContent="Informe um horário de início válido.");
     if(duration===null||duration<1)return void(el.ocrValidation.textContent="Informe um tempo de prova válido maior que 00:00.");
     if(minimum===null)return void(el.ocrValidation.textContent="Informe uma permanência mínima válida.");
@@ -1346,7 +1344,6 @@
     $("quickTakePhotoBtn").addEventListener("click",()=>requestPhoto("quick")); el.quickPhotoInput.addEventListener("change",()=>{const file=el.quickPhotoInput.files?.[0];if(file)analyzePhoto(file,"quick")});
     $("ocrModalClose").addEventListener("click",()=>closeModal(el.ocrModal)); $("ocrRetryBtn").addEventListener("click",()=>{closeModal(el.ocrModal);requestPhoto(ocrMode)}); $("ocrErrorRetryBtn").addEventListener("click",()=>{closeModal(el.ocrModal);requestPhoto(ocrMode)}); $("ocrConfirmBtn").addEventListener("click",confirmOcr);
     [el.ocrStart,el.ocrDuration,el.ocrMinimum,el.ocrEnd].forEach(input=>input.addEventListener("input",updateOcrEndValidation));
-    el.ocrCardType.addEventListener("change",()=>{ocrDetectedCardType=el.ocrCardType.value;el.ocrModulesField.classList.toggle("hidden",ocrDetectedCardType==="time_poster");});
 
     el.manualForm.addEventListener("submit",manualSubmit); $("manualResetBtn").addEventListener("click",resetManual); el.quickManualForm.addEventListener("submit",quickManualSubmit); $("quickResetBtn").addEventListener("click",resetQuickManual);
     $("refreshRoomsBtn").addEventListener("click",loadRooms); $("backRoomsBtn").addEventListener("click",renderRooms); $("saveChecklistBtn").addEventListener("click",saveChecklist);

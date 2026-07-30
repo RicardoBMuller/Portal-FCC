@@ -11,12 +11,12 @@
   <meta name="apple-mobile-web-app-title" content="Portal FCC">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="format-detection" content="telephone=no">
-  <title>FCC • Portal de Provas — V19.1</title>
+  <title>FCC • Portal de Provas — V19.2</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=19.1">
-  <link rel="stylesheet" href="kanban.css?v=19.1">
+  <link rel="stylesheet" href="styles.css?v=19.2">
+  <link rel="stylesheet" href="kanban.css?v=19.2">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -637,12 +637,12 @@
         <span class="modal-chip">DADOS IDENTIFICADOS</span><h2 id="ocrModalTitle">Confira antes de calcular</h2>
         <img class="ocr-preview" id="ocrPreview" alt="Prévia do cartão ou cartaz">
         <div class="ocr-identification-row">
-          <div class="read-quality detected-model"><span>Modelo identificado</span><select id="ocrCardType" aria-label="Tipo de cartão ou cartaz"><option value="module_card">Cartão por módulo</option><option value="time_poster">Cartaz vertical de horário</option></select><small>Você pode corrigir o modelo antes de salvar.</small></div>
+          <div class="read-quality auto-reading"><span>Leitura automática</span><strong id="ocrAutoReading">Horizontal ou vertical</strong><small>O Portal identifica os campos pelo conteúdo, sem exigir a seleção do modelo ou da posição da foto.</small></div>
           <div class="read-quality"><span>Qualidade da leitura</span><strong id="ocrQuality">—</strong></div>
         </div>
         <div class="ocr-grid">
           <label class="modal-field room-shared-field"><span>Sala</span><input id="ocrRoom" type="text" maxlength="40" placeholder="Ex.: 23"></label>
-          <label class="modal-field modules-only-field" id="ocrModulesField"><span>Módulo(s)</span><input id="ocrModules" type="text" maxlength="120" placeholder="Ex.: 0000001"></label>
+          <label class="modal-field modules-only-field" id="ocrModulesField"><span>Módulo(s) <small>opcional</small></span><input id="ocrModules" type="text" maxlength="120" placeholder="Ex.: 0000001"></label>
           <label class="modal-field"><span>Horário de início</span><input id="ocrStart" type="time"></label>
           <label class="modal-field"><span>Tempo de prova</span><input id="ocrDuration" type="text" maxlength="5" placeholder="00:00"></label>
           <label class="modal-field"><span>Permanência mínima</span><input id="ocrMinimum" type="text" maxlength="5" placeholder="00:00"></label>
@@ -679,9 +679,9 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=19.0"></script>
-  <script src="pwa.js?v=19.1"></script>
-  <script src="app.js?v=19.1"></script>
-  <script src="kanban-module.js?v=19.0"></script>
+  <script src="config.js?v=19.2"></script>
+  <script src="pwa.js?v=19.2"></script>
+  <script src="app.js?v=19.2"></script>
+  <script src="kanban-module.js?v=19.2"></script>
 </body>
 </html>

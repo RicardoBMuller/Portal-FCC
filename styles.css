@@ -1513,3 +1513,9 @@ body.guest-mode #guestLoginReturnBtn{
     margin-bottom:18px;
   }
 }
+
+/* V19.2 — leitura automática independente da orientação */
+.auto-reading{background:linear-gradient(135deg,rgba(196,59,115,.16),rgba(143,86,255,.10));border-color:rgba(196,59,115,.26)}
+.auto-reading strong{color:#ffc7de;line-height:1.2}
+.auto-reading small{color:var(--muted);font-size:.68rem;line-height:1.35}
+.modal-field>span small{font-size:.66rem;font-weight:650;color:var(--muted);margin-left:4px}
