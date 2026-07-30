@@ -460,6 +460,7 @@
     el.appShell.classList.add("hidden"); el.authGate.classList.remove("hidden"); document.body.classList.remove("auth-pending");
     el.authError.textContent = errorMessage;
     const guestReturn = $("guestLoginReturnBtn"); if (guestReturn) guestReturn.classList.add("hidden");
+    window.dispatchEvent(new CustomEvent("fcc:signed-out"));
   }
 
   function showPublicCalculator() {
@@ -486,6 +487,7 @@
     updateMenuContext();
     currentProjectFilter = "ativo";
     showView("projectsView");
+    window.dispatchEvent(new CustomEvent("fcc:auth-session", { detail: { session, user: currentUser, profile: currentProfile } }));
     await loadProjects();
   }
 

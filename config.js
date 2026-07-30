@@ -1,22 +1,9 @@
 /*
-  PORTAL FCC V15
+  PORTAL FCC V18 — PWA + PUSH
 
-  Preencha SOMENTE os valores abaixo antes de publicar no GitHub Pages.
-
-  OCR.Space:
-  - OCRSPACE_API_KEY: sua chave gratuita já criada.
-
-  Supabase:
-  - SUPABASE_URL: Project URL / Data API URL do projeto calculadora-fcc.
-  - SUPABASE_PUBLISHABLE_KEY: chave pública sb_publishable_...
-
-  Esta versão usa as tabelas:
-  - fcc_projects
-  - fcc_rooms
-  - fcc_exam_cards
-
-  Regra do portal:
-  Projeto -> Manhã ou Tarde -> Diretório de Salas -> Cartões
+  Preencha os valores antes de publicar.
+  A Publishable Key do Supabase e a VAPID Public Key podem ficar no frontend.
+  NUNCA use Secret Key, service_role ou VAPID Private Key no GitHub Pages.
 */
 window.FCC_CONFIG = {
   OCRSPACE_API_KEY: "K82786113188957",
@@ -24,5 +11,9 @@ window.FCC_CONFIG = {
   OCRSPACE_ENGINE: "3",
 
   SUPABASE_URL: "https://fxkjikfurlvfftpncunp.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_tla6br_lPVuEPBgsMFEDCw_58Pp-7jA"
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_tla6br_lPVuEPBgsMFEDCw_58Pp-7jA",
+
+  // Chave pública gerada pelo comando: npx web-push generate-vapid-keys
+  // A chave privada deve ser guardada somente nos Secrets do Supabase.
+  VAPID_PUBLIC_KEY: "BAib7Cx76y9ik8ugrssm4Ccpp2T3R0zvK9qH9rSHd-NGcTDs8GaHfwLySnDacPNAlmtrJfem_EbscTuEbWGy2jY"
 };

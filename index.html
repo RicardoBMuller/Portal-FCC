@@ -4,11 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17171f">
-  <meta name="description" content="Portal FCC para controle de aplicação, OCR, salas, checklist e equipes de projeto.">
-  <title>FCC • Portal de Provas — V17 Kanban Integrado</title>
+  <meta name="description" content="Portal FCC instalável para projetos, salas, OCR, Kanban, chat e notificações.">
+  <meta name="application-name" content="Portal FCC">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Portal FCC">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <title>FCC • Portal de Provas — V18 PWA</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=17.1">
-  <link rel="stylesheet" href="kanban.css?v=17.1">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="styles.css?v=18.0">
+  <link rel="stylesheet" href="kanban.css?v=18.0">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -52,6 +60,11 @@
       <div class="auth-divider"><span>ou</span></div>
       <button class="guest-calc-btn" id="guestCalculatorBtn" type="button">
         <span class="guest-line-icon" aria-hidden="true"><svg class="ui-line-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5l3.5 2"></path></svg></span><strong>Calcular tempo de prova</strong>
+      </button>
+      <button class="auth-install-btn hidden" id="authInstallAppBtn" type="button">
+        <span class="pwa-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M5 18h14"></path></svg></span>
+        <span><strong>Instalar aplicativo</strong><small>Adicionar o Portal FCC à tela inicial</small></span>
+        <i>›</i>
       </button>
       <p class="auth-error" id="authError" role="alert"></p>
     </div>
@@ -103,6 +116,8 @@
       <div class="profile-bio-actions">
         <button class="menu-item profile-action" id="editProfileBtn" type="button"><b>✎</b><span><strong>Editar BIO</strong><small>Atualizar informações profissionais</small></span><i>›</i></button>
         <button class="menu-item profile-action" id="profileProjectsBtn" type="button"><b>▰</b><span><strong>Projetos</strong><small>Todos os projetos em que você participou</small></span><i>›</i></button>
+        <button class="menu-item profile-action pwa-profile-action hidden" id="profileInstallAppBtn" type="button"><b class="pwa-action-icon"><svg viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M5 18h14"></path></svg></b><span><strong>Instalar aplicativo</strong><small>Adicionar à tela inicial do celular</small></span><i>›</i></button>
+        <button class="menu-item profile-action pwa-profile-action" id="profileNotificationsBtn" type="button"><b class="pwa-action-icon"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg></b><span><strong>Ativar notificações</strong><small>Projetos, Kanban e mensagens</small></span><i>›</i></button>
       </div>
       <button class="signout-btn" id="signOutBtn" type="button">Sair da conta</button>
     </aside>
@@ -599,6 +614,20 @@
     <button class="kq-chat-toggle" id="kanbanChatToggleBtn" type="button" aria-label="Mensagens">💬<span id="kanbanChatBadge" class="hidden">0</span></button>
   </div>
 
+  <!-- Instalação e ajuda de notificações PWA -->
+  <div class="modal" id="pwaHelpModal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <section class="modal-card pwa-help-modal" role="dialog" aria-modal="true" aria-labelledby="pwaHelpTitle">
+      <button class="modal-close" id="pwaHelpClose" type="button">×</button>
+      <div class="pwa-help-icon"><img src="icons/icon-192.png" width="72" height="72" alt=""></div>
+      <span class="modal-chip">PORTAL FCC NO CELULAR</span>
+      <h2 id="pwaHelpTitle">Instalar Portal FCC</h2>
+      <p id="pwaHelpText">Adicione o aplicativo à tela inicial.</p>
+      <ol class="pwa-help-steps" id="pwaHelpSteps"></ol>
+      <button class="btn btn-primary full" id="pwaHelpOk" type="button">Entendido</button>
+    </section>
+  </div>
+
   <!-- OCR compartilhado entre diretório e calculadora rápida -->
   <div class="modal" id="ocrModal" aria-hidden="true">
     <div class="modal-backdrop"></div>
@@ -641,8 +670,9 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=17.3"></script>
-  <script src="app.js?v=17.3"></script>
-  <script src="kanban-module.js?v=17.3"></script>
+  <script src="config.js?v=18.0"></script>
+  <script src="pwa.js?v=18.0"></script>
+  <script src="app.js?v=18.0"></script>
+  <script src="kanban-module.js?v=18.0"></script>
 </body>
 </html>

@@ -1408,3 +1408,43 @@ body.guest-mode #guestLoginReturnBtn{
   body.design-v16 .intro-orbit-track--inner i{width:42px;height:42px}
   body.design-v16 .auth-card{background:linear-gradient(155deg,#e2deea,#cbc6d8)}
 }
+
+/* =====================================================================
+   PORTAL FCC V18 — PWA / INSTALAÇÃO / PUSH
+   ===================================================================== */
+.auth-install-btn{
+  width:100%;min-height:58px;margin-top:12px;padding:10px 14px;border-radius:18px;
+  display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:11px;
+  color:#f7f3f6;text-align:left;cursor:pointer;
+  background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.045));
+  border:1px solid rgba(255,255,255,.11);box-shadow:0 12px 28px rgba(0,0,0,.16);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.auth-install-btn:hover{transform:translateY(-2px);border-color:rgba(216,61,128,.4);background:rgba(216,61,128,.09)}
+.auth-install-btn:disabled{opacity:.62;cursor:default;transform:none}
+.auth-install-btn>span:nth-child(2) strong,.auth-install-btn>span:nth-child(2) small{display:block}
+.auth-install-btn>span:nth-child(2) small{margin-top:3px;color:var(--muted);font-size:.73rem}
+.auth-install-btn>i{font-style:normal;color:var(--muted);font-size:1.35rem}
+.pwa-action-icon{
+  width:36px;height:36px;border-radius:12px;display:grid!important;place-items:center;
+  background:linear-gradient(135deg,rgba(216,61,128,.24),rgba(154,82,223,.24));
+  border:1px solid rgba(235,149,192,.18);color:#ffd8e9;font-style:normal;font-weight:900;
+}
+.pwa-profile-action.is-enabled{border-color:rgba(75,213,158,.34)!important;background:rgba(75,213,158,.08)!important}
+.pwa-profile-action.is-enabled .pwa-action-icon{background:rgba(75,213,158,.15);color:#9ff1cf;border-color:rgba(75,213,158,.25)}
+.pwa-help-modal{max-width:480px;text-align:center}
+.pwa-help-icon{width:88px;height:88px;margin:0 auto 18px;border-radius:26px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 38px rgba(196,59,115,.18)}
+.pwa-help-icon img{border-radius:22px}
+.pwa-help-modal>p{color:var(--muted);line-height:1.55}
+.pwa-help-steps{list-style:none;padding:0;margin:22px 0;display:grid;gap:10px;text-align:left}
+.pwa-help-steps li{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:11px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}
+.pwa-help-steps li b{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#d83d80,#9a52df);color:#fff;font-size:.78rem}
+.pwa-help-steps li span{color:#e5e0e7;font-size:.9rem;line-height:1.4}
+@media(display-mode:standalone){
+  body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .app-header{padding-top:max(0px,env(safe-area-inset-top))}
+}
+@media(max-width:780px){
+  .pwa-help-modal{width:calc(100% - 24px)}
+}
+.pwa-action-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
