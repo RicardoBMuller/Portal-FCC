@@ -1,20 +1,37 @@
-# Portal FCC V17.2
+# Portal FCC V19
 
-Portal de aplicação de provas com projetos, diretórios, OCR, salas, checklist, calculadora, autenticação Google e Kanban colaborativo.
+Portal de provas instalável (PWA), derivado do ponto de restauração **V18 com notificações push funcionando**.
 
-## Kanban integrado
+## Principais módulos
 
-O Kanban usa os mesmos projetos, profissionais e login do Portal FCC. Cada projeto possui quadro próprio com cards, rich text, participantes, checklist, comentários, anexos, prazos, notificações, Realtime e chat.
+- login Google pelo Supabase Auth;
+- projetos, participantes e BIO profissional;
+- diretórios, salas, cartões de prova e checklist;
+- OCR.Space e calculadora pública;
+- leitura do cartão tradicional por módulo;
+- leitura do novo cartaz vertical de horário;
+- validação do término informado contra o cálculo oficial;
+- Kanban completo por projeto;
+- chat direto entre profissionais;
+- central interna e notificações push no celular;
+- instalação como PWA.
 
-## Instalação
+## Novo cartaz vertical
 
-1. Execute `SUPABASE_HOTFIX_V17_2_KANBAN_COMPLETO.sql` no SQL Editor do Supabase.
-2. Preencha `config.js` com OCR.Space e Supabase.
-3. Publique todos os arquivos na raiz do GitHub Pages.
+O OCR identifica:
 
-Consulte `PASSO_A_PASSO_V17_2.txt`.
+- tempo de prova;
+- permanência mínima;
+- sala;
+- horário de início;
+- horário de término.
 
+O término oficial é sempre calculado por `início + tempo de prova`. Caso o valor escrito esteja diferente, a divergência é destacada e preservada para conferência.
 
-## V17.3
+## Atualização da V18
 
-O seletor do Kanban exibe somente projetos ativos. Projetos encerrados permanecem acessíveis nas áreas próprias do Portal, mas não podem ser selecionados para o Kanban. Não requer SQL novo.
+Leia `PASSO_A_PASSO_V19.txt` e execute apenas:
+
+`SUPABASE_HOTFIX_V19_NOVO_CARTAZ.sql`
+
+Não é necessário gerar novas chaves VAPID, recriar a Edge Function, o webhook ou o login Google.

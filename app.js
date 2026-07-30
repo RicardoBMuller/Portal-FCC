@@ -41,8 +41,8 @@
     quickManualForm: $("quickManualForm"), quickStart: $("quickStart"), quickDurationHours: $("quickDurationHours"), quickDurationMinutes: $("quickDurationMinutes"), quickMinimumHours: $("quickMinimumHours"), quickMinimumMinutes: $("quickMinimumMinutes"), quickValidation: $("quickValidation"),
     roomsStatus: $("roomsStatus"), roomsGrid: $("roomsGrid"), roomsEmpty: $("roomsEmpty"), roomsRoot: $("roomsRoot"), roomDetail: $("roomDetail"), roomCrumb: $("roomCrumb"), roomTitle: $("roomTitle"), roomMeta: $("roomMeta"), roomRecords: $("roomRecords"),
     check1: $("check1"), check2: $("check2"), check3: $("check3"), check4: $("check4"), checkComments: $("checkComments"), checklistStatus: $("checklistStatus"),
-    ocrModal: $("ocrModal"), ocrLoading: $("ocrLoading"), ocrConfirm: $("ocrConfirm"), ocrError: $("ocrError"), ocrPreview: $("ocrPreview"), ocrRoom: $("ocrRoom"), ocrModules: $("ocrModules"), ocrStart: $("ocrStart"), ocrDuration: $("ocrDuration"), ocrMinimum: $("ocrMinimum"), ocrQuality: $("ocrQuality"), ocrRawText: $("ocrRawText"), ocrValidation: $("ocrValidation"), ocrErrorText: $("ocrErrorText"),
-    resultModal: $("resultModal"), resultEnd: $("resultEnd"), resultStart: $("resultStart"), resultDuration: $("resultDuration"), resultMinimum: $("resultMinimum"), resultMinimumExit: $("resultMinimumExit"), savedMeta: $("savedMeta"), savedRoom: $("savedRoom"), savedModules: $("savedModules"),
+    ocrModal: $("ocrModal"), ocrLoading: $("ocrLoading"), ocrConfirm: $("ocrConfirm"), ocrError: $("ocrError"), ocrPreview: $("ocrPreview"), ocrRoom: $("ocrRoom"), ocrModules: $("ocrModules"), ocrModulesField: $("ocrModulesField"), ocrStart: $("ocrStart"), ocrDuration: $("ocrDuration"), ocrMinimum: $("ocrMinimum"), ocrEnd: $("ocrEnd"), ocrEndCheck: $("ocrEndCheck"), ocrCardType: $("ocrCardType"), ocrQuality: $("ocrQuality"), ocrRawText: $("ocrRawText"), ocrValidation: $("ocrValidation"), ocrErrorText: $("ocrErrorText"),
+    resultModal: $("resultModal"), resultEnd: $("resultEnd"), resultStart: $("resultStart"), resultDuration: $("resultDuration"), resultMinimum: $("resultMinimum"), resultMinimumExit: $("resultMinimumExit"), resultReportedEndBox: $("resultReportedEndBox"), resultReportedEnd: $("resultReportedEnd"), resultEndValidationText: $("resultEndValidationText"), savedMeta: $("savedMeta"), savedRoom: $("savedRoom"), savedModules: $("savedModules"),
     toast: $("toast"), toastText: $("toastText")
   };
 
@@ -59,6 +59,7 @@
   let originalRoleUsers = {};
   let searchTimers = {};
   let ocrMode = "directory";
+  let ocrDetectedCardType = "module_card";
   let toastTimer = null;
   let projectActionMode = null;
   let currentProjectFilter = "ativo";
@@ -1044,9 +1045,23 @@
     const startMin = parseClock(start); if (startMin === null || duration < 1) return null;
     return { start, duration, minimum, end: formatClock(startMin + duration), endNextDay: startMin + duration >= 1440, minimumExit: formatClock(startMin + minimum), minimumNextDay: startMin + minimum >= 1440 };
   }
-  function showResult(result, saved = null) {
+  function showResult(result, saved = null, reportedEnd = "") {
     el.resultEnd.textContent = result.end; el.resultStart.textContent = result.start; el.resultDuration.textContent = formatDurationClock(result.duration); el.resultMinimum.textContent = formatDurationClock(result.minimum); el.resultMinimumExit.textContent = result.minimumExit;
-    el.savedMeta.classList.toggle("hidden", !saved); if (saved) { el.savedRoom.textContent = `Sala ${saved.room}`; el.savedModules.textContent = `Módulo(s): ${saved.modules}`; }
+    const normalizedReportedEnd = normalizeAiClock(reportedEnd);
+    const hasReportedEnd = Boolean(normalizedReportedEnd);
+    const endMatches = hasReportedEnd && normalizedReportedEnd === result.end;
+    el.resultReportedEndBox.classList.toggle("hidden", !hasReportedEnd);
+    el.resultReportedEndBox.classList.toggle("match", endMatches);
+    el.resultReportedEndBox.classList.toggle("mismatch", hasReportedEnd && !endMatches);
+    if (hasReportedEnd) {
+      el.resultReportedEnd.textContent = normalizedReportedEnd;
+      el.resultEndValidationText.textContent = endMatches ? "O término informado confere com o cálculo." : `Divergência identificada. O horário correto calculado é ${result.end}.`;
+    }
+    el.savedMeta.classList.toggle("hidden", !saved);
+    if (saved) {
+      el.savedRoom.textContent = `Sala ${saved.room}`;
+      el.savedModules.textContent = saved.cardType === "time_poster" ? "Registro: Cartaz de horário" : `Módulo(s): ${saved.modules}`;
+    }
     openModal(el.resultModal);
   }
   function resetForm(start, dh, dm, mh, mm, validation) { start.value = "00:00"; dh.value = "00"; dm.value = "00"; mh.value = "00"; mm.value = "00"; validation.textContent = ""; }
@@ -1070,7 +1085,25 @@
   }
   async function saveExamCard(room, data, result) {
     const params = new URLSearchParams({ on_conflict: "room_id,modules,start_time" });
-    const payload = { room_id: room.id, modules: data.modules, start_time: data.start, duration_minutes: data.duration, end_time: result.end, end_next_day: result.endNextDay, minimum_stay_minutes: data.minimum, minimum_exit_time: result.minimumExit, minimum_exit_next_day: result.minimumNextDay, source: "ocr_space" };
+    const reportedEnd = normalizeAiClock(data.reportedEnd);
+    const moduleStorageValue = data.cardType === "time_poster"
+      ? `Cartaz de horário • ${formatDurationClock(data.duration)} • ${reportedEnd || result.end}`
+      : data.modules;
+    const payload = {
+      room_id: room.id,
+      modules: moduleStorageValue,
+      start_time: data.start,
+      duration_minutes: data.duration,
+      end_time: result.end,
+      end_next_day: result.endNextDay,
+      minimum_stay_minutes: data.minimum,
+      minimum_exit_time: result.minimumExit,
+      minimum_exit_next_day: result.minimumNextDay,
+      source: "ocr_space",
+      card_type: data.cardType,
+      reported_end_time: reportedEnd || null,
+      end_matches_calculation: reportedEnd ? reportedEnd === result.end : null
+    };
     return supabaseRequest(`fcc_directory_exam_cards?${params}`, { method: "POST", body: payload, prefer: "resolution=merge-duplicates,return=representation" });
   }
   async function loadRooms() {
@@ -1093,8 +1126,17 @@
     const room = roomsCache.find(r => r.id === roomId); if (!room) return;
     el.roomsRoot.classList.add("hidden"); el.roomDetail.classList.remove("hidden"); el.roomCrumb.textContent = `Sala ${room.room_code}`; el.roomTitle.textContent = room.room_code; el.roomMeta.textContent = `${room.cards.length} ${room.cards.length === 1 ? "registro" : "registros"}`; el.roomRecords.innerHTML = "";
     room.cards.forEach(card => {
-      const div = document.createElement("article"); div.className = "record-card";
-      div.innerHTML = `<div class="record-top"><span>MÓDULO(S)</span><span>${new Date(card.captured_at).toLocaleString("pt-BR")}</span></div><h4>${escapeHtml(card.modules)}</h4><div class="record-times"><div><span>Início</span><strong>${String(card.start_time).slice(0,5)}</strong></div><div><span>Duração</span><strong>${formatDurationClock(card.duration_minutes)}</strong></div><div><span>Encerramento</span><strong>${String(card.end_time).slice(0,5)}</strong></div><div><span>Liberação mínima</span><strong>${String(card.minimum_exit_time).slice(0,5)}</strong></div></div><div class="record-min">⏱ Permanência mínima: <strong>${formatDurationClock(card.minimum_stay_minutes)}</strong></div>`;
+      const div = document.createElement("article");
+      const isTimePoster = card.card_type === "time_poster";
+      const reportedEnd = card.reported_end_time ? String(card.reported_end_time).slice(0,5) : "";
+      const endMatches = card.end_matches_calculation !== false;
+      div.className = `record-card${isTimePoster ? " time-poster-record" : ""}${reportedEnd && !endMatches ? " has-end-warning" : ""}`;
+      const recordHeading = isTimePoster ? "CARTAZ DE HORÁRIO" : "MÓDULO(S)";
+      const recordTitle = isTimePoster ? "Tempo e permanência da prova" : escapeHtml(card.modules);
+      const reportedMarkup = reportedEnd
+        ? `<div class="record-reported-end ${endMatches ? "match" : "mismatch"}"><span>Término informado</span><strong>${reportedEnd}</strong><small>${endMatches ? "Confere com o cálculo" : `Diverge — calculado ${String(card.end_time).slice(0,5)}`}</small></div>`
+        : "";
+      div.innerHTML = `<div class="record-top"><span>${recordHeading}</span><span>${new Date(card.captured_at).toLocaleString("pt-BR")}</span></div><h4>${recordTitle}</h4><div class="record-times"><div><span>Início</span><strong>${String(card.start_time).slice(0,5)}</strong></div><div><span>Tempo de prova</span><strong>${formatDurationClock(card.duration_minutes)}</strong></div><div><span>Término calculado</span><strong>${String(card.end_time).slice(0,5)}</strong></div><div><span>Liberação mínima</span><strong>${String(card.minimum_exit_time).slice(0,5)}</strong></div></div>${reportedMarkup}<div class="record-min">⏱ Permanência mínima: <strong>${formatDurationClock(card.minimum_stay_minutes)}</strong></div>`;
       el.roomRecords.appendChild(div);
     });
   }
@@ -1149,23 +1191,105 @@
       throw new Error("Não foi possível compactar a foto para o OCR.Space.");
     } finally { source.cleanup(); }
   }
-  async function callOcr(blob) {
+  async function callOcr(blob, isTable = true) {
     const cfg = getOcrConfig(); if (!cfg.configured) throw new Error("Configure OCRSPACE_API_KEY no config.js.");
-    const form = new FormData(); form.append("file", blob, "cartao.jpg"); form.append("OCREngine", cfg.engine); form.append("language", "auto"); form.append("detectOrientation", "true"); form.append("scale", "true"); form.append("isTable", "true");
+    const form = new FormData(); form.append("file", blob, "cartao.jpg"); form.append("OCREngine", cfg.engine); form.append("language", "auto"); form.append("detectOrientation", "true"); form.append("scale", "true"); form.append("isTable", String(Boolean(isTable)));
     const res = await fetch(cfg.endpoint, { method:"POST", headers:{apikey:cfg.key}, body:form }); const payload = await res.json().catch(() => null); if (!res.ok) throw new Error(`OCR.Space HTTP ${res.status}`);
     if (payload?.IsErroredOnProcessing) throw new Error((payload.ErrorMessage || payload.ErrorDetails || ["OCR.Space retornou erro"]).flat?.().join?.(" ") || "OCR.Space retornou erro."); const text = payload?.ParsedResults?.[0]?.ParsedText; if (!text) throw new Error("Nenhum texto foi reconhecido."); return text;
   }
-  function cleanOcrLine(v){return String(v||"").replace(/[|_*#`]/g," ").replace(/\s+/g," ").trim()}
-  function normalizeOcrDigits(v){return String(v||"").replace(/[Oo]/g,"0").replace(/[Il|]/g,"1")}
-  function normalizeAiClock(v){let t=String(v||"").trim().toLowerCase().replace(/\s/g,"").replace(/[h\.]/g,":");const m=t.match(/^(\d{1,2}):(\d{2})$/);if(!m)return"";const h=+m[1],mi=+m[2];return h<=23&&mi<=59?`${String(h).padStart(2,"0")}:${String(mi).padStart(2,"0")}`:""}
-  function durationStringToMinutes(v){let t=String(v||"").trim().toLowerCase().replace(/\s/g,"");if(!t)return null;const colon=t.match(/^(\d{1,2}):(\d{2})$/);if(colon){const total=+colon[1]*60 + +colon[2];return +colon[2]<=59&&total>=0&&total<=720?total:null}const hp=t.match(/^(\d{1,2})h(?:(\d{1,2}))?$/);if(hp){const total=+hp[1]*60+(+hp[2]||0);return (+hp[2]||0)<=59&&total>=0&&total<=720?total:null}return null}
-  function findTimeToken(text,{duration=false}={}){const src=String(text||"");const pattern=/(?:^|[^A-Za-zÀ-ÿ0-9])([0-9OoIl|]{1,2})\s*(?:h|H|:|\.|;)\s*([0-9OoIl|]{1,2})(?![A-Za-zÀ-ÿ0-9])/g;let m;while((m=pattern.exec(src))){const h=+normalizeOcrDigits(m[1]),mi=+normalizeOcrDigits(m[2]);if(mi>59)continue;if(duration){const total=h*60+mi;if(total>=0&&total<=720)return formatDurationClock(total)}else if(h<=23)return`${String(h).padStart(2,"0")}:${String(mi).padStart(2,"0")}`}return""}
-  function isDifferentFieldLabel(line,expected){const s=stripDiacritics(line).toLowerCase();const known=/duracao|inicio|termino|fim|encerramento|permanencia|minima|sala|modulo/.test(s);return known&&!expected.test(s)}
-  function findValueNearLabel(lines,label,{duration=false,lookAhead=2}={}){for(let i=0;i<lines.length;i++){const s=stripDiacritics(lines[i]).toLowerCase();if(!label.test(s))continue;const d=findTimeToken(lines[i],{duration});if(d)return{value:d,anchored:true};for(let o=1;o<=lookAhead&&i+o<lines.length;o++){if(isDifferentFieldLabel(lines[i+o],label))break;const v=findTimeToken(lines[i+o],{duration});if(v)return{value:v,anchored:true}}}return{value:"",anchored:false}}
-  function findTextAfterLabel(lines,label,kind){for(let i=0;i<lines.length;i++){if(!label.test(stripDiacritics(lines[i]).toLowerCase()))continue;for(let o=0;o<=1&&i+o<lines.length;o++){let c=cleanOcrLine(lines[i+o]);if(o===0){const pos=c.indexOf(":");c=pos>=0?c.slice(pos+1).trim():c.replace(/m[oó]dulo(?:\(s\))?s?/i,"").replace(/sala/i,"").replace(/^\s*[-–—:]\s*/,"").trim()}if(!c)continue;if(kind==="room"){c=c.replace(/\b(?:m[oó]dulo|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const m=c.match(/\b([A-Za-z0-9][A-Za-z0-9._-]{0,19})\b/);if(m)return{value:normalizeRoomCode(m[1]),anchored:true}}else{c=c.replace(/\b(?:sala|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const nums=c.match(/\b\d{3,}\b/g);if(nums?.length)return{value:normalizeModulesText([...new Set(nums)].join(", ")),anchored:true}}}}return{value:"",anchored:false}}
-  function parseOcr(raw){const lines=String(raw||"").split(/\r?\n/).map(cleanOcrLine).filter(Boolean);const dur=findValueNearLabel(lines,/duracao(?:\s+da)?\s+prova|duracao/,{duration:true,lookAhead:1});const start=findValueNearLabel(lines,/\binicio\b/,{duration:false,lookAhead:1});const min=findValueNearLabel(lines,/permanencia(?:\s+minima)?|minima/,{duration:true,lookAhead:1});const room=findTextAfterLabel(lines,/\bsala\b/,"room");const modules=findTextAfterLabel(lines,/modulo(?:\(s\))?s?/,"modules");let inicio=normalizeAiClock(start.value),duration=durationStringToMinutes(dur.value),minimum=durationStringToMinutes(min.value);const requiredFound=[inicio,duration!==null].filter(Boolean).length;const projectFound=[room.value,modules.value].filter(Boolean).length;return{room:normalizeRoomCode(room.value),modules:normalizeModulesText(modules.value),start:inicio,duration:duration===null?"":formatDurationClock(duration),minimum:minimum===null?"":formatDurationClock(minimum),quality:requiredFound===2&&start.anchored&&dur.anchored&&(ocrMode==="quick"||projectFound===2)?"Alta":requiredFound===2?"Média":"Baixa",raw};}
-  async function analyzePhoto(file, mode){ocrMode=mode; el.ocrModal.classList.toggle("quick-mode",mode==="quick"); $("ocrConfirmBtn").textContent=mode==="quick"?"✓ Calcular":"✓ Calcular e salvar"; openModal(el.ocrModal);setOcrState("loading");try{const img=await prepareImage(file);el.ocrPreview.src=img.preview;const raw=await callOcr(img.blob);const data=parseOcr(raw);el.ocrRoom.value=data.room;el.ocrModules.value=data.modules;el.ocrStart.value=data.start;el.ocrDuration.value=data.duration;el.ocrMinimum.value=data.minimum;el.ocrQuality.textContent=data.quality;el.ocrRawText.textContent=raw;el.ocrValidation.textContent="";setOcrState("confirm")}catch(error){el.ocrErrorText.textContent=error.message;setOcrState("error")}}
-  async function confirmOcr(){if(ocrMode==="directory"&&isCurrentProjectClosed())return void(el.ocrValidation.textContent="Projeto encerrado: novos cartões estão bloqueados.");const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value);if(ocrMode==="directory"&&!room)return void(el.ocrValidation.textContent="Informe a sala.");if(ocrMode==="directory"&&!modules)return void(el.ocrValidation.textContent="Informe o(s) módulo(s).");if(!start)return void(el.ocrValidation.textContent="Informe um horário de início válido.");if(duration===null||duration<1)return void(el.ocrValidation.textContent="Informe uma duração válida maior que 00:00.");if(minimum===null)return void(el.ocrValidation.textContent="Informe uma permanência mínima válida.");const result=calculateResult(start,duration,minimum);if(ocrMode==="quick"){closeModal(el.ocrModal);showResult(result,null);return}el.ocrValidation.textContent="Salvando no Supabase...";try{const roomRow=await ensureRoom(room);await saveExamCard(roomRow,{room,modules,start,duration,minimum},result);closeModal(el.ocrModal);showResult(result,{room,modules});await loadRooms();}catch(error){el.ocrValidation.textContent=`Erro ao salvar: ${error.message}`}}
+  function cleanOcrLine(v){return String(v||"").replace(/[|_*#`]/g," ").replace(/[–—]/g,"-").replace(/\s+/g," ").trim()}
+  function normalizeOcrDigits(v){return String(v||"").replace(/[OoQ]/g,"0").replace(/[Il|!]/g,"1").replace(/[Ss](?=\d)/g,"5")}
+  function normalizeAiClock(v){
+    let t=normalizeOcrDigits(String(v||"")).trim().toLowerCase().replace(/\s/g,"").replace(/[h\.;,]/g,":").replace(/_+/g,"");
+    let m=t.match(/^(\d{1,2}):(\d{1,2})$/);
+    if(!m){const digits=t.replace(/\D/g,"");if(digits.length===3)m=[digits,digits.slice(0,1),digits.slice(1)];else if(digits.length===4)m=[digits,digits.slice(0,2),digits.slice(2)];}
+    if(!m)return"";const h=+m[1],mi=+m[2];return h<=23&&mi<=59?`${String(h).padStart(2,"0")}:${String(mi).padStart(2,"0")}`:"";
+  }
+  function durationStringToMinutes(v){
+    let t=normalizeOcrDigits(String(v||"")).trim().toLowerCase().replace(/\s+/g," ");if(!t)return null;
+    const clock=t.replace(/\s/g,"").match(/^(\d{1,2})[:\.](\d{1,2})$/);if(clock){const total=+clock[1]*60 + +clock[2];return +clock[2]<=59&&total>=0&&total<=720?total:null}
+    const hour=t.match(/(\d{1,2})\s*(?:h|hora|horas)\s*(?:(?:e\s*)?(\d{1,2})\s*(?:m|min|minuto|minutos))?/i);if(hour){const mins=+(hour[2]||0),total=+hour[1]*60+mins;return mins<=59&&total>=0&&total<=720?total:null}
+    const compact=t.replace(/\s/g,"").match(/^(\d{1,2})h(?:(\d{1,2})(?:m|min)?)?$/);if(compact){const mins=+(compact[2]||0),total=+compact[1]*60+mins;return mins<=59&&total>=0&&total<=720?total:null}
+    const minutes=t.match(/^(\d{1,3})\s*(?:m|min|minuto|minutos)$/);if(minutes){const total=+minutes[1];return total>=0&&total<=720?total:null}
+    return null;
+  }
+  function findTimeToken(text,{duration=false}={}){
+    const src=normalizeOcrDigits(String(text||""));
+    if(duration){
+      const candidates=[
+        src.match(/(\d{1,2})\s*h\s*(\d{1,2})(?!\d)/i),
+        src.match(/(\d{1,2})\s*(?:horas?|h)\s*(?:(?:e\s*)?(\d{1,2})\s*(?:min(?:utos?)?|m))?/i),
+        src.match(/(\d{1,3})\s*(?:min(?:utos?)?|m)\b/i),
+        src.match(/(?:^|[^A-Za-zÀ-ÿ0-9])(\d{1,2})\s*(?::|\.|;)\s*(\d{1,2})(?![A-Za-zÀ-ÿ0-9])/)
+      ];
+      for(const m of candidates){if(!m)continue;let total;if(/min/i.test(m[0])&&!/(?:hora|h)/i.test(m[0])&&m.length<3)total=+m[1];else if(/(?:hora|h)/i.test(m[0]))total=+m[1]*60+(+m[2]||0);else total=+m[1]*60+(+m[2]||0);if(total>=0&&total<=720&&(m[2]===undefined||(+m[2]||0)<=59))return formatDurationClock(total)}
+      return"";
+    }
+    const pattern=/(?:^|[^A-Za-zÀ-ÿ0-9])([0-9]{1,2})\s*(?::|h|H|\.|;)\s*([0-9]{1,2})(?![A-Za-zÀ-ÿ0-9])/g;let m;
+    while((m=pattern.exec(src))){const h=+m[1],mi=+m[2];if(h<=23&&mi<=59)return`${String(h).padStart(2,"0")}:${String(mi).padStart(2,"0")}`}
+    return"";
+  }
+  function isDifferentFieldLabel(line,expected){const s=stripDiacritics(line).toLowerCase();const known=/tempo\s+de\s+prova|duracao|inicio|termino|fim|encerramento|permanencia|minima|sala|modulo/.test(s);return known&&!expected.test(s)}
+  function findValueNearLabel(lines,label,{duration=false,lookAhead=2}={}){for(let i=0;i<lines.length;i++){const s=stripDiacritics(lines[i]).toLowerCase();const labelMatch=s.match(label);if(!labelMatch)continue;const anchoredSlice=lines[i].slice(labelMatch.index||0);const d=findTimeToken(anchoredSlice,{duration});if(d)return{value:d,anchored:true};for(let o=1;o<=lookAhead&&i+o<lines.length;o++){if(isDifferentFieldLabel(lines[i+o],label))break;const v=findTimeToken(lines[i+o],{duration});if(v)return{value:v,anchored:true}}}return{value:"",anchored:false}}
+  function findTextAfterLabel(lines,label,kind){for(let i=0;i<lines.length;i++){if(!label.test(stripDiacritics(lines[i]).toLowerCase()))continue;for(let o=0;o<=1&&i+o<lines.length;o++){let c=cleanOcrLine(lines[i+o]);if(o===0){const pos=c.indexOf(":");c=pos>=0?c.slice(pos+1).trim():c.replace(/m[oó]dulo(?:\(s\))?s?/i,"").replace(/sala/i,"").replace(/^\s*[-–—:]\s*/,"").trim()}if(!c)continue;if(kind==="room"){c=c.replace(/\b(?:manha|tarde|noite|m[oó]dulo|tempo\s+de\s+prova|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const m=normalizeOcrDigits(c).match(/\b([A-Za-z0-9][A-Za-z0-9._-]{0,19})\b/);if(m)return{value:normalizeRoomCode(m[1]),anchored:true}}else{c=c.replace(/\b(?:sala|tempo\s+de\s+prova|dura[cç][aã]o|in[ií]cio|t[eé]rmino|perman[eê]ncia)\b.*$/i,"").trim();const nums=normalizeOcrDigits(c).match(/\b\d{3,}\b/g);if(nums?.length)return{value:normalizeModulesText([...new Set(nums)].join(", ")),anchored:true}}}}return{value:"",anchored:false}}
+  function parseOcr(raw){
+    const lines=String(raw||"").split(/\r?\n/).map(cleanOcrLine).filter(Boolean);
+    const normalizedText=stripDiacritics(lines.join(" ")).toLowerCase();
+    const dur=findValueNearLabel(lines,/tempo\s+de\s+prova|duracao(?:\s+da)?\s+prova|duracao/,{duration:true,lookAhead:2});
+    const start=findValueNearLabel(lines,/\binicio\b/,{duration:false,lookAhead:2});
+    const end=findValueNearLabel(lines,/\btermino\b|\bfim\b|encerramento/,{duration:false,lookAhead:2});
+    const min=findValueNearLabel(lines,/permanencia(?:\s+minima)?|minima/,{duration:true,lookAhead:2});
+    const room=findTextAfterLabel(lines,/\bsala\b/,"room");
+    const modules=findTextAfterLabel(lines,/modulo(?:\(s\))?s?/,"modules");
+    const inicio=normalizeAiClock(start.value),reportedEnd=normalizeAiClock(end.value),duration=durationStringToMinutes(dur.value),minimum=durationStringToMinutes(min.value);
+    const timePosterSignals=/tempo\s+de\s+prova/.test(normalizedText)||(!modules.value&&/permanencia\s+minima/.test(normalizedText));
+    const cardType=modules.value?"module_card":(timePosterSignals?"time_poster":"module_card");
+    const requiredFound=[inicio,duration!==null,minimum!==null].filter(Boolean).length;
+    const projectRequired=ocrMode==="quick"?true:Boolean(room.value&&(cardType==="time_poster"||modules.value));
+    const anchors=[start.anchored,dur.anchored,min.anchored,room.anchored].filter(Boolean).length;
+    const quality=requiredFound===3&&projectRequired&&anchors>=3?"Alta":requiredFound>=2?"Média":"Baixa";
+    return{room:normalizeRoomCode(room.value),modules:normalizeModulesText(modules.value),start:inicio,duration:duration===null?"":formatDurationClock(duration),minimum:minimum===null?"":formatDurationClock(minimum),reportedEnd,cardType,quality,raw};
+  }
+  function ocrScore(data){return [data.start,data.duration,data.minimum,data.room,data.modules||data.cardType==="time_poster",data.reportedEnd].filter(Boolean).length+(data.quality==="Alta"?3:data.quality==="Média"?1:0)}
+  function cardTypeLabel(cardType){return cardType==="time_poster"?"Cartaz vertical de horário":"Cartão por módulo"}
+  function updateOcrEndValidation(){
+    const start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),reportedEnd=normalizeAiClock(el.ocrEnd.value);
+    el.ocrEndCheck.className="ocr-end-check neutral";
+    if(!start||duration===null||duration<1){el.ocrEndCheck.innerHTML='<span>VALIDAÇÃO DO TÉRMINO</span><strong>Informe início e tempo de prova para validar.</strong><small>O horário correto será calculado automaticamente.</small>';return}
+    const result=calculateResult(start,duration,durationStringToMinutes(el.ocrMinimum.value)||0);
+    if(!reportedEnd){el.ocrEndCheck.innerHTML=`<span>TÉRMINO CALCULADO</span><strong>${result.end}</strong><small>O cartaz não trouxe um término legível. Confira e preencha manualmente se necessário.</small>`;return}
+    const matches=reportedEnd===result.end;el.ocrEndCheck.className=`ocr-end-check ${matches?"match":"mismatch"}`;
+    el.ocrEndCheck.innerHTML=matches?`<span>VALIDAÇÃO DO TÉRMINO</span><strong>✓ ${reportedEnd} confere com o cálculo</strong><small>Início ${start} + ${formatDurationClock(duration)} = ${result.end}</small>`:`<span>DIVERGÊNCIA NO TÉRMINO</span><strong>Informado ${reportedEnd} • Calculado ${result.end}</strong><small>O Portal salvará ${result.end} como término correto e manterá ${reportedEnd} para conferência.</small>`;
+  }
+  function applyOcrData(data){
+    ocrDetectedCardType=data.cardType||"module_card";
+    el.ocrModal.dataset.cardType=ocrDetectedCardType;
+    el.ocrCardType.value=ocrDetectedCardType;
+    el.ocrModulesField.classList.toggle("hidden",ocrDetectedCardType==="time_poster");
+    el.ocrRoom.value=data.room;el.ocrModules.value=data.modules;el.ocrStart.value=data.start;el.ocrDuration.value=data.duration;el.ocrMinimum.value=data.minimum;el.ocrEnd.value=data.reportedEnd;el.ocrQuality.textContent=data.quality;el.ocrRawText.textContent=data.raw;el.ocrValidation.textContent="";updateOcrEndValidation();
+  }
+  async function analyzePhoto(file, mode){
+    ocrMode=mode;el.ocrModal.classList.toggle("quick-mode",mode==="quick");$("ocrConfirmBtn").textContent=mode==="quick"?"✓ Calcular":"✓ Calcular e salvar";openModal(el.ocrModal);setOcrState("loading");
+    try{const img=await prepareImage(file);el.ocrPreview.src=img.preview;const rawTable=await callOcr(img.blob,true);let best=parseOcr(rawTable);
+      const needsSecondPass=!best.start||!best.duration||!best.minimum||(mode==="directory"&&!best.room)||(!best.reportedEnd&&/termino|fim|encerramento/i.test(stripDiacritics(rawTable)));
+      if(needsSecondPass){try{const rawFree=await callOcr(img.blob,false);const alternative=parseOcr(rawFree);if(ocrScore(alternative)>ocrScore(best))best=alternative}catch{}}
+      applyOcrData(best);setOcrState("confirm")
+    }catch(error){el.ocrErrorText.textContent=error.message;setOcrState("error")}
+  }
+  async function confirmOcr(){
+    if(ocrMode==="directory"&&isCurrentProjectClosed())return void(el.ocrValidation.textContent="Projeto encerrado: novos cartões estão bloqueados.");
+    const room=normalizeRoomCode(el.ocrRoom.value),modules=normalizeModulesText(el.ocrModules.value),start=normalizeAiClock(el.ocrStart.value),duration=durationStringToMinutes(el.ocrDuration.value),minimum=durationStringToMinutes(el.ocrMinimum.value),reportedEnd=normalizeAiClock(el.ocrEnd.value),cardType=el.ocrCardType.value||ocrDetectedCardType||"module_card";
+    if(ocrMode==="directory"&&!room)return void(el.ocrValidation.textContent="Informe a sala.");
+    if(ocrMode==="directory"&&cardType==="module_card"&&!modules)return void(el.ocrValidation.textContent="Informe o(s) módulo(s) para este modelo de cartão.");
+    if(!start)return void(el.ocrValidation.textContent="Informe um horário de início válido.");
+    if(duration===null||duration<1)return void(el.ocrValidation.textContent="Informe um tempo de prova válido maior que 00:00.");
+    if(minimum===null)return void(el.ocrValidation.textContent="Informe uma permanência mínima válida.");
+    if(el.ocrEnd.value&&!reportedEnd)return void(el.ocrValidation.textContent="Confira o horário de término informado.");
+    const result=calculateResult(start,duration,minimum);
+    if(ocrMode==="quick"){closeModal(el.ocrModal);showResult(result,null,reportedEnd);return}
+    el.ocrValidation.textContent="Salvando no Supabase...";
+    try{const roomRow=await ensureRoom(room);await saveExamCard(roomRow,{room,modules,start,duration,minimum,reportedEnd,cardType},result);closeModal(el.ocrModal);showResult(result,{room,modules,cardType},reportedEnd);await loadRooms()}catch(error){el.ocrValidation.textContent=`Erro ao salvar: ${error.message}`}
+  }
 
   // -------------------- EVENTOS --------------------
   function bindEvents() {
@@ -1221,6 +1345,8 @@
     $("takePhotoBtn").addEventListener("click",()=>requestPhoto("directory")); $("roomsCaptureBtn").addEventListener("click",()=>requestPhoto("directory")); el.photoInput.addEventListener("change",()=>{const file=el.photoInput.files?.[0];if(file)analyzePhoto(file,"directory")});
     $("quickTakePhotoBtn").addEventListener("click",()=>requestPhoto("quick")); el.quickPhotoInput.addEventListener("change",()=>{const file=el.quickPhotoInput.files?.[0];if(file)analyzePhoto(file,"quick")});
     $("ocrModalClose").addEventListener("click",()=>closeModal(el.ocrModal)); $("ocrRetryBtn").addEventListener("click",()=>{closeModal(el.ocrModal);requestPhoto(ocrMode)}); $("ocrErrorRetryBtn").addEventListener("click",()=>{closeModal(el.ocrModal);requestPhoto(ocrMode)}); $("ocrConfirmBtn").addEventListener("click",confirmOcr);
+    [el.ocrStart,el.ocrDuration,el.ocrMinimum,el.ocrEnd].forEach(input=>input.addEventListener("input",updateOcrEndValidation));
+    el.ocrCardType.addEventListener("change",()=>{ocrDetectedCardType=el.ocrCardType.value;el.ocrModulesField.classList.toggle("hidden",ocrDetectedCardType==="time_poster");});
 
     el.manualForm.addEventListener("submit",manualSubmit); $("manualResetBtn").addEventListener("click",resetManual); el.quickManualForm.addEventListener("submit",quickManualSubmit); $("quickResetBtn").addEventListener("click",resetQuickManual);
     $("refreshRoomsBtn").addEventListener("click",loadRooms); $("backRoomsBtn").addEventListener("click",renderRooms); $("saveChecklistBtn").addEventListener("click",saveChecklist);

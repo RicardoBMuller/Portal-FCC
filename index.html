@@ -11,12 +11,12 @@
   <meta name="apple-mobile-web-app-title" content="Portal FCC">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="format-detection" content="telephone=no">
-  <title>FCC • Portal de Provas — V18 PWA</title>
+  <title>FCC • Portal de Provas — V19</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="logo-fcc-avatar.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=18.0">
-  <link rel="stylesheet" href="kanban.css?v=18.0">
+  <link rel="stylesheet" href="styles.css?v=19.0">
+  <link rel="stylesheet" href="kanban.css?v=19.0">
 </head>
 <body class="intro-playing auth-pending design-v16">
   <div class="intro-screen" id="introScreen" aria-hidden="true">
@@ -241,7 +241,7 @@
         </div>
         <article class="camera-card">
           <input id="quickPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
-          <button class="capture-button" id="quickTakePhotoBtn" type="button"><span>📷</span><strong>Capturar informações do cartão</strong></button>
+          <button class="capture-button" id="quickTakePhotoBtn" type="button"><span>📷</span><strong>Capturar cartão ou cartaz de prova</strong></button>
         </article>
         <article class="manual-card">
           <div class="section-title"><span class="eyebrow">PREENCHIMENTO MANUAL</span><h3>Horários</h3></div>
@@ -298,7 +298,7 @@
         <section class="directory-section" id="calculatorSection">
           <article class="camera-card">
             <input id="examPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
-            <button class="capture-button" id="takePhotoBtn" type="button"><span>📷</span><strong>Capturar informações do cartão</strong></button>
+            <button class="capture-button" id="takePhotoBtn" type="button"><span>📷</span><strong>Capturar cartão ou cartaz de prova</strong></button>
           </article>
           <article class="manual-card">
             <div class="section-title"><span class="eyebrow">PREENCHIMENTO MANUAL</span><h3>Calculadora</h3></div>
@@ -636,14 +636,23 @@
       <div id="ocrLoading" class="ocr-state"><div class="spinner"></div><span class="modal-chip">LENDO CARTÃO</span><h2>Processando a foto...</h2></div>
       <div id="ocrConfirm" class="ocr-state hidden">
         <span class="modal-chip">DADOS IDENTIFICADOS</span><h2 id="ocrModalTitle">Confira antes de calcular</h2>
-        <img class="ocr-preview" id="ocrPreview" alt="Prévia do cartão">
-        <div class="ocr-grid">
-          <label class="modal-field project-only-field"><span>Sala</span><input id="ocrRoom" type="text" maxlength="40"></label>
-          <label class="modal-field project-only-field"><span>Módulo(s)</span><input id="ocrModules" type="text" maxlength="120"></label>
-          <label class="modal-field"><span>Horário de início</span><input id="ocrStart" type="time"></label>
-          <label class="modal-field"><span>Duração</span><input id="ocrDuration" type="text" maxlength="5" placeholder="00:00"></label>
-          <label class="modal-field"><span>Permanência mínima</span><input id="ocrMinimum" type="text" maxlength="5" placeholder="00:00"></label>
+        <img class="ocr-preview" id="ocrPreview" alt="Prévia do cartão ou cartaz">
+        <div class="ocr-identification-row">
+          <div class="read-quality detected-model"><span>Modelo identificado</span><select id="ocrCardType" aria-label="Tipo de cartão ou cartaz"><option value="module_card">Cartão por módulo</option><option value="time_poster">Cartaz vertical de horário</option></select><small>Você pode corrigir o modelo antes de salvar.</small></div>
           <div class="read-quality"><span>Qualidade da leitura</span><strong id="ocrQuality">—</strong></div>
+        </div>
+        <div class="ocr-grid">
+          <label class="modal-field room-shared-field"><span>Sala</span><input id="ocrRoom" type="text" maxlength="40" placeholder="Ex.: 23"></label>
+          <label class="modal-field modules-only-field" id="ocrModulesField"><span>Módulo(s)</span><input id="ocrModules" type="text" maxlength="120" placeholder="Ex.: 0000001"></label>
+          <label class="modal-field"><span>Horário de início</span><input id="ocrStart" type="time"></label>
+          <label class="modal-field"><span>Tempo de prova</span><input id="ocrDuration" type="text" maxlength="5" placeholder="00:00"></label>
+          <label class="modal-field"><span>Permanência mínima</span><input id="ocrMinimum" type="text" maxlength="5" placeholder="00:00"></label>
+          <label class="modal-field"><span>Horário de término informado</span><input id="ocrEnd" type="time"></label>
+        </div>
+        <div class="ocr-end-check neutral" id="ocrEndCheck">
+          <span>VALIDAÇÃO DO TÉRMINO</span>
+          <strong>Informe início e duração para validar.</strong>
+          <small>O Portal sempre considera o término calculado a partir do início + tempo de prova.</small>
         </div>
         <details class="raw-ocr"><summary>Ver texto reconhecido</summary><pre id="ocrRawText"></pre></details>
         <p class="validation" id="ocrValidation"></p>
@@ -662,7 +671,8 @@
       <div class="result-time" id="resultEnd">--:--</div>
       <div class="result-grid"><div><span>Início</span><strong id="resultStart">--:--</strong></div><div><span>Duração</span><strong id="resultDuration">00:00</strong></div></div>
       <div class="minimum-highlight"><span>⏱ Permanência mínima</span><strong id="resultMinimum">00:00</strong><small>Liberação a partir de <b id="resultMinimumExit">--:--</b></small></div>
-      <div class="saved-meta hidden" id="savedMeta"><span>✓ Registro salvo</span><strong id="savedRoom">Sala —</strong><small id="savedModules">Módulo(s): —</small></div>
+      <div class="reported-end-result hidden" id="resultReportedEndBox"><span>Término escrito no cartaz</span><strong id="resultReportedEnd">--:--</strong><small id="resultEndValidationText">—</small></div>
+      <div class="saved-meta hidden" id="savedMeta"><span>✓ Registro salvo</span><strong id="savedRoom">Sala —</strong><small id="savedModules">Registro: —</small></div>
       <button class="btn btn-primary full" id="resultOkBtn" type="button">Entendido</button>
     </section>
   </div>
@@ -670,9 +680,9 @@
   <div class="toast" id="toast"><span id="toastText">Salvo</span></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=18.0"></script>
-  <script src="pwa.js?v=18.0"></script>
-  <script src="app.js?v=18.0"></script>
-  <script src="kanban-module.js?v=18.0"></script>
+  <script src="config.js?v=19.0"></script>
+  <script src="pwa.js?v=19.0"></script>
+  <script src="app.js?v=19.0"></script>
+  <script src="kanban-module.js?v=19.0"></script>
 </body>
 </html>

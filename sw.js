@@ -1,14 +1,14 @@
-const CACHE_VERSION = "fcc-portal-v18.0.0";
+const CACHE_VERSION = "fcc-portal-v19.0.0";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=18.0",
-  "./kanban.css?v=18.0",
-  "./app.js?v=18.0",
-  "./kanban-module.js?v=18.0",
-  "./pwa.js?v=18.0",
+  "./styles.css?v=19.0",
+  "./kanban.css?v=19.0",
+  "./app.js?v=19.0",
+  "./kanban-module.js?v=19.0",
+  "./pwa.js?v=19.0",
   "./manifest.webmanifest",
   "./offline.html",
   "./logo-fcc.jpg",

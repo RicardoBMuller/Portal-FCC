@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Portal FCC de Provas",
   "short_name": "Portal FCC",
-  "description": "Portal de provas da Fundação Carlos Chagas com projetos, salas, OCR, Kanban, chat e notificações.",
+  "description": "Portal de provas da Fundação Carlos Chagas com OCR de cartões por módulo e cartazes verticais de horário, projetos, salas, Kanban, chat e notificações.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
